@@ -1,0 +1,46 @@
+{
+  "name": "patient-checkin-manager",
+  "version": "1.0.0",
+  "description": "患儿入住信息管理系统",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build-win": "electron-builder --win",
+    "build": "electron-builder",
+    "test": "jest"
+  },
+  "keywords": ["electron", "sqlite", "excel", "患儿管理"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0",
+    "jest": "^29.0.0"
+  },
+  "dependencies": {
+    "sqlite3": "^5.1.6",
+    "xlsx": "^0.18.5",
+    "electron-store": "^8.1.0"
+  },
+  "build": {
+    "appId": "com.yourcompany.patient-manager",
+    "productName": "患儿入住信息管理系统",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "node_modules/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth" data-theme="emerald">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>患儿入住信息管理系统</title>
+  <meta name="color-scheme" content="light dark" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ===================== 主题系统（CSS 变量） ===================== */
+    :root {
+      --bg-primary: #f8fafc; --bg-secondary: #ffffff; --bg-tertiary: #f1f5f9;
+      --text-primary: #334155; --text-secondary: #64748b; --text-muted: #94a3b8;
+      --border-primary: #e2e8f0; --border-secondary: #f1f5f9;
+      --brand-primary: #0d9488; --brand-secondary: #0f766e; --brand-text: #ffffff;
+      --brand-tag-bg: #f0fdfa; --brand-tag-text: #14532d;
+      --ring-color: #34d399;
+      --selection-bg: #a7f3d0;
+    }
+    [data-theme="aurora"] {
+      --brand-primary: #BCB6FF; --brand-secondary: #B8E1FF; --brand-text: #1e293b;
+      --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
+      --brand-tag-bg: #eef2ff; --brand-tag-text: #3730a3; --ring-color: #a5b4fc;
+    }
+    [data-theme="sunrise"] {
+      --brand-primary: #E8AA14; --brand-secondary: #FF5714; --brand-text: #ffffff;
+      --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
+      --brand-tag-bg: #fffbeb; --brand-tag-text: #b45309; --ring-color: #f59e0b;
+    }
+    [data-theme="berry"] {
+      --brand-primary: #C52184; --brand-secondary: #334139; --brand-text: #ffffff;
+      --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
+      --brand-tag-bg: #fce7f3; --brand-tag-text: #9d174d; --ring-color: #f472b6;
+    }
+
+    /* ===================== 基础样式 ===================== */
+    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background-color: var(--bg-primary); color: var(--text-primary); }
+    ::selection { background-color: var(--selection-bg); }
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn .24s ease-out; }
+    .card-header-bg { background-image: linear-gradient(to right, var(--brand-primary), var(--brand-secondary)); }
+    .mask-id { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    .kbd { border: 1px solid var(--border-primary); background: var(--bg-secondary); border-bottom-width: 2px; }
+    mark { background: color-mix(in oklab, var(--ring-color) 25%, white); padding: .05rem .2rem; border-radius: .25rem; }
+
+    /* 减少动效支持 */
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+    @keyframes fadeIn { from {opacity: 0; transform: translateY(6px)} to {opacity: 1; transform: translateY(0)} }
+
+    /* 打印优化 */
+    @media print {
+      .no-print { display: none !important; }
+      body { background-color: #fff; }
+      main { margin: 0; padding: 0; }
+      .print-container { box-shadow: none !important; border: none !important; }
+    }
+
+    /* 加载状态 */
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body class="antialiased">
+  <a href="#main" class="no-print sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-[var(--bg-secondary)] focus:px-3 focus:py-1.5 focus:rounded-md focus:shadow">跳到主要内容</a>
+
+  <!-- 顶部栏 -->
+  <header class="sticky top-0 z-30 backdrop-blur bg-[var(--bg-secondary)]/75 border-b border-[var(--border-primary)]/70 no-print" role="banner">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-2.5 flex items-center gap-3">
+      <button id="backBtn" class="inline-flex items-center justify-center size-9 rounded-full hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)]" title="返回列表" aria-label="返回列表" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5"><path fill-rule="evenodd" d="M9.53 5.47a.75.75 0 010 1.06L4.81 11.25H21a.75.75 0 010 1.5H4.81l4.72 4.72a.75.75 0 11-1.06 1.06l-6-6a.75.75 0 010-1.06l6-6a.75.75 0 011.06 0z" clip-rule="evenodd"/></svg>
+      </button>
+      <h1 class="text-[15px] md:text-lg font-bold tracking-tight text-[var(--brand-secondary)]">患儿入住信息管理系统</h1>
+
+      <div class="ml-auto flex items-center gap-2">
+        <!-- 快捷键提示 -->
+        <div class="hidden md:flex items-center gap-2 text-xs text-[var(--text-muted)]" aria-hidden="true">
+          <span class="kbd px-1.5 py-0.5 rounded">/</span><span>搜索</span>
+          <span class="kbd px-1.5 py-0.5 rounded">F</span><span>筛选</span>
+        </div>
+
+        <!-- 导入按钮 -->
+        <button id="importBtn" class="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-primary)] px-3 py-1.5 text-sm hover:bg-[var(--bg-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)]">
+          <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>导入Excel</span>
+        </button>
+
+        <!-- 主题切换 -->
+        <div class="relative">
+          <button id="themeToggleBtn" class="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-primary)] px-3 py-1.5 text-sm hover:bg-[var(--bg-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)]" aria-haspopup="menu" aria-expanded="false" aria-controls="themeMenu">
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15.5 2.5a1 1 0 0 0-2 0l-1 4-4-1a1 1 0 0 0-1 2l1 4-4 1a1 1 0 0 0 0 2l4 1-1 4a1 1 0 0 0 2 1l4-1 1 4a1 1 0 0 0 2 0l1-4 4 1a1 1 0 0 0 1-2l-1-4 1-4a1 1 0 0 0-2-1l-4 1-1-4Z"/></svg>
+            <span>主题</span>
+          </button>
+          <div id="themeMenu" class="absolute right-0 top-full mt-2 w-44 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] shadow-lg p-2 origin-top-right transition-transform duration-150 ease-out scale-95 opacity-0 pointer-events-none" role="menu" aria-label="主题选择" tabindex="-1"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8" role="main">
+    <!-- 加载提示 -->
+    <div id="loadingIndicator" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+      <div class="bg-[var(--bg-secondary)] rounded-xl p-6 flex items-center gap-3">
+        <div class="spinner"></div>
+        <span id="loadingText">加载中...</span>
+      </div>
+    </div>
+
+    <section id="listView" class="page active" aria-labelledby="listTitle">
+      <h2 id="listTitle" class="sr-only">档案列表</h2>
+
+      <!-- 数据总览 -->
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 mb-5 md:mb-8 no-print">
+        <div class="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-4 md:p-5 shadow-sm">
+          <p class="text-xs md:text-sm text-[var(--text-secondary)]">总患儿数</p>
+          <p id="totalPatients" class="text-2xl md:text-3xl font-bold text-[var(--brand-primary)] mt-0.5">0</p>
+        </div>
+        <div class="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-4 md:p-5 shadow-sm">
+          <p class="text-xs md:text-sm text-[var(--text-secondary)]">总入住记录</p>
+          <p id="totalRecords" class="text-2xl md:text-3xl font-bold text-[var(--brand-primary)] mt-0.5">0</p>
+        </div>
+        <div class="hidden md:block rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-5 shadow-sm">
+          <p class="text-sm text-[var(--text-secondary)]">筛选</p>
+          <p class="mt-1 text-[var(--text-muted)]">支持姓名 / 诊断 / 籍贯；支持键盘 <span class="kbd px-1 rounded">/</span> 快速聚焦。</p>
+        </div>
+        <div class="hidden md:block rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-5 shadow-sm">
+          <p class="text-sm text-[var(--text-secondary)]">数据导入</p>
+          <p class="mt-1 text-[var(--text-muted)]">点击导入Excel按钮选择数据文件。</p>
+        </div>
+      </div>
+
+      <!-- 工具栏 -->
+      <section class="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-4 md:p-5 shadow-sm mb-6 no-print" aria-labelledby="toolsTitle">
+        <h3 id="toolsTitle" class="sr-only">筛选与排序</h3>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-center">
+          <div class="md:col-span-5">
+            <div class="relative">
+              <input id="searchInput" type="search" inputmode="search" placeholder="搜索姓名 / 诊断 / 籍贯…" aria-label="搜索" class="w-full rounded-xl border-[var(--border-primary)] bg-[var(--bg-secondary)] focus:border-[var(--brand-primary)] focus:ring-[var(--ring-color)] pl-10 pr-3 py-2.5 placeholder-[var(--text-muted)]" />
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-[var(--text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-3.5-3.5"/></svg>
+            </div>
+          </div>
+          <div class="md:col-span-3">
+            <label class="sr-only" for="genderFilter">按性别筛选</label>
+            <select id="genderFilter" class="w-full rounded-xl border-[var(--border-primary)] bg-[var(--bg-secondary)] focus:border-[var(--brand-primary)] focus:ring-[var(--ring-color)] py-2.5">
+              <option value="">全部性别</option>
+              <option value="男">男</option>
+              <option value="女">女</option>
+            </select>
+          </div>
+          <div class="md:col-span-3">
+            <label class="sr-only" for="sortSelect">排序方式</label>
+            <select id="sortSelect" class="w-full rounded-xl border-[var(--border-primary)] bg-[var(--bg-secondary)] focus:border-[var(--brand-primary)] focus:ring-[var(--ring-color)] py-2.5">
+              <option value="recent">按最近入住</option>
+              <option value="name">按姓名</option>
+              <option value="age">按年龄</option>
+            </select>
+          </div>
+          <div class="md:col-span-1 flex justify-end">
+            <button id="resetBtn" class="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-primary)] px-3 py-2 text-sm hover:bg-[var(--bg-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)]">重置</button>
+          </div>
+        </div>
+        <div class="mt-3 text-sm text-[var(--text-secondary)]" aria-live="polite"><span id="resultCount">—</span></div>
+      </section>
+
+      <div id="patientGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8" role="list"></div>
+      <div id="emptyState" class="hidden mt-12 text-center text-[var(--text-secondary)]" role="status">
+        <svg class="mx-auto size-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 3h10a2 2 0 0 1 2 2v14l-7-4-7 4V5a2 2 0 0 1 2-2Z"/></svg>
+        <p class="mt-3">没有匹配的结果。</p>
+      </div>
+    </section>
+
+    <section id="detailView" class="page" aria-labelledby="detailTitle"></section>
+  </main>
+
+  <footer class="mt-10 pb-10 text-center text-xs text-[var(--text-muted)] no-print" role="contentinfo">
+    © <span id="year"></span> 患儿入住信息管理系统 · <span id="appVersion"></span> · <span id="printTime" class="hidden md:inline"></span>
+  </footer>
+
+  <script src="./js/app.js"></script>
+</body>
+</html>
