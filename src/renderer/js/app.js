@@ -3,14 +3,28 @@ class PatientApp {
     constructor() {
         this.patients = [];
         this.filteredPatients = [];
-        this.currentView = 'list';
+        this.currentView = 'home';
         
         // DOM元素引用
         this.elements = {
             // 视图切换
+            homeView: document.getElementById('homeView'),
             listView: document.getElementById('listView'),
             detailView: document.getElementById('detailView'),
+            homeBtn: document.getElementById('homeBtn'),
             backBtn: document.getElementById('backBtn'),
+            
+            // 导航相关
+            pageTitle: document.getElementById('pageTitle'),
+            breadcrumbHome: document.getElementById('breadcrumbHome'),
+            breadcrumbSeparator: document.getElementById('breadcrumbSeparator'),
+            breadcrumbCurrent: document.getElementById('breadcrumbCurrent'),
+            
+            // 主页统计
+            homePatientCount: document.getElementById('homePatientCount'),
+            homeRecordCount: document.getElementById('homeRecordCount'),
+            homeFamilyCount: document.getElementById('homeFamilyCount'),
+            homeServiceCount: document.getElementById('homeServiceCount'),
             
             // 详情页排序
             timelineSortSelect: null, // 动态创建
@@ -77,7 +91,8 @@ class PatientApp {
 
     initEventListeners() {
         // 视图切换
-        this.elements.backBtn.addEventListener('click', () => this.setPage('list'));
+        this.elements.homeBtn.addEventListener('click', () => this.navigateTo('home'));
+        this.elements.backBtn.addEventListener('click', () => this.navigateTo('patientList'));
         
         // 搜索和排序
         this.elements.searchInput.addEventListener('input', this.debounce(() => this.filterAndSort(), 300));
@@ -171,6 +186,11 @@ class PatientApp {
             this.patients = patients || [];
             this.updateStatistics(statistics);
             this.filterAndSort();
+            
+            // 如果当前在主页，更新主页统计
+            if (this.currentView === 'home') {
+                this.updateHomeStatistics();
+            }
             
             this.hideLoading();
         } catch (error) {
@@ -510,9 +530,22 @@ class PatientApp {
         URL.revokeObjectURL(url);
     }
 
-    // 工具函数
+    // 导航管理
+    navigateTo(page) {
+        switch (page) {
+            case 'home':
+                this.setPage('home');
+                break;
+            case 'patientList':
+                this.setPage('list');
+                break;
+            default:
+                console.warn(`未知页面: ${page}`);
+        }
+    }
+
     setPage(pageName) {
-        const pages = ['list', 'detail'];
+        const pages = ['home', 'list', 'detail'];
         pages.forEach(page => {
             const element = this.elements[`${page}View`];
             if (element) {
@@ -520,14 +553,107 @@ class PatientApp {
             }
         });
         
-        this.elements.backBtn.hidden = (pageName === 'list');
+        // 更新导航按钮状态
+        this.elements.homeBtn.style.display = (pageName === 'home') ? 'none' : 'flex';
+        this.elements.backBtn.hidden = (pageName === 'home' || pageName === 'list');
+        
+        // 更新面包屑导航
+        this.updateBreadcrumb(pageName);
+        
+        // 更新页面标题
+        this.updatePageTitle(pageName);
+        
         this.currentView = pageName;
         
-        if (pageName === 'list') {
-            document.title = '患儿入住信息管理系统';
+        // 如果是主页，更新统计数据
+        if (pageName === 'home') {
+            this.updateHomeStatistics();
         }
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    updateBreadcrumb(pageName) {
+        const separator = this.elements.breadcrumbSeparator;
+        const current = this.elements.breadcrumbCurrent;
+        
+        if (pageName === 'home') {
+            separator.classList.add('hidden');
+            current.classList.add('hidden');
+        } else {
+            separator.classList.remove('hidden');
+            current.classList.remove('hidden');
+            
+            switch (pageName) {
+                case 'list':
+                    current.textContent = '患儿列表';
+                    break;
+                case 'detail':
+                    current.textContent = '患儿详情';
+                    break;
+                default:
+                    current.textContent = pageName;
+            }
+        }
+    }
+
+    updatePageTitle(pageName) {
+        const titles = {
+            home: '患儿入住信息管理系统',
+            list: '患儿列表 - 患儿入住信息管理系统',
+            detail: '患儿详情 - 患儿入住信息管理系统'
+        };
+        
+        const title = titles[pageName] || titles.home;
+        document.title = title;
+        
+        // 更新页面标题显示
+        if (pageName === 'home') {
+            this.elements.pageTitle.textContent = '患儿入住信息管理系统';
+        } else {
+            this.elements.pageTitle.textContent = titles[pageName] || pageName;
+        }
+    }
+
+    updateHomeStatistics() {
+        // 更新主页统计数据
+        const patientCount = this.patients.length;
+        const recordCount = this.patients.reduce((sum, patient) => 
+            sum + (patient.check_in_count || 0), 0);
+        
+        this.elements.homePatientCount.textContent = patientCount;
+        this.elements.homeRecordCount.textContent = recordCount;
+    }
+
+    // 主页功能方法
+    showStatistics(type) {
+        const messages = {
+            patients: `当前共有 ${this.patients.length} 名患儿档案`,
+            records: `总计 ${this.patients.reduce((sum, p) => sum + (p.check_in_count || 0), 0)} 条入住记录`,
+            families: '家庭月度信息功能开发中，敬请期待',
+            services: '关怀服务功能开发中，敬请期待'
+        };
+        
+        this.showNotification(messages[type] || '统计信息获取失败');
+    }
+
+    showComingSoon(feature) {
+        this.showNotification(`${feature}功能正在开发中，敬请期待！`);
+    }
+
+    importData() {
+        // 调用现有的导入功能
+        this.importExcel();
+    }
+
+    showSystemInfo() {
+        const info = `
+            系统版本: ${window.electronAPI?.getAppVersion() || '未知'}
+            患儿数量: ${this.patients.length}
+            入住记录: ${this.patients.reduce((sum, p) => sum + (p.check_in_count || 0), 0)}
+            最后更新: ${new Date().toLocaleString()}
+        `;
+        this.showNotification(info.trim());
     }
 
     calculateAge(birthDate) {
@@ -634,6 +760,10 @@ class PatientApp {
         alert(`成功：${message}`); // 可以替换为更美观的通知组件
     }
 
+    showNotification(message) {
+        alert(message); // 可以替换为更美观的通知组件
+    }
+
     // 防抖函数
     debounce(func, wait) {
         let timeout;
@@ -650,5 +780,6 @@ class PatientApp {
 
 // 初始化应用
 document.addEventListener('DOMContentLoaded', () => {
-    window.patientApp = new PatientApp();
+    window.app = new PatientApp();
+    window.patientApp = window.app; // 保持向后兼容
 });
