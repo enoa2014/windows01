@@ -1,4 +1,5 @@
 const XLSX = require('xlsx');
+const ExcelDiagnostics = require('../utils/ExcelDiagnostics');
 
 class ExcelImporter {
     constructor(databaseManager) {
@@ -18,6 +19,13 @@ class ExcelImporter {
                 defval: null // 空单元格返回null
             });
 
+            // 诊断Excel结构
+            console.log('🔍 开始Excel结构诊断...');
+            const diagnosticResult = ExcelDiagnostics.analyzeExcelStructure(rawData);
+            if (diagnosticResult) {
+                ExcelDiagnostics.suggestFieldMapping(diagnosticResult);
+            }
+            
             // 解析表头和数据
             const parsedData = this.parseExcelData(rawData);
             
@@ -98,15 +106,20 @@ class ExcelImporter {
             return `${h1 || ''}${h2 || ''}`.trim();
         });
 
-        // 定义字段映射规则
+        // 调试输出：显示所有检测到的表头
+        console.log('🔍 Excel表头检测结果:');
+        headers.forEach((header, index) => {
+            console.log(`  列${index}: "${header}"`);
+        });
+
+        // 定义字段映射规则（按优先级排序，更具体的模式在前面）
         const fieldPatterns = {
             'sequence': /序号/,
-            'name': /姓名/,
+            'name': /^姓名$|患者姓名|患儿姓名/,  // 更精确的姓名匹配
             'gender': /性别/,
             'birthDate': /出生日期|出生年月/,
             'hometown': /籍贯/,
             'ethnicity': /民族/,
-            'idCard': /身份证号|身份证/,
             'checkInDate': /入住时间|入住日期/,
             'attendees': /入住人/,
             'hospital': /就诊医院|医院/,
@@ -116,20 +129,37 @@ class ExcelImporter {
             'treatmentProcess': /医治过程|治疗过程/,
             'followUpPlan': /后续治疗安排|后续安排/,
             'homeAddress': /家庭地址|地址/,
-            'fatherInfo': /父亲.*信息|父亲/,
-            'motherInfo': /母亲.*信息|母亲/,
+            // 父母信息必须在身份证字段之前，因为它们包含"身份证"关键词
+            'fatherInfo': /父亲姓名、电话、身份证号|父亲.*姓名|父亲.*信息|父亲/,
+            'motherInfo': /母亲姓名、电话、身份证号|母亲.*姓名|母亲.*信息|母亲/,
             'otherGuardian': /其他监护人/,
-            'economicStatus': /家庭经济/
+            'economicStatus': /家庭经济/,
+            // 身份证字段放在最后，避免误匹配父母信息列
+            'idCard': /^身份证号$|^身份证$/
         };
 
+        console.log('🎯 字段映射结果:');
         headers.forEach((header, index) => {
             for (const [field, pattern] of Object.entries(fieldPatterns)) {
                 if (pattern.test(header)) {
                     mapping[field] = index;
+                    console.log(`  ${field} -> 列${index}: "${header}"`);
                     break;
                 }
             }
         });
+
+        // 特别检查姓名字段映射
+        if (!mapping.name) {
+            console.error('❌ 未找到姓名字段！可能的姓名相关列:');
+            headers.forEach((header, index) => {
+                if (header.includes('姓名') || header.includes('名字') || header.includes('母亲') || header.includes('父亲')) {
+                    console.log(`  列${index}: "${header}"`);
+                }
+            });
+        } else {
+            console.log(`✅ 姓名字段映射到列${mapping.name}: "${headers[mapping.name]}"`);
+        }
 
         return mapping;
     }
@@ -144,9 +174,21 @@ class ExcelImporter {
         const fatherInfo = this.parseParentInfo(getValue('fatherInfo'));
         const motherInfo = this.parseParentInfo(getValue('motherInfo'));
 
-        return {
+        // 调试输出姓名相关信息
+        const patientName = getValue('name');
+        console.log('👤 数据行解析调试:');
+        console.log(`  患者姓名: "${patientName}" (来自列${columnMap.name})`);
+        console.log(`  母亲姓名: "${motherInfo.name}"`);
+        console.log(`  父亲姓名: "${fatherInfo.name}"`);
+        
+        // 如果姓名为空但有母亲姓名，这可能是字段映射错误的信号
+        if (!patientName && motherInfo.name) {
+            console.warn('⚠️  警告：患者姓名为空但母亲姓名不为空，可能存在字段映射错误！');
+        }
+
+        const record = {
             sequence: getValue('sequence'),
-            name: getValue('name'),
+            name: patientName,
             gender: getValue('gender'),
             birthDate: this.normalizeDateFormat(getValue('birthDate')),
             hometown: getValue('hometown'),
@@ -170,6 +212,11 @@ class ExcelImporter {
             otherGuardian: getValue('otherGuardian'),
             economicStatus: getValue('economicStatus')
         };
+
+        // 最终记录调试
+        console.log(`✏️  最终解析结果 - 姓名: "${record.name}"`);
+        
+        return record;
     }
 
     parseParentInfo(infoString) {

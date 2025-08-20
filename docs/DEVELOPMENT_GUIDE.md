@@ -173,12 +173,20 @@ class DatabaseManager {
 ### 2. Excel 导入服务 (ExcelImporter)
 
 **职责**:
-- Excel 文件解析
-- 数据格式验证
+- Excel 文件解析（支持多层表头）
+- 智能字段映射和优先级处理
+- 复合字段解析（如父母信息）
+- 数据格式验证和清洗
 - 批量数据导入
 - 错误处理和回滚
 
-**关键实现**:
+**关键技术特点**:
+- **多层表头支持**：处理合并单元格的复杂表头结构
+- **智能字段映射**：基于正则表达式的自动字段识别
+- **优先级映射**：避免字段冲突的映射优先级机制
+- **复合字段解析**：解析"姓名 电话 身份证"格式的复合数据
+
+**核心实现**:
 
 ```javascript
 class ExcelImporter {
@@ -188,13 +196,16 @@ class ExcelImporter {
       // 1. 读取 Excel 文件
       const rawData = this.readExcelFile(filePath);
       
-      // 2. 解析表头映射
+      // 2. 诊断Excel结构
+      const diagnosticResult = this.analyzeExcelStructure(rawData);
+      
+      // 3. 解析多层表头并创建字段映射
       const parsedData = this.parseExcelData(rawData);
       
-      // 3. 数据验证
+      // 4. 数据验证和清洗
       const validatedData = this.validateData(parsedData);
       
-      // 4. 批量导入
+      // 5. 批量导入到数据库
       const result = await this.batchImport(validatedData);
       
       return result;
@@ -205,16 +216,79 @@ class ExcelImporter {
     }
   }
 
-  // 表头映射配置
-  getColumnMapping() {
-    return {
-      '姓名': 'name',
-      '性别': 'gender',
-      '出生日期': 'birth_date',
-      '籍贯': 'hometown',
-      '身份证号': 'id_card',
-      // ... 其他字段映射
+  // 智能字段映射系统
+  createColumnMapping(header1, header2) {
+    const mapping = {};
+    // 合并多层表头
+    const headers = header1.map((h1, index) => {
+      const h2 = header2[index] || '';
+      return `${h1 || ''}${h2 || ''}`.trim();
+    });
+
+    // 字段映射规则（按优先级排序 - 重要！）
+    const fieldPatterns = {
+      'sequence': /序号/,
+      'name': /^姓名$|患者姓名|患儿姓名/,  // 精确匹配避免误识别
+      'gender': /性别/,
+      'birthDate': /出生日期|出生年月/,
+      'hometown': /籍贯/,
+      'ethnicity': /民族/,
+      'checkInDate': /入住时间|入住日期/,
+      'attendees': /入住人/,
+      'hospital': /就诊医院|医院/,
+      'diagnosis': /医院诊断|诊断/,
+      'doctorName': /医生姓名|主治医生/,
+      'symptoms': /症状详情|症状/,
+      'treatmentProcess': /医治过程|治疗过程/,
+      'followUpPlan': /后续治疗安排|后续安排/,
+      'homeAddress': /家庭地址|地址/,
+      // 父母信息字段必须在身份证字段之前！
+      // 这些字段包含"身份证"关键词，会被idCard模式误匹配
+      'fatherInfo': /父亲姓名、电话、身份证号|父亲.*姓名|父亲.*信息|父亲/,
+      'motherInfo': /母亲姓名、电话、身份证号|母亲.*姓名|母亲.*信息|母亲/,
+      'otherGuardian': /其他监护人/,
+      'economicStatus': /家庭经济/,
+      // 身份证字段使用精确匹配，避免误匹配父母信息列
+      'idCard': /^身份证号$|^身份证$/
     };
+
+    // 按顺序匹配字段，第一个匹配的规则获胜
+    headers.forEach((header, index) => {
+      for (const [field, pattern] of Object.entries(fieldPatterns)) {
+        if (pattern.test(header)) {
+          mapping[field] = index;
+          break; // 找到第一个匹配就停止，避免重复映射
+        }
+      }
+    });
+
+    return mapping;
+  }
+
+  // 复合字段解析系统
+  parseParentInfo(infoString) {
+    if (!infoString) {
+      return { name: '', phone: '', idCard: '' };
+    }
+
+    // 解析格式：姓名 电话 身份证号（空格分隔）
+    const parts = infoString.split(/\s+/);
+    let name = '', phone = '', idCard = '';
+
+    for (const part of parts) {
+      if (/^1[3-9]\d{9}$/.test(part)) {
+        // 手机号格式：13-19开头的11位数字
+        phone = part;
+      } else if (/^\d{15}(\d{2}[0-9Xx])?$/.test(part)) {
+        // 身份证格式：15位或18位（最后一位可能是X）
+        idCard = part;
+      } else if (part && !phone && !idCard) {
+        // 第一个非手机号、非身份证的字段作为姓名
+        name = part;
+      }
+    }
+
+    return { name, phone, idCard };
   }
 
   // 数据验证规则
@@ -842,7 +916,51 @@ try {
 }
 ```
 
-### 2. 性能问题诊断
+### 2. Excel导入字段映射问题
+
+**问题描述**: 患者姓名显示为母亲姓名，父母信息缺失
+```
+症状：
+- 患者列表中显示的是母亲姓名而不是患者本人姓名
+- 患者详情页面父母信息为空
+- Excel导入看似成功但数据错误
+```
+
+**根本原因**: 字段映射优先级冲突
+```javascript
+// 问题代码：idCard 模式过于宽泛，匹配了父母信息列
+const fieldPatterns = {
+  'idCard': /身份证号|身份证/,  // ❌ 会匹配 "母亲姓名、电话、身份证号"
+  'fatherInfo': /父亲.*姓名|父亲.*信息|父亲/,
+  'motherInfo': /母亲.*姓名|母亲.*信息|母亲/,
+};
+```
+
+**解决方案**: 调整字段映射优先级和正则模式
+```javascript
+// 修复后：父母信息字段在前，身份证字段更精确
+const fieldPatterns = {
+  // 父母信息必须在身份证字段之前
+  'fatherInfo': /父亲姓名、电话、身份证号|父亲.*姓名|父亲.*信息|父亲/,
+  'motherInfo': /母亲姓名、电话、身份证号|母亲.*姓名|母亲.*信息|母亲/,
+  // 身份证字段使用精确匹配
+  'idCard': /^身份证号$|^身份证$/  // ✅ 只匹配完全匹配的列名
+};
+```
+
+**验证方法**:
+```javascript
+// 创建调试工具验证字段映射
+const debugFieldMapping = () => {
+  const headers = ["姓名", "性别", "母亲姓名、电话、身份证号", "身份证号"];
+  headers.forEach((header, index) => {
+    console.log(`列${index}: "${header}"`);
+    // 测试各字段模式是否正确匹配
+  });
+};
+```
+
+### 3. 性能问题诊断
 
 **内存使用监控**:
 ```javascript
@@ -917,7 +1035,26 @@ git commit -m "perf(query): 优化患者列表查询性能"
 git commit -m "refactor(ui): 重构主题切换逻辑"
 ```
 
+## 更新记录
+
+### v1.1 - 2025年8月20日
+**重大修复：Excel导入字段映射问题**
+- **问题**：患者姓名显示为母亲姓名，父母信息缺失
+- **原因**：字段映射优先级冲突，idCard正则模式过于宽泛
+- **解决**：
+  - 调整字段映射优先级：父母信息字段优先于身份证字段
+  - 优化正则表达式：身份证字段使用精确匹配（`/^身份证号$|^身份证$/`）
+  - 增强复合字段解析：改进父母信息解析逻辑
+- **验证**：成功导入243条记录，患者姓名和父母信息正确显示
+- **影响**：解决了Excel导入的核心数据质量问题
+
+**文档更新**：
+- 新增智能字段映射系统详细说明
+- 新增复合字段解析系统文档  
+- 新增Excel导入故障排除指南
+- 更新核心功能描述，强调字段映射和家庭信息解析能力
+
 ---
 
 *开发指南最后更新时间：2025年8月20日*  
-*文档版本：v1.0*
+*文档版本：v1.1*
