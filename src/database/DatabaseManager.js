@@ -46,20 +46,50 @@ class DatabaseManager {
 
     async createTables() {
         try {
-            const schema = await fs.readFile(path.join(__dirname, '../../database-schema.sql'), 'utf8');
-            const statements = schema.split(';').filter(stmt => stmt.trim() && !stmt.trim().startsWith('--'));
+            const schemaPath = path.join(__dirname, '../../database-schema.sql');
+            const schema = await fs.readFile(schemaPath, 'utf8');
+            
+            // 清理注释行并保留多行SQL语句结构
+            const cleanedSchema = schema
+                .split('\n')
+                .filter(line => !line.trim().startsWith('--') && line.trim())
+                .join('\n');
+            
+            const statements = cleanedSchema.split(';').filter(stmt => stmt.trim());
+            
+            // 分离表创建和索引创建语句
+            const createTableStatements = [];
+            const createIndexStatements = [];
             
             for (const statement of statements) {
-                const trimmedStatement = statement.trim();
-                if (trimmedStatement) {
-                    try {
-                        await this.run(trimmedStatement);
-                    } catch (error) {
-                        // 忽略索引已存在等不影响功能的错误
-                        if (!error.message.includes('already exists') && 
-                            !error.message.includes('duplicate column name')) {
-                            console.warn('SQL语句执行警告:', trimmedStatement, error.message);
-                        }
+                const trimmed = statement.trim();
+                if (trimmed) {
+                    if (trimmed.toUpperCase().startsWith('CREATE TABLE')) {
+                        createTableStatements.push(trimmed);
+                    } else if (trimmed.toUpperCase().startsWith('CREATE')) {
+                        createIndexStatements.push(trimmed);
+                    }
+                }
+            }
+            
+            // 先创建表
+            for (const statement of createTableStatements) {
+                try {
+                    await this.run(statement);
+                } catch (error) {
+                    if (!error.message.includes('already exists')) {
+                        console.warn('表创建警告:', error.message);
+                    }
+                }
+            }
+            
+            // 再创建索引
+            for (const statement of createIndexStatements) {
+                try {
+                    await this.run(statement);
+                } catch (error) {
+                    if (!error.message.includes('already exists')) {
+                        console.warn('索引创建警告:', error.message);
                     }
                 }
             }
@@ -113,7 +143,7 @@ class DatabaseManager {
     async findOrCreatePerson(name, idCard = null) {
         // 规范化处理
         const normalizedName = name ? name.trim() : '';
-        const normalizedIdCard = (idCard && idCard.trim()) ? idCard.trim() : null;
+        const normalizedIdCard = (idCard && idCard.trim() && idCard.trim() !== '-') ? idCard.trim() : null;
 
         if (!normalizedName) {
             throw new Error('姓名不能为空');
@@ -123,17 +153,43 @@ class DatabaseManager {
 
         try {
             if (normalizedIdCard) {
-                // 有身份证号：查找相同身份证号的人
+                // 有身份证号：首先查找相同身份证号的人
                 existingPerson = await this.get(
                     'SELECT * FROM persons WHERE id_card = ? AND id_card IS NOT NULL',
                     [normalizedIdCard]
                 );
+                
+                // 如果没有找到相同身份证号的人，查找同名但无身份证号的人
+                if (!existingPerson) {
+                    const sameNamePerson = await this.get(
+                        'SELECT * FROM persons WHERE name = ? AND (id_card IS NULL OR id_card = "")',
+                        [normalizedName]
+                    );
+                    
+                    if (sameNamePerson) {
+                        // 更新现有人员的身份证号
+                        await this.run(
+                            'UPDATE persons SET id_card = ? WHERE id = ?',
+                            [normalizedIdCard, sameNamePerson.id]
+                        );
+                        return sameNamePerson.id;
+                    }
+                }
             } else {
-                // 无身份证号：查找同名且也无身份证号的人
+                // 无身份证号：查找同名的人
+                // 优先找无身份证号的记录，如果没有则找任何同名记录
                 existingPerson = await this.get(
-                    'SELECT * FROM persons WHERE name = ? AND (id_card IS NULL OR id_card = "")',
+                    'SELECT * FROM persons WHERE name = ? AND (id_card IS NULL OR id_card = "") ORDER BY id',
                     [normalizedName]
                 );
+                
+                // 如果没有找到无身份证号的同名记录，查找任何同名记录
+                if (!existingPerson) {
+                    existingPerson = await this.get(
+                        'SELECT * FROM persons WHERE name = ? ORDER BY id',
+                        [normalizedName]
+                    );
+                }
             }
 
             if (existingPerson) {

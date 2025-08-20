@@ -12,6 +12,9 @@ class PatientApp {
             detailView: document.getElementById('detailView'),
             backBtn: document.getElementById('backBtn'),
             
+            // 详情页排序
+            timelineSortSelect: null, // 动态创建
+            
             // 数据显示
             totalPatients: document.getElementById('totalPatients'),
             totalRecords: document.getElementById('totalRecords'),
@@ -21,7 +24,6 @@ class PatientApp {
             
             // 控制元素
             searchInput: document.getElementById('searchInput'),
-            genderFilter: document.getElementById('genderFilter'),
             sortSelect: document.getElementById('sortSelect'),
             resetBtn: document.getElementById('resetBtn'),
             importBtn: document.getElementById('importBtn'),
@@ -77,9 +79,8 @@ class PatientApp {
         // 视图切换
         this.elements.backBtn.addEventListener('click', () => this.setPage('list'));
         
-        // 搜索和筛选
+        // 搜索和排序
         this.elements.searchInput.addEventListener('input', this.debounce(() => this.filterAndSort(), 300));
-        this.elements.genderFilter.addEventListener('change', () => this.filterAndSort());
         this.elements.sortSelect.addEventListener('change', () => this.filterAndSort());
         this.elements.resetBtn.addEventListener('click', () => this.resetFilters());
         
@@ -91,9 +92,6 @@ class PatientApp {
             if (e.key === '/' && document.activeElement !== this.elements.searchInput) {
                 e.preventDefault();
                 this.elements.searchInput.focus();
-            }
-            if ((e.key === 'f' || e.key === 'F') && !e.metaKey && !e.ctrlKey) {
-                this.elements.genderFilter.focus();
             }
         });
 
@@ -184,19 +182,14 @@ class PatientApp {
 
     filterAndSort() {
         const searchTerm = this.elements.searchInput.value.toLowerCase().trim();
-        const genderFilter = this.elements.genderFilter.value;
         const sortBy = this.elements.sortSelect.value;
 
-        // 筛选
+        // 筛选（只保留搜索功能）
         this.filteredPatients = this.patients.filter(patient => {
-            const matchesSearch = !searchTerm || 
+            return !searchTerm || 
                 [patient.name, patient.diagnosis, patient.hometown].some(field => 
                     field && field.toLowerCase().includes(searchTerm)
                 );
-            
-            const matchesGender = !genderFilter || patient.gender === genderFilter;
-            
-            return matchesSearch && matchesGender;
         });
 
         // 排序
@@ -205,7 +198,18 @@ class PatientApp {
                 case 'name':
                     return a.name.localeCompare(b.name, 'zh');
                 case 'age':
-                    return this.calculateAge(b.birth_date) - this.calculateAge(a.birth_date);
+                    // 按年龄降序（年龄大的在前），无效日期排在最后
+                    const ageA = this.calculateAge(a.birth_date);
+                    const ageB = this.calculateAge(b.birth_date);
+                    
+                    // 处理无效年龄（-1）
+                    if (ageA === -1 && ageB === -1) return 0;
+                    if (ageA === -1) return 1;  // a排到后面
+                    if (ageB === -1) return -1; // b排到后面
+                    
+                    return ageB - ageA; // 正常年龄比较
+                case 'visits':
+                    return (b.check_in_count || 0) - (a.check_in_count || 0); // 按入住次数降序
                 case 'recent':
                 default:
                     return new Date(b.latest_check_in || '1900-01-01') - new Date(a.latest_check_in || '1900-01-01');
@@ -261,7 +265,7 @@ class PatientApp {
           <div class="p-5 grid gap-2 text-[var(--text-secondary)]">
             <div class="flex items-center gap-2">
               <svg class="size-5 text-[var(--brand-primary)]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm-7 9a7 7 0 0 1 14 0Z"/></svg>
-              <span class="text-sm">年龄 <strong>${age}</strong> 岁</span>
+              <span class="text-sm">年龄 <strong>${this.displayAge(patient.birth_date)}</strong> 岁</span>
               <span class="ml-auto text-xs ${genderColor} px-2 py-0.5 rounded-full font-medium">${patient.gender || ''}</span>
             </div>
             <div class="flex items-center gap-2">
@@ -298,7 +302,11 @@ class PatientApp {
         }
 
         const age = this.calculateAge(profile.birth_date);
-        const timeline = this.createTimelineHTML(checkIns);
+        
+        // 保存原始数据供排序使用
+        this.currentPatientDetail = { profile, family, checkIns, medicalInfo };
+        
+        const timeline = this.createTimelineHTML(checkIns, 'desc', medicalInfo);
         
         this.elements.detailView.innerHTML = `
         <div class="mb-6 no-print">
@@ -327,7 +335,7 @@ class PatientApp {
               <h3 class="font-semibold text-lg mb-3 text-[var(--brand-secondary)]">基本信息</h3>
               <dl class="grid grid-cols-1 gap-2 text-[var(--text-primary)]">
                 <div><dt class="inline text-[var(--text-secondary)]">性别：</dt><dd class="inline">${profile.gender || '未知'}</dd></div>
-                <div><dt class="inline text-[var(--text-secondary)]">出生日期：</dt><dd class="inline">${profile.birth_date || '未知'}${profile.birth_date ? `（${age} 岁）` : ''}</dd></div>
+                <div><dt class="inline text-[var(--text-secondary)]">出生日期：</dt><dd class="inline">${profile.birth_date || '未知'}${profile.birth_date ? `（${this.displayAge(profile.birth_date)} 岁）` : ''}</dd></div>
                 <div><dt class="inline text-[var(--text-secondary)]">籍贯：</dt><dd class="inline">${profile.hometown || '未知'}</dd></div>
                 <div><dt class="inline text-[var(--text-secondary)]">民族：</dt><dd class="inline">${profile.ethnicity || '未知'}</dd></div>
                 <div class="mask-id"><dt class="inline text-[var(--text-secondary)]">身份证号：</dt><dd class="inline">${this.maskIdCard(profile.id_card)}</dd></div>
@@ -346,11 +354,22 @@ class PatientApp {
           </div>
 
           <section>
-            <div class="flex items-center gap-2 mb-4">
-              <h3 class="font-semibold text-lg text-[var(--brand-secondary)]">入住历史</h3>
-              <span class="text-xs rounded-full bg-[var(--brand-tag-bg)] text-[var(--brand-tag-text)] px-2 py-0.5">${checkIns?.length || 0} 条</span>
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <h3 class="font-semibold text-lg text-[var(--brand-secondary)]">入住历史</h3>
+                <span class="text-xs rounded-full bg-[var(--brand-tag-bg)] text-[var(--brand-tag-text)] px-2 py-0.5">${checkIns?.length || 0} 条</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <label for="timelineSortSelect" class="text-sm text-[var(--text-secondary)]">排序:</label>
+                <select id="timelineSortSelect" class="text-sm border border-[var(--border-primary)] rounded-lg px-2 py-1 bg-[var(--bg-primary)] text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--ring-color)]">
+                  <option value="desc">时间降序 (最新在前)</option>
+                  <option value="asc">时间升序 (最早在前)</option>
+                </select>
+              </div>
             </div>
-            ${timeline}
+            <div id="timelineContainer">
+              ${timeline}
+            </div>
           </section>
         </div>`;
 
@@ -359,28 +378,102 @@ class PatientApp {
         if (exportBtn) {
             exportBtn.addEventListener('click', () => this.exportPatientData(detail));
         }
+        
+        // 绑定排序选择器事件
+        this.elements.timelineSortSelect = document.getElementById('timelineSortSelect');
+        if (this.elements.timelineSortSelect) {
+            this.elements.timelineSortSelect.addEventListener('change', (e) => {
+                this.sortTimeline(e.target.value);
+            });
+        }
 
         // 更新页面标题
         document.title = `${profile.name} · 患儿详情`;
     }
 
-    createTimelineHTML(checkIns) {
+    createTimelineHTML(checkIns, sortOrder = 'desc', medicalInfo = []) {
         if (!checkIns || checkIns.length === 0) {
             return '<p class="text-[var(--text-secondary)]">暂无入住记录</p>';
         }
 
-        const timelineItems = checkIns.map(record => `
-        <li class="relative pl-8">
-          <span class="absolute left-0 top-2 size-3 rounded-full bg-[var(--brand-primary)] ring-4 ring-[var(--brand-tag-bg)]" aria-hidden="true"></span>
-          <h4 class="font-semibold text-[var(--brand-secondary)]">${record.check_in_date || '未知日期'}</h4>
-          <div class="mt-2 rounded-xl bg-[var(--bg-tertiary)] p-4 text-sm leading-6 text-[var(--text-secondary)]">
-            ${record.attendees ? `<p><span class="font-medium text-[var(--text-primary)]">入住人：</span>${record.attendees}</p>` : ''}
-            ${record.details ? `<p><span class="font-medium text-[var(--text-primary)]">症状详情：</span>${record.details}</p>` : ''}
-            ${record.treatment_plan ? `<p><span class="font-medium text-[var(--text-primary)]">后续安排：</span>${record.treatment_plan}</p>` : ''}
-          </div>
-        </li>`).join('');
+        // 对入住记录进行排序
+        const sortedCheckIns = this.sortCheckInsByDate(checkIns, sortOrder);
+
+        const timelineItems = sortedCheckIns.map(record => {
+            // 查找对应日期的医疗信息
+            const relatedMedical = medicalInfo.find(info => info.record_date === record.check_in_date);
+            
+            // 构建医疗信息显示内容
+            let medicalContent = '';
+            if (relatedMedical) {
+                // 处理字段映射问题：当前数据库中hospital字段实际存储的是诊断信息
+                // 分析显示diagnosis字段完全为空，hospital字段包含"急淋"、"急性淋巴细胞白血病"等诊断信息
+                // 因此将hospital字段内容显示为"医院诊断"
+                const isHospitalActuallyDiagnosis = relatedMedical.hospital && 
+                    (!relatedMedical.diagnosis || relatedMedical.diagnosis.trim() === '');
+                
+                const medicalFields = [
+                    // 如果hospital实际是诊断信息，则不显示就诊医院标签
+                    ...(isHospitalActuallyDiagnosis ? [] : [{ label: '就诊医院', value: relatedMedical.hospital }]),
+                    { label: '医生姓名', value: relatedMedical.doctor_name },
+                    // 显示正确的诊断信息
+                    { label: '医院诊断', value: isHospitalActuallyDiagnosis ? relatedMedical.hospital : relatedMedical.diagnosis },
+                    { label: '症状详情', value: relatedMedical.symptoms },
+                    { label: '医治过程', value: relatedMedical.treatment_process },
+                    { label: '后续治疗安排', value: relatedMedical.follow_up_plan },
+                    { label: '记录日期', value: relatedMedical.record_date }
+                ];
+                
+                const validFields = medicalFields.filter(field => field.value && field.value.trim());
+                if (validFields.length > 0) {
+                    medicalContent = validFields.map(field => 
+                        `<p><span class="font-medium text-[var(--text-primary)]">${field.label}：</span>${field.value}</p>`
+                    ).join('');
+                }
+            }
+            
+            return `
+            <li class="relative pl-8">
+              <span class="absolute left-0 top-2 size-3 rounded-full bg-[var(--brand-primary)] ring-4 ring-[var(--brand-tag-bg)]" aria-hidden="true"></span>
+              <h4 class="font-semibold text-[var(--brand-secondary)]">${record.check_in_date || '未知日期'}</h4>
+              <div class="mt-2 rounded-xl bg-[var(--bg-tertiary)] p-4 text-sm leading-6 text-[var(--text-secondary)]">
+                ${record.attendees ? `<p><span class="font-medium text-[var(--text-primary)]">入住人：</span>${record.attendees}</p>` : ''}
+                ${record.details ? `<p><span class="font-medium text-[var(--text-primary)]">症状详情：</span>${record.details}</p>` : ''}
+                ${record.treatment_plan ? `<p><span class="font-medium text-[var(--text-primary)]">后续安排：</span>${record.treatment_plan}</p>` : ''}
+                ${medicalContent}
+              </div>
+            </li>`;
+        }).join('');
 
         return `<ol class="relative border-l-2 border-[var(--brand-primary)]/20 pl-6 space-y-6">${timelineItems}</ol>`;
+    }
+    
+    sortCheckInsByDate(checkIns, sortOrder = 'desc') {
+        return [...checkIns].sort((a, b) => {
+            const dateA = new Date(a.check_in_date || '1900-01-01');
+            const dateB = new Date(b.check_in_date || '1900-01-01');
+            
+            if (sortOrder === 'asc') {
+                return dateA - dateB; // 升序：早→晚
+            } else {
+                return dateB - dateA; // 降序：晚→早
+            }
+        });
+    }
+    
+    sortTimeline(sortOrder) {
+        if (!this.currentPatientDetail || !this.currentPatientDetail.checkIns) {
+            return;
+        }
+        
+        // 重新生成时间线HTML
+        const timeline = this.createTimelineHTML(this.currentPatientDetail.checkIns, sortOrder, this.currentPatientDetail.medicalInfo);
+        
+        // 更新时间线容器
+        const timelineContainer = document.getElementById('timelineContainer');
+        if (timelineContainer) {
+            timelineContainer.innerHTML = timeline;
+        }
     }
 
     async importExcel() {
@@ -438,11 +531,11 @@ class PatientApp {
     }
 
     calculateAge(birthDate) {
-        if (!birthDate) return '?';
+        if (!birthDate) return -1;
         
         try {
             const birth = new Date(birthDate.replace(/\./g, '-'));
-            if (isNaN(birth)) return '?';
+            if (isNaN(birth)) return -1;
             
             const today = new Date();
             let age = today.getFullYear() - birth.getFullYear();
@@ -454,8 +547,13 @@ class PatientApp {
             
             return age;
         } catch {
-            return '?';
+            return -1;
         }
+    }
+    
+    displayAge(birthDate) {
+        const age = this.calculateAge(birthDate);
+        return age === -1 ? '?' : age;
     }
 
     maskIdCard(idCard) {
@@ -484,7 +582,6 @@ class PatientApp {
 
     resetFilters() {
         this.elements.searchInput.value = '';
-        this.elements.genderFilter.value = '';
         this.elements.sortSelect.value = 'recent';
         this.filterAndSort();
     }
