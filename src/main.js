@@ -3,12 +3,14 @@ const path = require('path');
 const os = require('os');
 const DatabaseManager = require('./database/DatabaseManager');
 const ExcelImporter = require('./services/ExcelImporter');
+const FamilyServiceManager = require('./services/FamilyServiceManager');
 
 class App {
     constructor() {
         this.mainWindow = null;
         this.dbManager = new DatabaseManager();
         this.excelImporter = new ExcelImporter(this.dbManager);
+        this.familyServiceManager = new FamilyServiceManager(this.dbManager);
         this.isInitialized = false;
     }
 
@@ -155,6 +157,179 @@ class App {
                 return await this.dbManager.getAgeGroupPatients(ageRange);
             } catch (error) {
                 console.error('获取年龄段患者列表失败:', error);
+                throw error;
+            }
+        });
+
+        // ==================== 家庭服务管理 IPC 处理器 ====================
+
+        // 获取家庭服务记录列表
+        ipcMain.handle('family-service:get-records', async (event, filters, pagination) => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.familyServiceManager.getRecords(filters, pagination);
+            } catch (error) {
+                console.error('获取家庭服务记录失败:', error);
+                throw error;
+            }
+        });
+
+        // 获取家庭服务统计概览
+        ipcMain.handle('family-service:get-overview-stats', async () => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.familyServiceManager.getOverviewStats();
+            } catch (error) {
+                console.error('获取家庭服务统计概览失败:', error);
+                throw error;
+            }
+        });
+
+        // 获取单条家庭服务记录详情
+        ipcMain.handle('family-service:get-record-by-id', async (event, id) => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.familyServiceManager.getRecordById(id);
+            } catch (error) {
+                console.error('获取家庭服务记录详情失败:', error);
+                throw error;
+            }
+        });
+
+        // 创建家庭服务记录
+        ipcMain.handle('family-service:create-record', async (event, recordData) => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.familyServiceManager.createRecord(recordData);
+            } catch (error) {
+                console.error('创建家庭服务记录失败:', error);
+                throw error;
+            }
+        });
+
+        // 更新家庭服务记录
+        ipcMain.handle('family-service:update-record', async (event, id, updateData) => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.familyServiceManager.updateRecord(id, updateData);
+            } catch (error) {
+                console.error('更新家庭服务记录失败:', error);
+                throw error;
+            }
+        });
+
+        // 删除家庭服务记录
+        ipcMain.handle('family-service:delete-record', async (event, id) => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.familyServiceManager.deleteRecord(id);
+            } catch (error) {
+                console.error('删除家庭服务记录失败:', error);
+                throw error;
+            }
+        });
+
+        // 批量删除家庭服务记录
+        ipcMain.handle('family-service:batch-delete-records', async (event, ids) => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.familyServiceManager.batchDeleteRecords(ids);
+            } catch (error) {
+                console.error('批量删除家庭服务记录失败:', error);
+                throw error;
+            }
+        });
+
+        // 导入家庭服务Excel数据
+        ipcMain.handle('family-service:import-excel', async () => {
+            try {
+                const result = await dialog.showOpenDialog(this.mainWindow, {
+                    properties: ['openFile'],
+                    filters: [
+                        { name: 'Excel Files', extensions: ['xlsx', 'xls'] }
+                    ],
+                    title: '选择家庭服务数据Excel文件'
+                });
+
+                if (result.canceled || result.filePaths.length === 0) {
+                    return { success: false, message: '用户取消操作' };
+                }
+
+                const filePath = result.filePaths[0];
+                const importResult = await this.familyServiceManager.importFromExcel(filePath);
+                
+                return {
+                    success: importResult.success,
+                    message: importResult.success ? 
+                        `成功导入 ${importResult.successCount} 条记录，跳过 ${importResult.duplicateCount} 条重复记录` :
+                        `导入失败: ${importResult.errors.join('; ')}`,
+                    data: importResult
+                };
+            } catch (error) {
+                console.error('导入家庭服务Excel失败:', error);
+                return {
+                    success: false,
+                    message: `导入失败: ${error.message}`
+                };
+            }
+        });
+
+        // 导出家庭服务数据到Excel
+        ipcMain.handle('family-service:export-excel', async (event, filters) => {
+            try {
+                const result = await dialog.showSaveDialog(this.mainWindow, {
+                    filters: [
+                        { name: 'Excel Files', extensions: ['xlsx'] }
+                    ],
+                    defaultPath: `家庭服务统计_${new Date().toISOString().split('T')[0]}.xlsx`,
+                    title: '导出家庭服务数据'
+                });
+
+                if (result.canceled || !result.filePath) {
+                    return { success: false, message: '用户取消操作' };
+                }
+
+                const exportResult = await this.familyServiceManager.exportToExcel(result.filePath, filters);
+                
+                return {
+                    success: exportResult.success,
+                    message: exportResult.success ? 
+                        `成功导出 ${exportResult.recordCount} 条记录到 ${result.filePath}` :
+                        `导出失败: ${exportResult.error}`,
+                    data: exportResult
+                };
+            } catch (error) {
+                console.error('导出家庭服务数据失败:', error);
+                return {
+                    success: false,
+                    message: `导出失败: ${error.message}`
+                };
+            }
+        });
+
+        // 获取家庭服务筛选选项
+        ipcMain.handle('family-service:get-filter-options', async () => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.familyServiceManager.getFilterOptions();
+            } catch (error) {
+                console.error('获取家庭服务筛选选项失败:', error);
                 throw error;
             }
         });

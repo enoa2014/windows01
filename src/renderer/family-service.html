@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth" data-theme="emerald">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>家庭服务统计列表 · 患儿入住信息管理系统</title>
+  <meta name="color-scheme" content="light dark" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ===================== 主题系统（CSS 变量） ===================== */
+    :root {
+      --bg-primary: #f8fafc; --bg-secondary: #ffffff; --bg-tertiary: #f1f5f9;
+      --text-primary: #334155; --text-secondary: #64748b; --text-muted: #94a3b8;
+      --border-primary: #e2e8f0; --border-secondary: #f1f5f9;
+      --brand-primary: #0d9488; --brand-secondary: #0f766e; --brand-text: #ffffff;
+      --brand-tag-bg: #f0fdfa; --brand-tag-text: #14532d;
+      --ring-color: #34d399;
+      --selection-bg: #a7f3d0;
+      --success-color: #059669; --warning-color: #d97706; --error-color: #dc2626;
+    }
+    [data-theme="aurora"] {
+      --brand-primary: #BCB6FF; --brand-secondary: #B8E1FF; --brand-text: #1e293b;
+      --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
+      --brand-tag-bg: #eef2ff; --brand-tag-text: #3730a3; --ring-color: #a5b4fc;
+    }
+    [data-theme="sunrise"] {
+      --brand-primary: #E8AA14; --brand-secondary: #FF5714; --brand-text: #ffffff;
+      --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
+      --brand-tag-bg: #fffbeb; --brand-tag-text: #b45309; --ring-color: #f59e0b;
+    }
+    [data-theme="berry"] {
+      --brand-primary: #C52184; --brand-secondary: #334139; --brand-text: #ffffff;
+      --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
+      --brand-tag-bg: #fce7f3; --brand-tag-text: #9d174d; --ring-color: #f472b6;
+    }
+
+    /* ===================== 基础样式 ===================== */
+    body { 
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; 
+      background-color: var(--bg-primary); 
+      color: var(--text-primary); 
+    }
+    ::selection { background-color: var(--selection-bg); }
+    .page { display: none; }
+    .page.active { display: block; animation: fadeIn .24s ease-out; }
+    .card-header-bg { background-image: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary)); }
+    .kbd { border: 1px solid var(--border-primary); background: var(--bg-secondary); border-bottom-width: 2px; }
+    mark { background: color-mix(in oklab, var(--ring-color) 25%, white); padding: .05rem .2rem; border-radius: .25rem; }
+
+    /* ===================== 家庭服务专用样式 ===================== */
+    .overview-cards {
+      @apply grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4 mb-6;
+    }
+    
+    .overview-card {
+      @apply rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] 
+             p-4 md:p-5 shadow-sm hover:shadow-md transition-all duration-200;
+    }
+    
+    .overview-card .stat-value {
+      @apply text-2xl md:text-3xl font-bold text-[var(--brand-primary)] mt-0.5;
+    }
+    
+    .overview-card .stat-label {
+      @apply text-xs md:text-sm text-[var(--text-secondary)];
+    }
+    
+    .overview-card .stat-trend {
+      @apply text-xs text-[var(--text-muted)] mt-1;
+    }
+
+    .filter-toolbar {
+      @apply rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] 
+             p-4 md:p-5 shadow-sm mb-6;
+    }
+
+    .search-input {
+      @apply w-full rounded-xl border-[var(--border-primary)] bg-[var(--bg-secondary)] 
+             focus:border-[var(--brand-primary)] focus:ring-[var(--ring-color)] 
+             pl-10 pr-3 py-2.5 placeholder-[var(--text-muted)];
+    }
+
+    .filter-select {
+      @apply w-full rounded-xl border-[var(--border-primary)] bg-[var(--bg-secondary)] 
+             focus:border-[var(--brand-primary)] focus:ring-[var(--ring-color)] py-2.5 px-3;
+    }
+
+    .action-btn-primary {
+      @apply px-4 py-2 rounded-xl bg-[var(--brand-primary)] text-[var(--brand-text)] 
+             font-medium hover:bg-[var(--brand-secondary)] transition-colors
+             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)];
+    }
+
+    .action-btn-secondary {
+      @apply px-4 py-2 rounded-xl border border-[var(--border-primary)] 
+             bg-[var(--bg-secondary)] text-[var(--text-primary)] 
+             hover:bg-[var(--bg-tertiary)] transition-colors
+             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)];
+    }
+
+    .service-record-card {
+      @apply rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] 
+             shadow-sm hover:shadow-md hover:border-[var(--brand-primary)]/50 
+             overflow-hidden transition-all duration-200 cursor-pointer
+             focus-within:ring-2 focus-within:ring-[var(--ring-color)];
+    }
+
+    .service-record-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .stat-item {
+      @apply text-center p-3 rounded-lg bg-[var(--bg-tertiary)]/50;
+    }
+
+    .stat-item .stat-value {
+      @apply text-lg font-bold text-[var(--brand-primary)];
+    }
+
+    .stat-item .stat-label {
+      @apply text-xs text-[var(--text-muted)] mt-1;
+    }
+
+    .time-badge {
+      @apply size-12 rounded-full bg-white/20 grid place-items-center text-center;
+    }
+
+    .trend-indicator.positive { @apply text-green-600; }
+    .trend-indicator.negative { @apply text-red-600; }
+    .trend-indicator.neutral { @apply text-gray-600; }
+
+    .loading-skeleton {
+      @apply animate-pulse bg-[var(--bg-tertiary)] rounded;
+    }
+
+    /* 减少动效支持 */
+    @media (prefers-reduced-motion: reduce) { 
+      * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } 
+    }
+    
+    @keyframes fadeIn { 
+      from {opacity: 0; transform: translateY(6px)} 
+      to {opacity: 1; transform: translateY(0)} 
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .loading-shimmer {
+      position: relative;
+      overflow: hidden;
+      background: var(--bg-tertiary);
+    }
+
+    .loading-shimmer::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, 
+        transparent, 
+        rgba(255, 255, 255, 0.4), 
+        transparent);
+      animation: shimmer 1.5s infinite;
+    }
+
+    /* 打印优化 */
+    @media print {
+      .no-print { display: none !important; }
+      body { background-color: #fff; }
+      main { margin: 0; padding: 0; }
+      .print-container { box-shadow: none !important; border: none !important; }
+    }
+  </style>
+</head>
+<body class="antialiased">
+  <!-- 无障碍跳转链接 -->
+  <a href="#main" class="no-print sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-[var(--bg-secondary)] focus:px-3 focus:py-1.5 focus:rounded-md focus:shadow">跳到主要内容</a>
+
+  <!-- 顶部导航栏 -->
+  <header class="sticky top-0 z-30 backdrop-blur bg-[var(--bg-secondary)]/75 border-b border-[var(--border-primary)]/70 no-print" role="banner">
+    <div class="max-w-7xl mx-auto px-4 md:px-6 py-2.5 flex items-center gap-3">
+      <button id="backBtn" class="inline-flex items-center justify-center size-9 rounded-full hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)]" title="返回主页" aria-label="返回主页">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+          <path fill-rule="evenodd" d="M9.53 5.47a.75.75 0 010 1.06L4.81 11.25H21a.75.75 0 010 1.5H4.81l4.72 4.72a.75.75 0 11-1.06 1.06l-6-6a.75.75 0 010-1.06l6-6a.75.75 0 011.06 0z" clip-rule="evenodd"/>
+        </svg>
+      </button>
+      <h1 class="text-[15px] md:text-lg font-bold tracking-tight text-[var(--brand-secondary)]">家庭服务统计</h1>
+
+      <div class="ml-auto flex items-center gap-2">
+        <!-- 快捷键提示 -->
+        <div class="hidden md:flex items-center gap-2 text-xs text-[var(--text-muted)]" aria-hidden="true">
+          <span class="kbd px-1.5 py-0.5 rounded">/</span><span>搜索</span>
+          <span class="kbd px-1.5 py-0.5 rounded">F</span><span>筛选</span>
+          <span class="kbd px-1.5 py-0.5 rounded">E</span><span>导出</span>
+        </div>
+
+        <!-- 主题切换 -->
+        <div class="relative">
+          <button id="themeToggleBtn" class="inline-flex items-center gap-1.5 rounded-full border border-[var(--border-primary)] px-3 py-1.5 text-sm hover:bg-[var(--bg-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)]" aria-haspopup="menu" aria-expanded="false" aria-controls="themeMenu">
+            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M15.5 2.5a1 1 0 0 0-2 0l-1 4-4-1a1 1 0 0 0-1 2l1 4-4 1a1 1 0 0 0 0 2l4 1-1 4a1 1 0 0 0 2 1l4-1 1 4a1 1 0 0 0 2 0l1-4 4 1a1 1 0 0 0 1-2l-1-4 1-4a1 1 0 0 0-2-1l-4 1-1-4Z"/>
+            </svg>
+            <span>主题</span>
+          </button>
+          <div id="themeMenu" class="absolute right-0 top-full mt-2 w-44 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] shadow-lg p-2 origin-top-right transition-transform duration-150 ease-out scale-95 opacity-0 pointer-events-none" role="menu" aria-label="主题选择" tabindex="-1"></div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8" role="main">
+    <section id="listView" class="page active" aria-labelledby="listTitle">
+      <h2 id="listTitle" class="sr-only">家庭服务统计列表</h2>
+
+      <!-- 数据总览卡片区 -->
+      <section class="overview-cards no-print" aria-labelledby="overviewTitle">
+        <h3 id="overviewTitle" class="sr-only">数据总览</h3>
+        
+        <div class="overview-card">
+          <p class="stat-label">总记录数</p>
+          <p id="totalRecords" class="stat-value">0</p>
+          <p class="stat-trend">条服务记录</p>
+        </div>
+        
+        <div class="overview-card">
+          <p class="stat-label">累计服务家庭</p>
+          <p id="totalFamilies" class="stat-value">0</p>
+          <p class="stat-trend">户次</p>
+        </div>
+        
+        <div class="overview-card">
+          <p class="stat-label">总服务人次</p>
+          <p id="totalServices" class="stat-value">0</p>
+          <p class="stat-trend">人次</p>
+        </div>
+        
+        <div class="overview-card">
+          <p class="stat-label">平均入住天数</p>
+          <p id="avgDays" class="stat-value">0.0</p>
+          <p class="stat-trend">天/户</p>
+        </div>
+      </section>
+
+      <!-- 筛选工具栏 -->
+      <section class="filter-toolbar no-print" aria-labelledby="filtersTitle">
+        <h3 id="filtersTitle" class="sr-only">筛选与排序</h3>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-center">
+          <!-- 搜索框 -->
+          <div class="md:col-span-4">
+            <div class="relative">
+              <input id="searchInput" 
+                     type="search" 
+                     inputmode="search" 
+                     placeholder="搜索年月、备注信息..." 
+                     aria-label="搜索年月、备注信息"
+                     class="search-input" />
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-[var(--text-muted)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="7"/>
+                <path d="m21 21-3.5-3.5"/>
+              </svg>
+            </div>
+          </div>
+          
+          <!-- 年份筛选 -->
+          <div class="md:col-span-2">
+            <label class="sr-only" for="yearFilter">按年份筛选</label>
+            <select id="yearFilter" class="filter-select">
+              <option value="">全部年份</option>
+            </select>
+          </div>
+          
+          <!-- 月份筛选 -->
+          <div class="md:col-span-2">
+            <label class="sr-only" for="monthFilter">按月份筛选</label>
+            <select id="monthFilter" class="filter-select">
+              <option value="">全部月份</option>
+              <option value="1">1月</option>
+              <option value="2">2月</option>
+              <option value="3">3月</option>
+              <option value="4">4月</option>
+              <option value="5">5月</option>
+              <option value="6">6月</option>
+              <option value="7">7月</option>
+              <option value="8">8月</option>
+              <option value="9">9月</option>
+              <option value="10">10月</option>
+              <option value="11">11月</option>
+              <option value="12">12月</option>
+            </select>
+          </div>
+          
+          <!-- 排序选择 -->
+          <div class="md:col-span-2">
+            <label class="sr-only" for="sortSelect">排序方式</label>
+            <select id="sortSelect" class="filter-select">
+              <option value="date-desc">按时间倒序</option>
+              <option value="date-asc">按时间正序</option>
+              <option value="families-desc">按家庭数降序</option>
+              <option value="families-asc">按家庭数升序</option>
+              <option value="services-desc">按服务人次降序</option>
+              <option value="services-asc">按服务人次升序</option>
+            </select>
+          </div>
+          
+          <!-- 操作按钮 -->
+          <div class="md:col-span-2 flex gap-2">
+            <button id="resetBtn" class="action-btn-secondary flex-1">重置</button>
+            <button id="exportBtn" class="action-btn-primary flex-1">导出</button>
+          </div>
+        </div>
+        
+        <!-- 筛选结果统计 -->
+        <div class="mt-3 text-sm text-[var(--text-secondary)]" aria-live="polite">
+          <span id="resultCount">加载中...</span>
+        </div>
+      </section>
+
+      <!-- 服务记录列表 -->
+      <section aria-labelledby="recordsTitle">
+        <h3 id="recordsTitle" class="sr-only">家庭服务记录列表</h3>
+        <div id="serviceRecordGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8" role="list">
+          <!-- 记录卡片将通过JavaScript动态生成 -->
+        </div>
+        
+        <!-- 加载状态 -->
+        <div id="loadingState" class="hidden text-center py-12">
+          <div class="inline-flex items-center gap-3">
+            <div class="animate-spin rounded-full size-6 border-2 border-[var(--brand-primary)] border-t-transparent"></div>
+            <span class="text-[var(--text-secondary)]">加载数据中...</span>
+          </div>
+        </div>
+        
+        <!-- 空状态 -->
+        <div id="emptyState" class="hidden mt-12 text-center text-[var(--text-secondary)]" role="status">
+          <svg class="mx-auto size-16 mb-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M7 3h10a2 2 0 0 1 2 2v14l-7-4-7 4V5a2 2 0 0 1 2-2Z"/>
+          </svg>
+          <p class="text-lg font-medium">没有找到匹配的记录</p>
+          <p class="mt-1 text-sm">请尝试调整筛选条件或导入数据</p>
+        </div>
+
+        <!-- 错误状态 -->
+        <div id="errorState" class="hidden mt-12 text-center" role="status">
+          <svg class="mx-auto size-16 mb-4 text-[var(--error-color)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="m21 21-3.5-3.5"/>
+            <circle cx="11" cy="11" r="7"/>
+          </svg>
+          <p class="text-lg font-medium text-[var(--error-color)]">加载数据失败</p>
+          <p class="mt-1 text-sm text-[var(--text-secondary)]">请检查网络连接或稍后重试</p>
+          <button id="retryBtn" class="mt-4 action-btn-primary">重新加载</button>
+        </div>
+      </section>
+
+      <!-- 分页控制 -->
+      <section id="paginationSection" class="hidden mt-8 flex items-center justify-center gap-2 no-print">
+        <button id="prevPageBtn" class="action-btn-secondary" disabled>上一页</button>
+        <span id="pageInfo" class="px-4 py-2 text-sm text-[var(--text-secondary)]">第 1 页，共 1 页</span>
+        <button id="nextPageBtn" class="action-btn-secondary" disabled>下一页</button>
+      </section>
+    </section>
+
+    <!-- 详情视图（预留） -->
+    <section id="detailView" class="page" aria-labelledby="detailTitle">
+      <h2 id="detailTitle" class="sr-only">服务记录详情</h2>
+      <!-- 详情内容将通过JavaScript动态生成 -->
+    </section>
+  </main>
+
+  <!-- 页脚 -->
+  <footer class="mt-10 pb-10 text-center text-xs text-[var(--text-muted)] no-print" role="contentinfo">
+    © <span id="year"></span> 助医小家 · 家庭服务统计 · <span id="printTime" class="hidden md:inline"></span>
+  </footer>
+
+  <!-- Toast 通知容器 -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-50 space-y-2 no-print"></div>
+
+  <!-- 脚本文件 -->
+  <script src="js/family-service-app.js"></script>
+</body>
+</html>

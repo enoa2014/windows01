@@ -830,6 +830,12 @@ class PatientApp {
         }
     }
 
+    // 新增：导航到家庭服务页面
+    navigateToFamilyService() {
+        // 打开独立的家庭服务页面
+        window.open('./family-service.html', '_blank');
+    }
+
     // 设置模态框上下文（例如年龄组模态框）
     setModalContext(context) {
         this.modalContext = context;
