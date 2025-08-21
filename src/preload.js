@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     familyService: {
         getRecords: (filters, pagination) => ipcRenderer.invoke('family-service:get-records', filters, pagination),
         getOverviewStats: () => ipcRenderer.invoke('family-service:get-overview-stats'),
+        getStatistics: () => ipcRenderer.invoke('family-service:get-statistics'),
+        getStatsByDateRange: (dateRange) => ipcRenderer.invoke('family-service:get-stats-by-date-range', dateRange),
         getRecordById: (id) => ipcRenderer.invoke('family-service:get-record-by-id', id),
         createRecord: (recordData) => ipcRenderer.invoke('family-service:create-record', recordData),
         updateRecord: (id, updateData) => ipcRenderer.invoke('family-service:update-record', id, updateData),
@@ -34,6 +36,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
             'get-patients', 'get-patient-detail', 'search-patients', 
             'get-statistics', 'get-extended-statistics', 'get-age-group-patients',
             'import-excel', 'family-service:get-records', 'family-service:get-overview-stats',
+            'family-service:get-statistics', 'family-service:get-stats-by-date-range',
             'family-service:get-record-by-id', 'family-service:create-record',
             'family-service:update-record', 'family-service:delete-record',
             'family-service:batch-delete-records', 'family-service:import-excel',

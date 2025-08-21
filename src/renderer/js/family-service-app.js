@@ -3,9 +3,12 @@
  * 负责页面的所有交互功能和数据管理
  */
 
+console.log('📄 family-service-app.js 文件被加载');
+
 // 应用程序状态管理
 class FamilyServiceApp {
     constructor() {
+        console.log('🚀 FamilyServiceApp 构造函数被调用');
         this.state = {
             records: [],
             filteredRecords: [],
@@ -279,6 +282,7 @@ class FamilyServiceApp {
 
     async loadRecords() {
         try {
+            console.log('🎬 [FamilyServiceApp] loadRecords 方法开始执行');
             this.state.loading = true;
             this.updateResultCount('加载中...');
 
@@ -290,15 +294,18 @@ class FamilyServiceApp {
 
             // 调试日志：记录传递给IPC的参数
             console.log('🔍 FamilyServiceApp.loadRecords 调用参数:');
-            console.log('  filters:', JSON.stringify(filters));
-            console.log('  pagination:', JSON.stringify(pagination));
+            console.log('  📊 this.state.pagination:', JSON.stringify(this.state.pagination));
+            console.log('  📝 构建的 pagination:', JSON.stringify(pagination));
+            console.log('  📋 filters:', JSON.stringify(filters));
 
             const records = await window.electronAPI.familyService.getRecords(filters, pagination);
             
             // 调试日志：记录返回结果
-            console.log('  返回记录数:', records.length);
+            console.log('  💾 前端接收到的记录数:', records.length);
             if (records.length === 0) {
-                console.warn('  ⚠️ 返回了0条记录！');
+                console.warn('  ⚠️ 前端接收到0条记录！');
+            } else {
+                console.log('  📋 前端接收到的前3条记录ID:', records.slice(0, 3).map(r => r.id));
             }
             
             this.state.records = records;
@@ -362,19 +369,22 @@ class FamilyServiceApp {
 
         const container = this.elements.serviceRecordGrid;
         
+        console.log('🎨 renderRecords 开始渲染');
+        console.log('  📊 this.state.filteredRecords.length:', this.state.filteredRecords.length);
+        
         if (this.state.filteredRecords.length === 0) {
+            console.log('  📭 显示空状态');
             this.showEmptyState();
             return;
         }
 
         this.hideEmptyState();
 
-        // 分页处理
-        const startIndex = (this.state.pagination.currentPage - 1) * this.state.pagination.pageSize;
-        const endIndex = startIndex + this.state.pagination.pageSize;
-        const pageRecords = this.state.filteredRecords.slice(startIndex, endIndex);
+        // 后端已经做了分页，前端直接渲染所有返回的记录
+        const recordsToRender = this.state.filteredRecords;
+        console.log('  🎯 准备渲染记录数:', recordsToRender.length);
 
-        const cardsHTML = pageRecords.map(record => this.createRecordCard(record)).join('');
+        const cardsHTML = recordsToRender.map(record => this.createRecordCard(record)).join('');
         
         // 使用 requestAnimationFrame 优化性能
         requestAnimationFrame(() => {
@@ -854,7 +864,9 @@ class FamilyServiceApp {
 
 // 当页面加载完成后初始化应用
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🎭 DOMContentLoaded 事件触发，准备创建 FamilyServiceApp');
     window.familyServiceApp = new FamilyServiceApp();
+    console.log('✅ FamilyServiceApp 实例创建完成');
 });
 
 // 暴露全局方法供调试使用

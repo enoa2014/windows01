@@ -807,6 +807,199 @@ class DatabaseManager {
     isInitialized() {
         return this.db !== null;
     }
+
+    // 家庭服务统计方法
+    async getFamilyServiceStatistics() {
+        try {
+            // 1. 基础统计数据
+            const [totalFamilies, totalRecords, totalServiceDays] = await Promise.all([
+                // 家庭总数（按身份证/姓名去重）
+                this.get(`
+                    SELECT COUNT(DISTINCT p.id) as count 
+                    FROM persons p 
+                    LEFT JOIN family_info fi ON p.id = fi.person_id
+                `),
+                // 总服务记录数
+                this.get(`
+                    SELECT COUNT(*) as count 
+                    FROM check_in_records
+                `),
+                // 总服务天数 (从入住记录计算服务天数)
+                this.get(`
+                    SELECT SUM(
+                        CASE 
+                            WHEN check_in_date IS NOT NULL AND check_in_date != '' THEN
+                                CASE 
+                                    WHEN date(check_in_date) IS NOT NULL THEN
+                                        GREATEST(1, julianday('now') - julianday(check_in_date))
+                                    ELSE 1
+                                END
+                            ELSE 0
+                        END
+                    ) as total_days
+                    FROM check_in_records
+                `)
+            ]);
+
+            // 2. 月平均家庭数（最近12个月）
+            const monthlyFamilyStats = await this.all(`
+                SELECT 
+                    strftime('%Y-%m', cir.check_in_date) as month,
+                    COUNT(DISTINCT cir.person_id) as family_count
+                FROM check_in_records cir
+                WHERE cir.check_in_date IS NOT NULL
+                    AND date(cir.check_in_date) >= date('now', '-12 months')
+                GROUP BY month
+                ORDER BY month
+            `);
+
+            // 计算月平均家庭数
+            const monthlyAverage = monthlyFamilyStats.length > 0 
+                ? Math.round(monthlyFamilyStats.reduce((sum, item) => sum + item.family_count, 0) / monthlyFamilyStats.length)
+                : 0;
+
+            // 3. 服务人次统计（按医院分组）
+            const servicesByHospital = await this.all(`
+                SELECT 
+                    mi.hospital,
+                    COUNT(*) as service_count,
+                    COUNT(DISTINCT mi.person_id) as unique_families
+                FROM medical_info mi
+                WHERE mi.hospital IS NOT NULL AND mi.hospital != ''
+                GROUP BY mi.hospital
+                ORDER BY service_count DESC
+                LIMIT 10
+            `);
+
+            // 4. 年度统计（按年份分组）
+            const yearlyStats = await this.all(`
+                SELECT 
+                    strftime('%Y', cir.check_in_date) as year,
+                    COUNT(*) as total_records,
+                    COUNT(DISTINCT cir.person_id) as unique_families
+                FROM check_in_records cir
+                WHERE cir.check_in_date IS NOT NULL
+                    AND strftime('%Y', cir.check_in_date) IS NOT NULL
+                GROUP BY year
+                ORDER BY year DESC
+            `);
+
+            // 5. 按诊断分类的服务统计
+            const servicesByDiagnosis = await this.all(`
+                SELECT 
+                    mi.diagnosis,
+                    COUNT(*) as service_count,
+                    COUNT(DISTINCT mi.person_id) as unique_families
+                FROM medical_info mi
+                WHERE mi.diagnosis IS NOT NULL AND mi.diagnosis != ''
+                GROUP BY mi.diagnosis
+                ORDER BY service_count DESC
+                LIMIT 10
+            `);
+
+            // 6. 家庭地区分布统计
+            const familyLocationStats = await this.all(`
+                SELECT 
+                    pp.hometown,
+                    COUNT(DISTINCT p.id) as family_count
+                FROM persons p
+                LEFT JOIN patient_profiles pp ON p.id = pp.person_id
+                WHERE pp.hometown IS NOT NULL AND pp.hometown != ''
+                GROUP BY pp.hometown
+                ORDER BY family_count DESC
+                LIMIT 10
+            `);
+
+            return {
+                // 基础统计
+                totalFamilies: totalFamilies?.count || 0,
+                totalRecords: totalRecords?.count || 0,
+                totalServiceDays: Math.round(totalServiceDays?.total_days || 0),
+                monthlyAverageFamilies: monthlyAverage,
+                
+                // 详细统计
+                monthlyStats: monthlyFamilyStats,
+                yearlyStats: yearlyStats,
+                servicesByHospital: servicesByHospital,
+                servicesByDiagnosis: servicesByDiagnosis,
+                familyLocationStats: familyLocationStats,
+                
+                // 计算的指标
+                averageServiceDaysPerFamily: totalFamilies?.count > 0 
+                    ? Math.round((totalServiceDays?.total_days || 0) / totalFamilies.count)
+                    : 0
+            };
+        } catch (error) {
+            console.error('获取家庭服务统计失败:', error);
+            throw error;
+        }
+    }
+
+    // 获取家庭服务概览统计（用于首页卡片）
+    async getFamilyServiceOverviewStats() {
+        try {
+            const stats = await this.getFamilyServiceStatistics();
+            return {
+                totalFamilies: stats.totalFamilies,
+                totalRecords: stats.totalRecords,
+                monthlyAverage: stats.monthlyAverageFamilies,
+                totalServiceDays: stats.totalServiceDays
+            };
+        } catch (error) {
+            console.error('获取家庭服务概览统计失败:', error);
+            throw error;
+        }
+    }
+
+    // 获取指定时间范围的家庭服务统计
+    async getFamilyServiceStatsByDateRange(startDate, endDate) {
+        try {
+            const [recordsInRange, familiesInRange, daysInRange] = await Promise.all([
+                this.get(`
+                    SELECT COUNT(*) as count
+                    FROM check_in_records cir
+                    WHERE date(cir.check_in_date) BETWEEN date(?) AND date(?)
+                `, [startDate, endDate]),
+                
+                this.get(`
+                    SELECT COUNT(DISTINCT cir.person_id) as count
+                    FROM check_in_records cir
+                    WHERE date(cir.check_in_date) BETWEEN date(?) AND date(?)
+                `, [startDate, endDate]),
+                
+                this.get(`
+                    SELECT SUM(
+                        GREATEST(1, julianday(?) - julianday(cir.check_in_date))
+                    ) as total_days
+                    FROM check_in_records cir
+                    WHERE date(cir.check_in_date) BETWEEN date(?) AND date(?)
+                `, [endDate, startDate, endDate])
+            ]);
+
+            // 按月统计趋势
+            const monthlyTrend = await this.all(`
+                SELECT 
+                    strftime('%Y-%m', cir.check_in_date) as month,
+                    COUNT(*) as records,
+                    COUNT(DISTINCT cir.person_id) as families
+                FROM check_in_records cir
+                WHERE date(cir.check_in_date) BETWEEN date(?) AND date(?)
+                GROUP BY month
+                ORDER BY month
+            `, [startDate, endDate]);
+
+            return {
+                dateRange: { startDate, endDate },
+                totalRecords: recordsInRange?.count || 0,
+                totalFamilies: familiesInRange?.count || 0,
+                totalServiceDays: Math.round(daysInRange?.total_days || 0),
+                monthlyTrend: monthlyTrend
+            };
+        } catch (error) {
+            console.error('获取时间范围家庭服务统计失败:', error);
+            throw error;
+        }
+    }
 }
 
 module.exports = DatabaseManager;

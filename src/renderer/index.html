@@ -536,7 +536,7 @@
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- 家庭服务统计 -->
+            <!-- 家庭服务列表 -->
             <div class="card group cursor-pointer" onclick="app.navigateToFamilyService()">
               <div class="card-header-bg p-6">
                 <div class="flex items-center gap-4">
@@ -546,18 +546,37 @@
                     </svg>
                   </div>
                   <div>
-                    <h4 class="text-lg font-semibold text-white">家庭服务统计</h4>
+                    <h4 class="text-lg font-semibold text-white">家庭服务列表</h4>
                     <p class="text-white/80 text-sm">服务记录 · 统计分析</p>
                   </div>
                 </div>
               </div>
               <div class="p-6">
                 <p class="text-[var(--text-secondary)] mb-4">查看和管理家庭服务数据、月度统计和服务分析报表</p>
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between mb-4">
                   <span class="text-sm text-[var(--brand-primary)] font-medium">立即访问</span>
                   <svg class="w-4 h-4 text-[var(--brand-primary)] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                   </svg>
+                </div>
+                <!-- 家庭服务子功能 -->
+                <div class="border-t border-[var(--border-primary)] pt-4">
+                  <button onclick="app.navigateToFamilyServiceStatistics(); event.stopPropagation();" class="w-full text-left p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors group/sub">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 bg-[var(--brand-bg)] rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-[var(--brand-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                      </div>
+                      <div class="flex-1">
+                        <div class="text-sm font-medium text-[var(--text-primary)]">统计分析</div>
+                        <div class="text-xs text-[var(--text-secondary)]">月度、年度、时间范围统计</div>
+                      </div>
+                      <svg class="w-3 h-3 text-[var(--text-muted)] group-hover/sub:text-[var(--brand-primary)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                      </svg>
+                    </div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -873,13 +892,13 @@
       </div>
     </section>
 
-    <!-- 家庭服务统计页面 -->
+    <!-- 家庭服务列表页面 -->
     <section id="familyServiceView" class="page" aria-labelledby="familyServiceTitle">
-      <h2 id="familyServiceTitle" class="sr-only">家庭服务统计</h2>
+      <h2 id="familyServiceTitle" class="sr-only">家庭服务列表</h2>
       
       <!-- 页面标题 -->
       <div class="mb-8">
-        <h1 class="text-2xl md:text-3xl font-bold text-[var(--text-primary)] mb-2">家庭服务统计</h1>
+        <h1 class="text-2xl md:text-3xl font-bold text-[var(--text-primary)] mb-2">家庭服务列表</h1>
         <p class="text-[var(--text-secondary)] text-sm md:text-base">家庭服务记录统计与分析</p>
       </div>
 
@@ -1045,6 +1064,173 @@
       <!-- 详情内容区域 -->
       <div id="familyServiceDetailContent" class="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-5 md:p-7 shadow-sm print-container">
         <!-- 内容将通过JavaScript动态生成 -->
+      </div>
+    </section>
+
+    <!-- 家庭服务统计页面 -->
+    <section id="familyServiceStatisticsView" class="page" aria-labelledby="familyServiceStatisticsTitle">
+      <h2 id="familyServiceStatisticsTitle" class="sr-only">家庭服务统计分析</h2>
+      
+      <!-- 页面标题 -->
+      <div class="mb-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-[var(--text-primary)] mb-2">家庭服务统计分析</h1>
+        <p class="text-[var(--text-secondary)] text-sm md:text-base">全面了解家庭服务情况和统计分析</p>
+      </div>
+
+      <!-- 加载状态 -->
+      <div id="familyServiceStatisticsLoading" class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)] mx-auto mb-4"></div>
+        <p class="text-[var(--text-secondary)]">加载中...</p>
+      </div>
+
+      <!-- 统计内容 -->
+      <div id="familyServiceStatisticsContent" class="hidden">
+        <!-- 快速统计卡片 -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+          <!-- 月平均家庭数 -->
+          <div class="stat-card">
+            <div class="stat-value" id="fsStatMonthlyAverage">-</div>
+            <div class="stat-label">月平均家庭数</div>
+          </div>
+          
+          <!-- 总记录数 -->
+          <div class="stat-card">
+            <div class="stat-value" id="fsStatTotalRecords">-</div>
+            <div class="stat-label">总记录数</div>
+          </div>
+          
+          <!-- 服务人次 -->
+          <div class="stat-card">
+            <div class="stat-value" id="fsStatTotalFamilies">-</div>
+            <div class="stat-label">服务人次</div>
+          </div>
+          
+          <!-- 入住天数 -->
+          <div class="stat-card">
+            <div class="stat-value" id="fsStatTotalServiceDays">-</div>
+            <div class="stat-label">入住天数</div>
+          </div>
+        </div>
+
+        <!-- 时间范围统计工具 -->
+        <div class="mb-8">
+          <div class="flex items-center gap-2 mb-6">
+            <span class="text-2xl">📅</span>
+            <h3 class="text-xl font-bold text-[var(--text-primary)]">时间范围统计</h3>
+          </div>
+          
+          <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <div>
+                <label class="block text-sm font-medium text-[var(--text-secondary)] mb-2">开始日期</label>
+                <input type="date" id="fsDateRangeStart" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-opacity-20">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-[var(--text-secondary)] mb-2">结束日期</label>
+                <input type="date" id="fsDateRangeEnd" class="w-full px-3 py-2 border border-gray-200 rounded-lg focus:border-[var(--brand-primary)] focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-opacity-20">
+              </div>
+              <div>
+                <button id="fsApplyDateRange" class="w-full btn btn-primary">查询统计</button>
+              </div>
+            </div>
+            
+            <!-- 时间范围统计结果 -->
+            <div id="fsDateRangeResults" class="mt-6 hidden">
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                  <div class="text-sm text-[var(--text-secondary)] mb-1">记录数</div>
+                  <div class="text-2xl font-bold text-[var(--brand-primary)]" id="fsRangeRecords">-</div>
+                </div>
+                <div>
+                  <div class="text-sm text-[var(--text-secondary)] mb-1">家庭数</div>
+                  <div class="text-2xl font-bold text-[var(--brand-primary)]" id="fsRangeFamilies">-</div>
+                </div>
+                <div>
+                  <div class="text-sm text-[var(--text-secondary)] mb-1">服务天数</div>
+                  <div class="text-2xl font-bold text-[var(--brand-primary)]" id="fsRangeServiceDays">-</div>
+                </div>
+                <div>
+                  <div class="text-sm text-[var(--text-secondary)] mb-1">日期范围</div>
+                  <div class="text-sm font-medium text-[var(--brand-primary)]" id="fsRangePeriod">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <!-- 月度统计趋势 -->
+          <div class="chart-container">
+            <h3 class="chart-title">月度统计趋势</h3>
+            <canvas id="fsMonthlyChart" width="400" height="300"></canvas>
+          </div>
+          
+          <!-- 年度统计对比 -->
+          <div class="chart-container">
+            <h3 class="chart-title">年度统计对比</h3>
+            <canvas id="fsYearlyChart" width="400" height="300"></canvas>
+          </div>
+          
+          <!-- 医院服务分布 -->
+          <div class="chart-container">
+            <h3 class="chart-title">医院服务分布</h3>
+            <canvas id="fsHospitalChart" width="400" height="300"></canvas>
+          </div>
+          
+          <!-- 诊断分类统计 -->
+          <div class="chart-container">
+            <h3 class="chart-title">诊断分类统计</h3>
+            <canvas id="fsDiagnosisChart" width="400" height="300"></canvas>
+          </div>
+        </div>
+
+        <!-- 详细统计表格 -->
+        <div class="mb-8">
+          <div class="flex items-center gap-2 mb-6">
+            <span class="text-2xl">📊</span>
+            <h3 class="text-xl font-bold text-[var(--text-primary)]">详细统计数据</h3>
+          </div>
+          
+          <!-- 统计标签页 -->
+          <div class="border-b border-[var(--border-primary)] mb-6">
+            <nav class="flex space-x-8">
+              <button id="fsTabMonthly" class="py-2 px-1 border-b-2 border-[var(--brand-primary)] text-[var(--brand-primary)] font-medium">月度统计</button>
+              <button id="fsTabYearly" class="py-2 px-1 border-b-2 border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-secondary)] font-medium">年度统计</button>
+              <button id="fsTabHospital" class="py-2 px-1 border-b-2 border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-secondary)] font-medium">医院统计</button>
+              <button id="fsTabLocation" class="py-2 px-1 border-b-2 border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--border-secondary)] font-medium">地区统计</button>
+            </nav>
+          </div>
+          
+          <!-- 统计表格内容 -->
+          <div class="overflow-x-auto">
+            <div id="fsStatsTableContainer">
+              <!-- 表格内容将通过JavaScript动态生成 -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 导出功能 -->
+        <div class="text-center py-6 border-t border-[var(--border-primary)]">
+          <button id="fsExportStats" class="btn btn-primary inline-flex items-center gap-2">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            导出统计报告
+          </button>
+        </div>
+      </div>
+
+      <!-- 错误状态 -->
+      <div id="familyServiceStatisticsError" class="hidden text-center py-12">
+        <div class="text-red-500 mb-4">
+          <svg class="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-2">加载失败</h3>
+        <p class="text-[var(--text-secondary)] mb-4">无法加载统计数据</p>
+        <button id="fsRetryStatistics" class="btn btn-primary" onclick="app.loadFamilyServiceStatistics()">重试</button>
       </div>
     </section>
 

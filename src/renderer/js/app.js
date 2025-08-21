@@ -33,6 +33,7 @@ class PatientApp {
             statisticsView: document.getElementById('statisticsView'),
             familyServiceView: document.getElementById('familyServiceView'),
             familyServiceDetailView: document.getElementById('familyServiceDetailView'),
+            familyServiceStatisticsView: document.getElementById('familyServiceStatisticsView'),
             homeBtn: document.getElementById('homeBtn'),
             backBtn: document.getElementById('backBtn'),
             
@@ -903,13 +904,16 @@ class PatientApp {
                 this.setPage('familyService');
                 this.loadFamilyServicePage();
                 break;
+            case 'familyServiceStatistics':
+                this.setPage('familyServiceStatistics');
+                break;
             default:
                 console.warn(`未知页面: ${page}`);
         }
     }
 
     async setPage(pageName, addToHistory = true) {
-        const pages = ['home', 'list', 'detail', 'statistics', 'familyService', 'familyServiceDetail'];
+        const pages = ['home', 'list', 'detail', 'statistics', 'familyService', 'familyServiceDetail', 'familyServiceStatistics'];
         pages.forEach(page => {
             const element = this.elements[`${page}View`];
             if (element) {
@@ -1010,10 +1014,22 @@ class PatientApp {
     // 新增：导航到家庭服务页面
     async navigateToFamilyService() {
         try {
-            // 导航到家庭服务统计页面
+            // 导航到家庭服务列表页面
             this.navigateTo('familyService');
         } catch (error) {
             console.error('导航到家庭服务页面失败:', error);
+        }
+    }
+
+    // 导航到家庭服务统计页面
+    async navigateToFamilyServiceStatistics() {
+        try {
+            // 导航到家庭服务统计页面
+            this.navigateTo('familyServiceStatistics');
+            // 加载统计数据
+            await this.loadFamilyServiceStatistics();
+        } catch (error) {
+            console.error('导航到家庭服务统计页面失败:', error);
         }
     }
 
@@ -1154,7 +1170,7 @@ class PatientApp {
         }
     }
 
-    // 更新家庭服务统计数据
+    // 更新家庭服务列表数据
     updateFamilyServiceStats(stats) {
         if (!stats?.overall) return;
 
@@ -1450,6 +1466,9 @@ class PatientApp {
                     current.textContent = '数据统计分析';
                     break;
                 case 'familyService':
+                    current.textContent = '家庭服务列表';
+                    break;
+                case 'familyServiceStatistics':
                     current.textContent = '家庭服务统计';
                     break;
                 default:
@@ -1464,8 +1483,9 @@ class PatientApp {
             list: '患儿列表 - 患儿入住信息管理系统',
             detail: '患儿详情 - 患儿入住信息管理系统',
             statistics: '数据统计分析 - 患儿入住信息管理系统',
-            familyService: '家庭服务统计 - 患儿入住信息管理系统',
-            familyServiceDetail: '家庭服务详情 - 患儿入住信息管理系统'
+            familyService: '家庭服务列表 - 患儿入住信息管理系统',
+            familyServiceDetail: '家庭服务详情 - 患儿入住信息管理系统',
+            familyServiceStatistics: '家庭服务统计 - 患儿入住信息管理系统'
         };
         
         const title = titles[pageName] || titles.home;
@@ -1494,7 +1514,7 @@ class PatientApp {
             this.elements.homeRecordCount.textContent = '-';
         }
 
-        // 新增：加载家庭服务统计
+        // 新增：加载家庭服务列表
         try {
             const familyStats = await window.electronAPI.familyService.getOverviewStats();
             if (familyStats?.overall) {
@@ -1505,7 +1525,7 @@ class PatientApp {
                 this.elements.homeServiceCount.textContent = '-';
             }
         } catch (error) {
-            console.error('加载家庭服务统计失败:', error);
+            console.error('加载家庭服务列表失败:', error);
             this.elements.homeFamilyCount.textContent = '-';
             this.elements.homeServiceCount.textContent = '-';
         }
@@ -2705,6 +2725,448 @@ class PatientApp {
             
         } catch (error) {
             console.error('显示降级统计信息失败:', error);
+        }
+    }
+
+    // 家庭服务统计相关函数
+    async loadFamilyServiceStatistics() {
+        try {
+            // 显示加载状态
+            document.getElementById('familyServiceStatisticsLoading').classList.remove('hidden');
+            document.getElementById('familyServiceStatisticsContent').classList.add('hidden');
+            document.getElementById('familyServiceStatisticsError').classList.add('hidden');
+
+            // 获取统计数据
+            const stats = await window.api.familyService.getStatistics();
+            
+            // 更新基础统计卡片
+            document.getElementById('fsStatMonthlyAverage').textContent = stats.monthlyAverageFamilies || 0;
+            document.getElementById('fsStatTotalRecords').textContent = stats.totalRecords || 0;
+            document.getElementById('fsStatTotalFamilies').textContent = stats.totalFamilies || 0;
+            document.getElementById('fsStatTotalServiceDays').textContent = stats.totalServiceDays || 0;
+
+            // 初始化图表
+            await this.initializeFamilyServiceCharts(stats);
+            
+            // 初始化统计表格
+            this.initializeFamilyServiceTables(stats);
+            
+            // 绑定事件监听器
+            this.bindFamilyServiceEvents(stats);
+
+            // 隐藏加载状态，显示内容
+            document.getElementById('familyServiceStatisticsLoading').classList.add('hidden');
+            document.getElementById('familyServiceStatisticsContent').classList.remove('hidden');
+
+        } catch (error) {
+            console.error('加载家庭服务统计失败:', error);
+            
+            // 显示错误状态
+            document.getElementById('familyServiceStatisticsLoading').classList.add('hidden');
+            document.getElementById('familyServiceStatisticsContent').classList.add('hidden');
+            document.getElementById('familyServiceStatisticsError').classList.remove('hidden');
+        }
+    }
+
+    // 初始化家庭服务统计图表
+    async initializeFamilyServiceCharts(stats) {
+        try {
+            // 销毁已存在的图表实例
+            ['fsMonthlyChart', 'fsYearlyChart', 'fsHospitalChart', 'fsDiagnosisChart'].forEach(chartId => {
+                const chart = Chart.getChart(chartId);
+                if (chart) {
+                    chart.destroy();
+                }
+            });
+
+            // 1. 月度统计趋势图
+            const monthlyCtx = document.getElementById('fsMonthlyChart').getContext('2d');
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: stats.monthlyStats.map(item => item.month),
+                    datasets: [{
+                        label: '家庭数量',
+                        data: stats.monthlyStats.map(item => item.family_count),
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '最近12个月家庭服务趋势'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // 2. 年度统计对比图
+            const yearlyCtx = document.getElementById('fsYearlyChart').getContext('2d');
+            new Chart(yearlyCtx, {
+                type: 'bar',
+                data: {
+                    labels: stats.yearlyStats.map(item => item.year),
+                    datasets: [{
+                        label: '记录数',
+                        data: stats.yearlyStats.map(item => item.total_records),
+                        backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                        borderColor: 'rgb(16, 185, 129)',
+                        borderWidth: 1
+                    }, {
+                        label: '家庭数',
+                        data: stats.yearlyStats.map(item => item.unique_families),
+                        backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                        borderColor: 'rgb(245, 158, 11)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '年度服务统计对比'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+
+            // 3. 医院服务分布图
+            const hospitalCtx = document.getElementById('fsHospitalChart').getContext('2d');
+            new Chart(hospitalCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: stats.servicesByHospital.map(item => item.hospital),
+                    datasets: [{
+                        data: stats.servicesByHospital.map(item => item.service_count),
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(139, 92, 246, 0.8)',
+                            'rgba(236, 72, 153, 0.8)',
+                            'rgba(34, 197, 94, 0.8)',
+                            'rgba(251, 146, 60, 0.8)',
+                            'rgba(168, 85, 247, 0.8)',
+                            'rgba(14, 165, 233, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '各医院服务分布'
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // 4. 诊断分类统计图
+            const diagnosisCtx = document.getElementById('fsDiagnosisChart').getContext('2d');
+            new Chart(diagnosisCtx, {
+                type: 'bar',
+                data: {
+                    labels: stats.servicesByDiagnosis.map(item => 
+                        item.diagnosis.length > 10 ? item.diagnosis.substring(0, 10) + '...' : item.diagnosis
+                    ),
+                    datasets: [{
+                        label: '服务次数',
+                        data: stats.servicesByDiagnosis.map(item => item.service_count),
+                        backgroundColor: 'rgba(168, 85, 247, 0.8)',
+                        borderColor: 'rgb(168, 85, 247)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '主要诊断分类统计'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45
+                            }
+                        }
+                    }
+                }
+            });
+
+        } catch (error) {
+            console.error('初始化家庭服务图表失败:', error);
+        }
+    }
+
+    // 初始化家庭服务统计表格
+    initializeFamilyServiceTables(stats) {
+        // 默认显示月度统计
+        this.showFamilyServiceStatsTable('monthly', stats);
+    }
+
+    // 显示家庭服务统计表格
+    showFamilyServiceStatsTable(type, stats) {
+        const container = document.getElementById('fsStatsTableContainer');
+        let tableHTML = '';
+
+        switch (type) {
+            case 'monthly':
+                tableHTML = this.generateMonthlyStatsTable(stats.monthlyStats);
+                break;
+            case 'yearly':
+                tableHTML = this.generateYearlyStatsTable(stats.yearlyStats);
+                break;
+            case 'hospital':
+                tableHTML = this.generateHospitalStatsTable(stats.servicesByHospital);
+                break;
+            case 'location':
+                tableHTML = this.generateLocationStatsTable(stats.familyLocationStats);
+                break;
+        }
+
+        container.innerHTML = tableHTML;
+    }
+
+    // 生成月度统计表格
+    generateMonthlyStatsTable(monthlyStats) {
+        if (!monthlyStats || monthlyStats.length === 0) {
+            return '<p class="text-center text-[var(--text-secondary)] py-8">暂无月度统计数据</p>';
+        }
+
+        return `
+            <table class="min-w-full bg-white border border-[var(--border-primary)] rounded-lg">
+                <thead class="bg-[var(--bg-secondary)]">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">月份</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">家庭数量</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">环比变化</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--border-primary)]">
+                    ${monthlyStats.map((item, index) => {
+                        const prevCount = index > 0 ? monthlyStats[index - 1].family_count : item.family_count;
+                        const change = prevCount === 0 ? 0 : ((item.family_count - prevCount) / prevCount * 100);
+                        const changeClass = change > 0 ? 'text-green-600' : change < 0 ? 'text-red-600' : 'text-[var(--text-secondary)]';
+                        const changeIcon = change > 0 ? '↗' : change < 0 ? '↘' : '→';
+                        
+                        return `
+                            <tr class="hover:bg-[var(--bg-tertiary)]">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-[var(--text-primary)]">${item.month}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${item.family_count}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm ${changeClass}">
+                                    ${index === 0 ? '-' : `${changeIcon} ${Math.abs(change).toFixed(1)}%`}
+                                </td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    // 生成年度统计表格
+    generateYearlyStatsTable(yearlyStats) {
+        if (!yearlyStats || yearlyStats.length === 0) {
+            return '<p class="text-center text-[var(--text-secondary)] py-8">暂无年度统计数据</p>';
+        }
+
+        return `
+            <table class="min-w-full bg-white border border-[var(--border-primary)] rounded-lg">
+                <thead class="bg-[var(--bg-secondary)]">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">年份</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">总记录数</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">服务家庭数</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">平均服务次数</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--border-primary)]">
+                    ${yearlyStats.map(item => `
+                        <tr class="hover:bg-[var(--bg-tertiary)]">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-[var(--text-primary)]">${item.year}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${item.total_records}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${item.unique_families}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">
+                                ${item.unique_families > 0 ? (item.total_records / item.unique_families).toFixed(1) : '0'}
+                            </td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    // 生成医院统计表格
+    generateHospitalStatsTable(hospitalStats) {
+        if (!hospitalStats || hospitalStats.length === 0) {
+            return '<p class="text-center text-[var(--text-secondary)] py-8">暂无医院统计数据</p>';
+        }
+
+        return `
+            <table class="min-w-full bg-white border border-[var(--border-primary)] rounded-lg">
+                <thead class="bg-[var(--bg-secondary)]">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">医院名称</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">服务次数</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">服务家庭数</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">占比</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--border-primary)]">
+                    ${hospitalStats.map(item => {
+                        const totalServices = hospitalStats.reduce((sum, h) => sum + h.service_count, 0);
+                        const percentage = ((item.service_count / totalServices) * 100).toFixed(1);
+                        
+                        return `
+                            <tr class="hover:bg-[var(--bg-tertiary)]">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-[var(--text-primary)]">${item.hospital}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${item.service_count}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${item.unique_families}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${percentage}%</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    // 生成地区统计表格
+    generateLocationStatsTable(locationStats) {
+        if (!locationStats || locationStats.length === 0) {
+            return '<p class="text-center text-[var(--text-secondary)] py-8">暂无地区统计数据</p>';
+        }
+
+        return `
+            <table class="min-w-full bg-white border border-[var(--border-primary)] rounded-lg">
+                <thead class="bg-[var(--bg-secondary)]">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">地区</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">家庭数量</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">占比</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-[var(--border-primary)]">
+                    ${locationStats.map(item => {
+                        const totalFamilies = locationStats.reduce((sum, l) => sum + l.family_count, 0);
+                        const percentage = ((item.family_count / totalFamilies) * 100).toFixed(1);
+                        
+                        return `
+                            <tr class="hover:bg-[var(--bg-tertiary)]">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-[var(--text-primary)]">${item.hometown}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${item.family_count}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${percentage}%</td>
+                            </tr>
+                        `;
+                    }).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    // 绑定家庭服务统计事件
+    bindFamilyServiceEvents(stats) {
+        // 时间范围查询
+        document.getElementById('fsApplyDateRange').addEventListener('click', async () => {
+            const startDate = document.getElementById('fsDateRangeStart').value;
+            const endDate = document.getElementById('fsDateRangeEnd').value;
+            
+            if (!startDate || !endDate) {
+                alert('请选择开始和结束日期');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('开始日期不能晚于结束日期');
+                return;
+            }
+            
+            try {
+                const rangeStats = await window.api.familyService.getStatsByDateRange({ startDate, endDate });
+                this.displayDateRangeResults(rangeStats);
+            } catch (error) {
+                console.error('获取时间范围统计失败:', error);
+                alert('获取时间范围统计失败，请重试');
+            }
+        });
+
+        // 统计标签页切换
+        const tabs = ['Monthly', 'Yearly', 'Hospital', 'Location'];
+        tabs.forEach(tab => {
+            document.getElementById(`fsTab${tab}`).addEventListener('click', (e) => {
+                // 更新标签页样式
+                tabs.forEach(t => {
+                    const tabElement = document.getElementById(`fsTab${t}`);
+                    tabElement.classList.remove('border-[var(--brand-primary)]', 'text-[var(--brand-primary)]');
+                    tabElement.classList.add('border-transparent', 'text-[var(--text-secondary)]');
+                });
+                
+                e.target.classList.remove('border-transparent', 'text-[var(--text-secondary)]');
+                e.target.classList.add('border-[var(--brand-primary)]', 'text-[var(--brand-primary)]');
+                
+                // 显示对应的统计表格
+                this.showFamilyServiceStatsTable(tab.toLowerCase(), stats);
+            });
+        });
+
+        // 导出统计报告
+        document.getElementById('fsExportStats').addEventListener('click', () => {
+            this.exportFamilyServiceStatistics(stats);
+        });
+    }
+
+    // 显示时间范围查询结果
+    displayDateRangeResults(rangeStats) {
+        document.getElementById('fsRangeRecords').textContent = rangeStats.totalRecords;
+        document.getElementById('fsRangeFamilies').textContent = rangeStats.totalFamilies;
+        document.getElementById('fsRangeServiceDays').textContent = rangeStats.totalServiceDays;
+        document.getElementById('fsRangePeriod').textContent = 
+            `${rangeStats.dateRange.startDate} 至 ${rangeStats.dateRange.endDate}`;
+        
+        document.getElementById('fsDateRangeResults').classList.remove('hidden');
+    }
+
+    // 导出家庭服务统计报告
+    async exportFamilyServiceStatistics(stats) {
+        try {
+            // 调用导出API
+            await window.api.familyService.exportExcel({
+                type: 'statistics',
+                data: stats,
+                includeCharts: true
+            });
+            
+            // 显示成功提示
+            alert('统计报告导出成功！');
+        } catch (error) {
+            console.error('导出家庭服务统计失败:', error);
+            alert('导出失败，请重试');
         }
     }
 }

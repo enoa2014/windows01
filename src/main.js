@@ -184,9 +184,35 @@ class App {
                 if (!this.isInitialized) {
                     throw new Error('应用未完全初始化');
                 }
-                return await this.familyServiceManager.getOverviewStats();
+                return await this.database.getFamilyServiceOverviewStats();
             } catch (error) {
                 console.error('获取家庭服务统计概览失败:', error);
+                throw error;
+            }
+        });
+
+        // 获取完整的家庭服务统计数据
+        ipcMain.handle('family-service:get-statistics', async () => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.database.getFamilyServiceStatistics();
+            } catch (error) {
+                console.error('获取家庭服务统计失败:', error);
+                throw error;
+            }
+        });
+
+        // 获取指定时间范围的家庭服务统计
+        ipcMain.handle('family-service:get-stats-by-date-range', async (event, { startDate, endDate }) => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.database.getFamilyServiceStatsByDateRange(startDate, endDate);
+            } catch (error) {
+                console.error('获取时间范围家庭服务统计失败:', error);
                 throw error;
             }
         });

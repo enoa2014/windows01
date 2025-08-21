@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>家庭服务统计列表 · 患儿入住信息管理系统</title>
+  <title>家庭服务列表 · 患儿入住信息管理系统</title>
   <meta name="color-scheme" content="light dark" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -223,7 +223,7 @@
           <path fill-rule="evenodd" d="M9.53 5.47a.75.75 0 010 1.06L4.81 11.25H21a.75.75 0 010 1.5H4.81l4.72 4.72a.75.75 0 11-1.06 1.06l-6-6a.75.75 0 010-1.06l6-6a.75.75 0 011.06 0z" clip-rule="evenodd"/>
         </svg>
       </button>
-      <h1 class="text-[15px] md:text-lg font-bold tracking-tight text-[var(--brand-secondary)]">家庭服务统计</h1>
+      <h1 class="text-[15px] md:text-lg font-bold tracking-tight text-[var(--brand-secondary)]">家庭服务列表</h1>
 
       <div class="ml-auto flex items-center gap-2">
         <!-- 快捷键提示 -->
@@ -249,7 +249,7 @@
 
   <main id="main" class="max-w-7xl mx-auto px-4 md:px-6 py-6 md:py-8" role="main">
     <section id="listView" class="page active" aria-labelledby="listTitle">
-      <h2 id="listTitle" class="sr-only">家庭服务统计列表</h2>
+      <h2 id="listTitle" class="sr-only">家庭服务列表</h2>
 
       <!-- 数据总览卡片区 -->
       <section class="overview-cards no-print" aria-labelledby="overviewTitle">
@@ -424,7 +424,7 @@
 
   <!-- 页脚 -->
   <footer class="mt-10 pb-10 text-center text-xs text-[var(--text-muted)] no-print" role="contentinfo">
-    © <span id="year"></span> 助医小家 · 家庭服务统计 · <span id="printTime" class="hidden md:inline"></span>
+    © <span id="year"></span> 助医小家 · 家庭服务列表 · <span id="printTime" class="hidden md:inline"></span>
   </footer>
 
   <!-- Toast 通知容器 -->
@@ -432,5 +432,41 @@
 
   <!-- 脚本文件 -->
   <script src="js/family-service-app.js"></script>
+  
+  <!-- 临时调试脚本 -->
+  <script>
+  console.log('🔧 调试脚本开始执行');
+  
+  // 等待DOM和API准备好
+  window.addEventListener('DOMContentLoaded', async () => {
+    console.log('🎯 DOM加载完成，开始测试API调用');
+    
+    // 延迟一下确保API就绪
+    setTimeout(async () => {
+      try {
+        console.log('📞 准备调用 familyService.getRecords');
+        
+        if (!window.electronAPI?.familyService?.getRecords) {
+          console.error('❌ API不可用');
+          return;
+        }
+        
+        const result = await window.electronAPI.familyService.getRecords({}, {limit: 5, offset: 0});
+        console.log('✅ 直接API调用成功');
+        console.log('📊 返回记录数:', result.length);
+        console.log('📋 数据:', result);
+        
+        // 尝试在页面上显示结果
+        const testDiv = document.createElement('div');
+        testDiv.style.cssText = 'position:fixed;top:10px;right:10px;background:red;color:white;padding:10px;z-index:9999';
+        testDiv.textContent = `调试：API返回${result.length}条记录`;
+        document.body.appendChild(testDiv);
+        
+      } catch (error) {
+        console.error('❌ API调用失败:', error);
+      }
+    }, 2000);
+  });
+  </script>
 </body>
 </html>
