@@ -455,103 +455,133 @@
       </div>
 
       <!-- 功能模块导航 -->
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <!-- 入住信息管理 -->
-        <div class="card group cursor-pointer" onclick="app.navigateTo('patientList')">
-          <div class="card-header-bg p-6">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-white">入住信息管理</h3>
-                <p class="text-white/80 text-sm">患儿档案 · 入住记录</p>
-              </div>
-            </div>
-          </div>
-          <div class="p-6">
-            <p class="text-[var(--text-secondary)] mb-4">管理患儿基本信息、入住记录、医疗档案等核心数据</p>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-[var(--brand-primary)] font-medium">立即访问</span>
-              <svg class="w-4 h-4 text-[var(--brand-primary)] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      <div class="space-y-8 mb-8">
+        <!-- 患儿入住信息管理组 -->
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
             </div>
+            <h3 class="text-xl font-bold text-[var(--text-primary)]">患儿入住信息管理</h3>
+            <div class="flex-1 h-px bg-gradient-to-r from-[var(--border-primary)] to-transparent"></div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 入住信息列表 -->
+            <div class="card group cursor-pointer" onclick="app.navigateToPatientList()">
+              <div class="card-header-bg p-6">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-semibold text-white">入住信息列表</h4>
+                    <p class="text-white/80 text-sm">患儿档案 · 入住记录</p>
+                  </div>
+                </div>
+              </div>
+              <div class="p-6">
+                <p class="text-[var(--text-secondary)] mb-4">查看和管理患儿基本信息、入住记录、医疗档案等核心数据</p>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-[var(--brand-primary)] font-medium">立即访问</span>
+                  <svg class="w-4 h-4 text-[var(--brand-primary)] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- 入住信息统计 -->
+            <div class="card group cursor-pointer" onclick="app.navigateToStatistics()">
+              <div class="card-header-bg p-6">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-semibold text-white">入住信息统计</h4>
+                    <p class="text-white/80 text-sm">数据分析 · 统计报表</p>
+                  </div>
+                </div>
+              </div>
+              <div class="p-6">
+                <p class="text-[var(--text-secondary)] mb-4">查看患儿入住数据统计、年龄分布、疾病分析等综合报表</p>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-[var(--brand-primary)] font-medium">立即访问</span>
+                  <svg class="w-4 h-4 text-[var(--brand-primary)] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <!-- 家庭月度信息 -->
-        <div class="card group cursor-pointer opacity-75" onclick="app.showComingSoon('家庭月度信息')">
-          <div class="p-6 border-b border-[var(--border-primary)]">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-[var(--warning-bg)] rounded-xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-[var(--warning)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-[var(--text-primary)]">家庭月度信息</h3>
-                <p class="text-[var(--text-secondary)] text-sm">月度统计 · 家庭档案</p>
-              </div>
-            </div>
-          </div>
-          <div class="p-6">
-            <p class="text-[var(--text-secondary)] mb-4">跟踪家庭月度健康状况、医疗费用和服务记录</p>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-[var(--warning)] font-medium">即将推出</span>
-              <span class="px-2 py-1 bg-[var(--warning-bg)] text-[var(--warning)] text-xs rounded-full">开发中</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 数据统计分析 -->
-        <div class="card group cursor-pointer" onclick="app.navigateTo('statistics')">
-          <div class="card-header-bg p-6">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-lg font-semibold text-white">数据统计分析</h3>
-                <p class="text-white/80 text-sm">入住统计 · 分布分析</p>
-              </div>
-            </div>
-          </div>
-          <div class="p-6">
-            <p class="text-[var(--text-secondary)] mb-4">查看患儿入住数据统计、年龄分布、疾病分析等综合报表</p>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-[var(--brand-primary)] font-medium">立即访问</span>
-              <svg class="w-4 h-4 text-[var(--brand-primary)] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        <!-- 其他功能模块 -->
+        <div>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
               </svg>
             </div>
+            <h3 class="text-xl font-bold text-[var(--text-primary)]">其他服务</h3>
+            <div class="flex-1 h-px bg-gradient-to-r from-[var(--border-primary)] to-transparent"></div>
           </div>
-        </div>
-
-        <!-- 关怀服务管理 -->
-        <div class="card group cursor-pointer opacity-75" onclick="app.showComingSoon('关怀服务管理')">
-          <div class="p-6 border-b border-[var(--border-primary)]">
-            <div class="flex items-center gap-4">
-              <div class="w-12 h-12 bg-[var(--success-bg)] rounded-xl flex items-center justify-center">
-                <svg class="w-6 h-6 text-[var(--success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                </svg>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- 家庭月度信息 -->
+            <div class="card group cursor-pointer opacity-75" onclick="app.showComingSoon('家庭月度信息')">
+              <div class="p-6 border-b border-[var(--border-primary)]">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-[var(--warning-bg)] rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-[var(--warning)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-semibold text-[var(--text-primary)]">家庭月度信息</h4>
+                    <p class="text-[var(--text-secondary)] text-sm">月度统计 · 家庭档案</p>
+                  </div>
+                </div>
               </div>
-              <div>
-                <h3 class="text-lg font-semibold text-[var(--text-primary)]">关怀服务管理</h3>
-                <p class="text-[var(--text-secondary)] text-sm">服务记录 · 关怀统计</p>
+              <div class="p-6">
+                <p class="text-[var(--text-secondary)] mb-4">跟踪家庭月度健康状况、医疗费用和服务记录</p>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-[var(--warning)] font-medium">即将推出</span>
+                  <span class="px-2 py-1 bg-[var(--warning-bg)] text-[var(--warning)] text-xs rounded-full">开发中</span>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="p-6">
-            <p class="text-[var(--text-secondary)] mb-4">记录和管理患儿关怀服务、心理支持和家庭援助</p>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-[var(--success)] font-medium">即将推出</span>
-              <span class="px-2 py-1 bg-[var(--success-bg)] text-[var(--success)] text-xs rounded-full">开发中</span>
+
+            <!-- 关怀服务管理 -->
+            <div class="card group cursor-pointer opacity-75" onclick="app.showComingSoon('关怀服务管理')">
+              <div class="p-6 border-b border-[var(--border-primary)]">
+                <div class="flex items-center gap-4">
+                  <div class="w-12 h-12 bg-[var(--success-bg)] rounded-xl flex items-center justify-center">
+                    <svg class="w-6 h-6 text-[var(--success)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h4 class="text-lg font-semibold text-[var(--text-primary)]">关怀服务管理</h4>
+                    <p class="text-[var(--text-secondary)] text-sm">服务记录 · 关怀统计</p>
+                  </div>
+                </div>
+              </div>
+              <div class="p-6">
+                <p class="text-[var(--text-secondary)] mb-4">记录和管理患儿关怀服务、心理支持和家庭援助</p>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm text-[var(--success)] font-medium">即将推出</span>
+                  <span class="px-2 py-1 bg-[var(--success-bg)] text-[var(--success)] text-xs rounded-full">开发中</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -567,7 +597,7 @@
             </svg>
             导入患儿数据
           </button>
-          <button class="btn btn-secondary w-full" onclick="app.navigateTo('patientList')">
+          <button class="btn btn-secondary w-full" onclick="app.navigateToPatientList()">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
             </svg>

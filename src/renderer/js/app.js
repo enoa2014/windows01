@@ -20,7 +20,8 @@ class PatientApp {
         // 页面状态标志，防止重复加载
         this.pageStates = {
             statisticsLoading: false,
-            statisticsLoaded: false
+            statisticsLoaded: false,
+            dataLoaded: false  // 新增：数据是否已加载标志
         };
         
         // DOM元素引用
@@ -93,10 +94,8 @@ class PatientApp {
             // 初始化主题系统
             this.initThemeSystem();
             
-            // 加载数据
-            await this.loadData();
-            
-            console.log('应用初始化完成');
+            // 不再默认加载数据，只在用户点击相关功能时才加载
+            console.log('应用初始化完成（数据将按需加载）');
         } catch (error) {
             console.error('应用初始化失败:', error);
             this.showError('应用初始化失败，请重启应用');
@@ -626,6 +625,7 @@ class PatientApp {
             if (result.success) {
                 this.showSuccess(result.message);
                 await this.loadData(); // 重新加载数据
+                this.pageStates.dataLoaded = true; // 标记数据已加载
             } else {
                 this.showError(result.message);
             }
@@ -791,8 +791,42 @@ class PatientApp {
                 this.setPage(lastHistory.page, false);
             }
         } else {
-            // 如果没有历史记录，返回到患儿列表
+            // 如果没有历史记录，返回到主页
+            this.navigateTo('home');
+        }
+    }
+
+    // 新增：导航到患者列表（带数据加载）
+    async navigateToPatientList() {
+        try {
+            // 如果数据尚未加载，先加载数据
+            if (!this.pageStates.dataLoaded) {
+                await this.loadData();
+                this.pageStates.dataLoaded = true;
+            }
+            
+            // 导航到患者列表页面
             this.navigateTo('patientList');
+        } catch (error) {
+            console.error('导航到患者列表失败:', error);
+            this.showError('加载患者数据失败，请重试');
+        }
+    }
+
+    // 新增：导航到统计页面（带数据加载）
+    async navigateToStatistics() {
+        try {
+            // 如果数据尚未加载，先加载数据
+            if (!this.pageStates.dataLoaded) {
+                await this.loadData();
+                this.pageStates.dataLoaded = true;
+            }
+            
+            // 导航到统计页面
+            this.navigateTo('statistics');
+        } catch (error) {
+            console.error('导航到统计页面失败:', error);
+            this.showError('加载统计数据失败，请重试');
         }
     }
 
@@ -858,16 +892,27 @@ class PatientApp {
 
     updateHomeStatistics() {
         // 更新主页统计数据
-        const patientCount = this.patients.length;
-        const recordCount = this.patients.reduce((sum, patient) => 
-            sum + (patient.check_in_count || 0), 0);
-        
-        this.elements.homePatientCount.textContent = patientCount;
-        this.elements.homeRecordCount.textContent = recordCount;
+        if (this.pageStates.dataLoaded && this.patients) {
+            const patientCount = this.patients.length;
+            const recordCount = this.patients.reduce((sum, patient) => 
+                sum + (patient.check_in_count || 0), 0);
+            
+            this.elements.homePatientCount.textContent = patientCount;
+            this.elements.homeRecordCount.textContent = recordCount;
+        } else {
+            // 数据未加载时显示默认值
+            this.elements.homePatientCount.textContent = '-';
+            this.elements.homeRecordCount.textContent = '-';
+        }
     }
 
     // 主页功能方法
     showStatistics(type) {
+        if (!this.pageStates.dataLoaded) {
+            this.showNotification('请先访问患儿信息管理模块以加载数据');
+            return;
+        }
+        
         const messages = {
             patients: `当前共有 ${this.patients.length} 名患儿档案`,
             records: `总计 ${this.patients.reduce((sum, p) => sum + (p.check_in_count || 0), 0)} 条入住记录`,
