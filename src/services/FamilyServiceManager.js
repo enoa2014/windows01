@@ -131,7 +131,7 @@ class FamilyServiceManager {
             const records = await this.db.all(sql, params);
 
             // 计算额外的统计字段
-            return records.map(record => ({
+            const processedRecords = records.map(record => ({
                 ...record,
                 yearMonth: new Date(record.year_month),
                 avgDaysPerFamily: record.family_count > 0 ? 
@@ -139,6 +139,8 @@ class FamilyServiceManager {
                 serviceEfficiency: record.residents_count > 0 ? 
                     (record.total_service_count / record.residents_count).toFixed(1) : '0'
             }));
+            
+            return processedRecords;
 
         } catch (error) {
             console.error('获取家庭服务记录失败:', error);

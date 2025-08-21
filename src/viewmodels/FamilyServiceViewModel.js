@@ -5,15 +5,10 @@
 
 class FamilyServiceViewModel {
     constructor() {
-        console.log('🏗️ [ViewModel] FamilyServiceViewModel 构造函数被调用');
         this.resourceConfig = window.ResourceConfig?.resourceAdapters.familyServices;
         this.columnsConfig = window.ColumnsConfig?.columnsConfig.familyServices || [];
         this.filtersConfig = window.FiltersConfig?.filtersSchemas.familyServices || {};
         this.formatters = window.ColumnsConfig?.formatters || {};
-        
-        console.log('  📋 resourceConfig:', !!this.resourceConfig);
-        console.log('  📊 columnsConfig length:', this.columnsConfig.length);
-        console.log('  🔍 filtersConfig:', !!this.filtersConfig);
         
         // 状态管理
         this.state = {
@@ -45,13 +40,11 @@ class FamilyServiceViewModel {
      */
     async init() {
         try {
-            console.log('🚀 [ViewModel] init() 方法开始执行');
             this.setState({ loading: true, error: null });
             
             // 初始化视图模式
             this.initViewMode();
             
-            console.log('  📊 开始并行加载数据...');
             // 并行加载数据
             const [statsData, filterOptions] = await Promise.all([
                 this.loadOverviewStats(),
@@ -90,24 +83,10 @@ class FamilyServiceViewModel {
                 offset: (pagination.page - 1) * pagination.pageSize
             };
             
-            console.log('🔧 [ViewModel] 分页参数转换:');
-            console.log('  📥 前端格式:', JSON.stringify(pagination));
-            console.log('  📤 后端格式:', JSON.stringify(backendPagination));
-            
             const records = await window.electronAPI.familyService.getRecords(filters, backendPagination);
-            
-            console.log('📦 [ViewModel] 接收到后端数据:');
-            console.log('  📊 记录数量:', records.length);
-            if (records.length > 0) {
-                console.log('  📋 前3条记录:', records.slice(0, 3).map(r => ({id: r.id, year_month: r.year_month})));
-            } else {
-                console.warn('  ⚠️ 接收到0条记录！');
-            }
             
             // 应用排序
             const sortedRecords = this.applySorting(records, this.state.sorting);
-            
-            console.log('  🔄 排序后记录数:', sortedRecords.length);
             
             this.setState({
                 data: records,

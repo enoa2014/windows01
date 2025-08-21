@@ -1087,33 +1087,5 @@
   
   <script src="./js/app.js"></script>
   
-  <!-- 紧急调试脚本 - 确认JavaScript可以执行 -->
-  <script>
-    console.log('🚨 紧急调试：index.html中的JavaScript正在执行');
-    console.log('  📅 时间戳:', new Date().toISOString());
-    console.log('  🌐 当前URL:', window.location.href);
-    console.log('  📦 electronAPI可用:', !!window.electronAPI);
-    
-    // 显示一个明显的视觉指示器
-    document.addEventListener('DOMContentLoaded', () => {
-      console.log('🎯 DOM加载完成');
-      const indicator = document.createElement('div');
-      indicator.style.cssText = `
-        position: fixed; 
-        top: 50px; 
-        right: 10px; 
-        background: orange; 
-        color: white; 
-        padding: 10px; 
-        z-index: 10000; 
-        border: 2px solid red;
-        font-weight: bold;
-      `;
-      indicator.textContent = 'JavaScript正在运行';
-      document.body.appendChild(indicator);
-      
-      console.log('🔸 橙色指示器已添加到页面');
-    });
-  </script>
 </body>
 </html>

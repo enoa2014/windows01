@@ -1200,18 +1200,13 @@ class PatientApp {
 
     // 渲染数据表格
     renderFamilyServiceTable(data) {
-        console.log('🎨 [App] renderFamilyServiceTable 被调用');
-        console.log('  📊 data.length:', data.length);
-        console.log('  🔍 familyServiceVM 存在:', !!this.familyServiceVM);
-        
         if (!this.familyServiceVM) return;
         
         // 使用家庭服务页面的实际元素ID
         const serviceRecordGrid = document.getElementById('serviceRecordGrid');
-        console.log('  🎯 serviceRecordGrid 元素:', !!serviceRecordGrid);
         
         if (!serviceRecordGrid) {
-            console.error('❌ serviceRecordGrid element not found - 这是数据无法显示的原因！');
+            console.error('serviceRecordGrid element not found');
             return;
         }
 
