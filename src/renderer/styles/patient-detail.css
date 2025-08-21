@@ -1,0 +1,647 @@
+/* ===================== 患者详情页面样式 ===================== */
+
+/* 基于优化计划的详情页布局重构 */
+
+.patient-detail-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  background: #f8fafc;
+}
+
+/* ==================== 页面头部区域 ==================== */
+
+.detail-header {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  padding: 2rem;
+  margin-bottom: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.detail-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #14b8a6, #5eead4);
+}
+
+.detail-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.5rem;
+}
+
+.detail-header-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.back-button:hover {
+  color: #374151;
+  background: #f3f4f6;
+}
+
+.patient-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.patient-subtitle {
+  font-size: 1rem;
+  color: #6b7280;
+  margin: 0.25rem 0 0 0;
+}
+
+.detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.detail-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.detail-action-btn.primary {
+  background: linear-gradient(135deg, #14b8a6, #0d9488);
+  color: white;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.detail-action-btn.primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgb(20 184 166 / 0.25);
+}
+
+.detail-action-btn.secondary {
+  background: white;
+  color: #374151;
+  border: 1px solid #d1d5db;
+}
+
+.detail-action-btn.secondary:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* 快速概览统计 */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value.teal { color: #14b8a6; }
+.stat-value.green { color: #10b981; }
+.stat-value.blue { color: #3b82f6; }
+.stat-value.purple { color: #8b5cf6; }
+
+.stat-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* ==================== 主要内容区域 ==================== */
+
+.detail-content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+}
+
+/* 左侧：基本信息卡片 */
+.info-section {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+}
+
+.info-section-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #f3f4f6;
+  background: linear-gradient(135deg, #f0fdfa, #ecfdf5);
+}
+
+.info-section-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-section-title .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: #14b8a6;
+}
+
+.info-section-body {
+  padding: 2rem;
+}
+
+.info-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.info-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.info-field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.info-field-value {
+  font-size: 0.875rem;
+  color: #111827;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+  background: #f9fafb;
+  border-radius: 0.5rem;
+  border: 1px solid #f3f4f6;
+}
+
+.info-field-value.empty {
+  color: #9ca3af;
+  font-style: italic;
+}
+
+/* 特殊字段样式 */
+.info-field-value.id-number {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  letter-spacing: 0.05em;
+  background: #eff6ff;
+  border-color: #dbeafe;
+  color: #1d4ed8;
+}
+
+.info-field-value.diagnosis {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #92400e;
+  font-weight: 600;
+}
+
+.info-field-value.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  width: fit-content;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.info-field-value.status.active {
+  background: #ecfdf5;
+  color: #047857;
+  border-color: #a7f3d0;
+}
+
+.info-field-value.status.discharged {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+/* ==================== 右侧：医疗记录时间线 ==================== */
+
+.timeline-section {
+  background: white;
+  border-radius: 1.5rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  overflow: hidden;
+}
+
+.timeline-header {
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: linear-gradient(135deg, #fef3c7, #fde68a);
+}
+
+.timeline-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.timeline-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.timeline-sort {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background: white;
+  color: #374151;
+}
+
+.timeline-body {
+  padding: 2rem;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+/* 时间线样式 */
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0.75rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #14b8a6, #5eead4);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 2rem;
+  background: #f9fafb;
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid #f3f4f6;
+  transition: all 0.2s ease;
+}
+
+.timeline-item:hover {
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  border-color: #e5e7eb;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -2.25rem;
+  top: 1.5rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: #14b8a6;
+  border: 3px solid #f0fdfa;
+  box-shadow: 0 0 0 3px white;
+}
+
+.timeline-item-header {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #f0fdfa, #ecfdf5);
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.timeline-date {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f766e;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-attendees {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.timeline-item-body {
+  padding: 1.5rem;
+}
+
+.timeline-content {
+  display: grid;
+  gap: 1rem;
+}
+
+.timeline-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.timeline-field-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.timeline-field-value {
+  font-size: 0.875rem;
+  color: #374151;
+  line-height: 1.5;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+.timeline-field-value.highlight {
+  background: #fef3c7;
+  border-color: #fde68a;
+  color: #92400e;
+  font-weight: 600;
+}
+
+/* ==================== 响应式设计 ==================== */
+
+@media (max-width: 1024px) {
+  .detail-content {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .quick-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  
+  .detail-header-content {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .detail-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .patient-detail-container {
+    padding: 1rem;
+  }
+  
+  .detail-header {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .patient-title {
+    font-size: 1.5rem;
+  }
+  
+  .quick-stats {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
+  .info-section-body,
+  .timeline-body {
+    padding: 1.5rem;
+  }
+  
+  .detail-action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .timeline-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: stretch;
+  }
+  
+  .timeline-body {
+    max-height: 400px;
+  }
+}
+
+@media (max-width: 640px) {
+  .timeline {
+    padding-left: 1rem;
+  }
+  
+  .timeline::before {
+    left: 0.25rem;
+  }
+  
+  .timeline-item::before {
+    left: -1rem;
+    width: 0.75rem;
+    height: 0.75rem;
+  }
+  
+  .info-field-value,
+  .timeline-field-value {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+}
+
+/* ==================== 无障碍支持 ==================== */
+
+.timeline-item:focus-within {
+  outline: 2px solid #14b8a6;
+  outline-offset: 2px;
+}
+
+.detail-action-btn:focus-visible {
+  outline: 2px solid #14b8a6;
+  outline-offset: 2px;
+}
+
+/* ==================== 动画效果 ==================== */
+
+.timeline-item {
+  animation: slideInLeft 0.5s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.info-field {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== 打印优化 ==================== */
+
+@media print {
+  .patient-detail-container {
+    max-width: none;
+    padding: 0;
+    background: white;
+  }
+  
+  .detail-header,
+  .info-section,
+  .timeline-section {
+    box-shadow: none;
+    border: 1px solid #e5e7eb;
+    page-break-inside: avoid;
+  }
+  
+  .detail-actions {
+    display: none;
+  }
+  
+  .timeline-body {
+    max-height: none;
+    overflow: visible;
+  }
+  
+  .timeline-item {
+    page-break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+}
+
+/* ==================== 深色模式支持 ==================== */
+
+@media (prefers-color-scheme: dark) {
+  .patient-detail-container {
+    background: #0f172a;
+  }
+  
+  .detail-header,
+  .info-section,
+  .timeline-section {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  
+  .patient-title {
+    color: #f1f5f9;
+  }
+  
+  .patient-subtitle {
+    color: #cbd5e1;
+  }
+  
+  .info-field-value {
+    background: #334155;
+    border-color: #475569;
+    color: #f1f5f9;
+  }
+  
+  .timeline-item {
+    background: #334155;
+    border-color: #475569;
+  }
+  
+  .timeline-field-value {
+    background: #1e293b;
+    border-color: #334155;
+    color: #e2e8f0;
+  }
+}
+
+/* ==================== 数据可视化增强 ==================== */
+
+.medical-chart {
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background: #f8fafc;
+  border-radius: 0.75rem;
+  border: 1px solid #e2e8f0;
+}
+
+.chart-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.75rem;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 0.5rem;
+  background: #e5e7eb;
+  border-radius: 0.25rem;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #14b8a6, #5eead4);
+  transition: width 0.3s ease;
+}

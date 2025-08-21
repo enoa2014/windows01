@@ -4,6 +4,7 @@ class PatientApp {
         this.patients = [];
         this.filteredPatients = [];
         this.currentView = 'home';
+        this.currentViewMode = 'list'; // 默认为列表视图
         
         // DOM元素引用
         this.elements = {
@@ -45,6 +46,10 @@ class PatientApp {
             // 主题控制
             themeToggleBtn: document.getElementById('themeToggleBtn'),
             themeMenu: document.getElementById('themeMenu'),
+            
+            // 视图切换控制
+            gridViewBtn: document.getElementById('gridViewBtn'),
+            listViewBtn: document.getElementById('listViewBtn'),
             
             // 加载指示器
             loadingIndicator: document.getElementById('loadingIndicator'),
@@ -110,6 +115,10 @@ class PatientApp {
             }
         });
 
+        // 视图切换按钮事件
+        this.elements.gridViewBtn.addEventListener('click', () => this.setViewMode('grid'));
+        this.elements.listViewBtn.addEventListener('click', () => this.setViewMode('list'));
+        
         // 患者卡片点击事件（事件委托）
         this.elements.patientGrid.addEventListener('click', (e) => {
             const card = e.target.closest('article[data-id]');
@@ -168,6 +177,9 @@ class PatientApp {
         // 恢复保存的主题
         const savedTheme = localStorage.getItem('app-theme') || 'emerald';
         this.applyTheme(savedTheme);
+        
+        // 初始化视图模式
+        this.initViewMode();
     }
 
     async loadData() {
@@ -257,42 +269,83 @@ class PatientApp {
         const cards = patients.map(patient => this.createPatientCard(patient, searchTerm));
         
         this.elements.patientGrid.innerHTML = cards.join('');
+        
+        // 应用当前视图模式
+        this.applyViewMode();
     }
 
     createPatientCard(patient, searchTerm = '') {
         const age = this.calculateAge(patient.birth_date);
-        const genderColor = patient.gender === '男' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700';
         const initials = patient.name ? patient.name.charAt(0) : '?';
         
         // 高亮搜索关键词
         const highlightedName = this.highlightText(patient.name || '', searchTerm);
         const highlightedDiagnosis = this.highlightText(patient.diagnosis || '', searchTerm);
         const highlightedHometown = this.highlightText(patient.hometown || '', searchTerm);
+        
+        // 入住次数显示
+        const checkInCount = patient.check_in_count || 0;
+        
+        // 脱敏显示身份证号
+        const maskedId = this.maskIdCard(patient.id_number);
 
         return `
-        <article class="group rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] shadow-sm hover:shadow-md hover:border-[var(--brand-primary)]/50 overflow-hidden focus-within:ring-2 focus-within:ring-[var(--ring-color)] transition cursor-pointer" 
-                 role="button" tabindex="0" aria-label="查看 ${patient.name} 的详情" data-id="${patient.person_id}">
-          <div class="card-header-bg p-5 text-[var(--brand-text)]">
-            <div class="flex items-center gap-3">
-              <div class="size-10 rounded-full bg-white/20 grid place-items-center font-semibold">${initials}</div>
-              <div class="min-w-0 flex-1">
-                <h3 class="text-xl font-bold truncate">${highlightedName}</h3>
-                <p class="opacity-90 text-sm truncate">${highlightedDiagnosis}</p>
+        <article class="patient-card ${this.currentViewMode === 'list' ? 'list-mode' : ''}" 
+                 role="button" 
+                 tabindex="0" 
+                 aria-label="查看 ${patient.name} 的详情" 
+                 data-id="${patient.person_id}">
+          <div class="patient-card-body">
+            <!-- 患者头部信息 -->
+            <div class="patient-header">
+              <div class="patient-info">
+                <div class="patient-avatar">${initials}</div>
+                <div class="patient-details">
+                  <h3>${highlightedName}</h3>
+                  <div class="patient-meta">
+                    <span>${patient.gender || '未知性别'}</span>
+                    <span class="separator">·</span>
+                    <span>${this.displayAge(patient.birth_date)}岁</span>
+                    <span class="separator">·</span>
+                    <span class="mask-id">${maskedId}</span>
+                  </div>
+                </div>
               </div>
-              <span class="text-xs px-2 py-1 rounded-full bg-white/20" aria-label="入住次数">${patient.check_in_count || 0} 次</span>
+              
+              <!-- 入住次数标签 -->
+              <span class="patient-status status-info">${checkInCount}次入住</span>
             </div>
-          </div>
-          <div class="p-5 grid gap-2 text-[var(--text-secondary)]">
-            <div class="flex items-center gap-2">
-              <svg class="size-5 text-[var(--brand-primary)]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm-7 9a7 7 0 0 1 14 0Z"/></svg>
-              <span class="text-sm">年龄 <strong>${this.displayAge(patient.birth_date)}</strong> 岁</span>
-              <span class="ml-auto text-xs ${genderColor} px-2 py-0.5 rounded-full font-medium">${patient.gender || ''}</span>
+            
+            <!-- 关键医疗信息 -->
+            <div class="patient-medical-info">
+              <div class="medical-field">
+                <span class="medical-field-label">最近诊断</span>
+                <span class="medical-field-value" title="${patient.diagnosis || '暂无诊断信息'}">${highlightedDiagnosis || '暂无诊断信息'}</span>
+              </div>
+              <div class="medical-field">
+                <span class="medical-field-label">患者籍贯</span>
+                <span class="medical-field-value" title="${patient.hometown || '未知地区'}">${highlightedHometown || '未知地区'}</span>
+              </div>
             </div>
-            <div class="flex items-center gap-2">
-              <svg class="size-5 text-[var(--brand-primary)]" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a9 9 0 0 0-9 9c0 7 9 11 9 11s9-4 9-11a9 9 0 0 0-9-9Zm0 12a3 3 0 1 1 3-3 3 3 0 0 1-3 3Z"/></svg>
-              <span class="text-sm truncate">${highlightedHometown}</span>
+            
+            <!-- 操作按钮区域 -->
+            <div class="patient-footer">
+              <div class="patient-stats">
+                <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                </svg>
+                <span>入住次数：${patient.check_in_count || 0}次</span>
+              </div>
+              
+              <a href="#" class="patient-action" data-action="view-detail">
+                查看详情
+                <svg class="arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+              </a>
             </div>
-            ${patient.latest_check_in ? `<div class="pt-2 mt-1 border-t border-[var(--border-secondary)] text-xs text-[var(--text-muted)]">最近入住：${patient.latest_check_in}</div>` : ''}
+            
+            ${patient.latest_check_in ? `<div class="mt-3 pt-3 border-t border-gray-100 text-xs text-gray-500">最近入住：${patient.latest_check_in}</div>` : ''}
           </div>
         </article>`;
     }
@@ -530,6 +583,66 @@ class PatientApp {
         URL.revokeObjectURL(url);
     }
 
+    // 视图模式管理
+    initViewMode() {
+        // 恢复保存的视图模式，默认为列表视图
+        const savedViewMode = localStorage.getItem('app-view-mode') || 'list';
+        this.setViewMode(savedViewMode);
+    }
+
+    setViewMode(mode) {
+        if (mode !== 'grid' && mode !== 'list') {
+            console.warn(`无效的视图模式: ${mode}`);
+            return;
+        }
+
+        this.currentViewMode = mode;
+        
+        // 保存视图模式
+        localStorage.setItem('app-view-mode', mode);
+        
+        // 更新按钮状态
+        this.updateViewButtons();
+        
+        // 应用视图模式
+        this.applyViewMode();
+    }
+
+    updateViewButtons() {
+        // 重置按钮样式
+        this.elements.gridViewBtn.className = 'px-3 py-1.5 text-sm font-medium transition-all';
+        this.elements.listViewBtn.className = 'px-3 py-1.5 text-sm font-medium transition-all';
+        
+        if (this.currentViewMode === 'grid') {
+            this.elements.gridViewBtn.className += ' text-gray-700 bg-white rounded-md shadow-sm';
+            this.elements.listViewBtn.className += ' text-gray-500 hover:text-gray-700';
+        } else {
+            this.elements.listViewBtn.className += ' text-gray-700 bg-white rounded-md shadow-sm';
+            this.elements.gridViewBtn.className += ' text-gray-500 hover:text-gray-700';
+        }
+    }
+
+    applyViewMode() {
+        const patientGrid = this.elements.patientGrid;
+        const cards = patientGrid.querySelectorAll('.patient-card');
+        
+        if (this.currentViewMode === 'list') {
+            // 应用列表视图样式
+            patientGrid.className = 'patient-list-view space-y-4';
+            cards.forEach(card => {
+                card.classList.add('list-mode');
+                card.classList.remove('grid-mode');
+            });
+        } else {
+            // 应用网格视图样式
+            patientGrid.className = 'patient-grid-view grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8';
+            cards.forEach(card => {
+                card.classList.add('grid-mode');
+                card.classList.remove('list-mode');
+            });
+        }
+    }
+
     // 导航管理
     navigateTo(page) {
         switch (page) {
@@ -679,12 +792,42 @@ class PatientApp {
     
     displayAge(birthDate) {
         const age = this.calculateAge(birthDate);
-        return age === -1 ? '?' : age;
+        return age === -1 ? '未知' : age;
     }
 
     maskIdCard(idCard) {
         if (!idCard) return '—';
         return idCard.replace(/(\w{4})\w+(\w{3})/, '$1***********$2');
+    }
+
+    // 判断是否为最近入住
+    isRecentAdmission(latestCheckIn) {
+        if (!latestCheckIn) return false;
+        
+        try {
+            const checkInDate = new Date(latestCheckIn);
+            const today = new Date();
+            const daysDiff = Math.floor((today - checkInDate) / (1000 * 60 * 60 * 24));
+            
+            // 30天内的入住记录被认为是最近入住
+            return daysDiff <= 30;
+        } catch {
+            return false;
+        }
+    }
+
+    // 脱敏身份证号的通用方法
+    maskIdNumber(idNumber) {
+        if (!idNumber) return '未提供';
+        
+        // 适应不同长度的身份证号
+        if (idNumber.length === 18) {
+            return `${idNumber.substring(0, 3)}***********${idNumber.substring(15)}`;
+        } else if (idNumber.length === 15) {
+            return `${idNumber.substring(0, 3)}*********${idNumber.substring(12)}`;
+        } else {
+            return `${idNumber.substring(0, 2)}***${idNumber.substring(idNumber.length - 2)}`;
+        }
     }
 
     formatParentInfo(name, phone) {

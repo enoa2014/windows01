@@ -1,0 +1,584 @@
+/* ===================== 微动画和过渡效果 ===================== */
+
+/* 基于优化计划的流畅动画系统 */
+
+/* ==================== 全局动画设置 ==================== */
+
+/* 减少动画支持 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 动画变量 */
+:root {
+  /* 动画时长 */
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 350ms;
+  --duration-slower: 500ms;
+  
+  /* 缓动函数 */
+  --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0.0, 1, 1);
+  --ease-in-out: cubic-bezier(0.4, 0.0, 0.2, 1);
+  --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* ==================== 页面切换动画 ==================== */
+
+.page {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all var(--duration-slow) var(--ease-out);
+  pointer-events: none;
+}
+
+.page.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* 页面淡入动画 */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.page.active {
+  animation: pageEnter var(--duration-slow) var(--ease-out);
+}
+
+/* ==================== 卡片动画效果 ==================== */
+
+/* 患者卡片悬停动画 */
+.patient-card {
+  transition: all var(--duration-normal) var(--ease-out);
+  will-change: transform, box-shadow;
+}
+
+.patient-card:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+}
+
+.patient-card:active {
+  transform: translateY(-2px) scale(1.01);
+  transition-duration: var(--duration-fast);
+}
+
+/* 卡片加载动画 */
+@keyframes cardFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.patient-card {
+  animation: cardFadeIn var(--duration-slow) var(--ease-out);
+}
+
+/* 交错动画 */
+.patient-card:nth-child(1) { animation-delay: 0ms; }
+.patient-card:nth-child(2) { animation-delay: 50ms; }
+.patient-card:nth-child(3) { animation-delay: 100ms; }
+.patient-card:nth-child(4) { animation-delay: 150ms; }
+.patient-card:nth-child(5) { animation-delay: 200ms; }
+.patient-card:nth-child(6) { animation-delay: 250ms; }
+
+/* ==================== 按钮动画效果 ==================== */
+
+/* 主要按钮动画 */
+.btn, 
+.detail-action-btn,
+.patient-action {
+  transition: all var(--duration-normal) var(--ease-out);
+  position: relative;
+  overflow: hidden;
+  will-change: transform, box-shadow;
+}
+
+/* 按钮悬停效果 */
+.btn:hover,
+.detail-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}
+
+.btn:active,
+.detail-action-btn:active {
+  transform: translateY(0);
+  transition-duration: var(--duration-fast);
+}
+
+/* 按钮波纹效果 */
+.btn::before,
+.detail-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width var(--duration-normal) ease, height var(--duration-normal) ease;
+}
+
+.btn:active::before,
+.detail-action-btn:active::before {
+  width: 300px;
+  height: 300px;
+  transition-duration: 0ms;
+}
+
+/* ==================== 输入框动画效果 ==================== */
+
+.form-input,
+.search-input input {
+  transition: all var(--duration-normal) var(--ease-out);
+  will-change: border-color, box-shadow, background-color;
+}
+
+.form-input:focus,
+.search-input input:focus {
+  transform: scale(1.01);
+  transition-duration: var(--duration-fast);
+}
+
+/* 搜索图标动画 */
+.search-input .search-icon {
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.search-input input:focus + .search-icon,
+.search-input input:not(:placeholder-shown) + .search-icon {
+  transform: scale(1.1);
+  color: #14b8a6;
+}
+
+/* ==================== 加载动画 ==================== */
+
+/* 旋转加载器 */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 骨架屏动画 */
+@keyframes shimmer {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200px 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* ==================== 通知动画 ==================== */
+
+/* 通知滑入动画 */
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.notification-enter {
+  animation: slideInRight var(--duration-slow) var(--ease-out);
+}
+
+.notification-exit {
+  animation: slideOutRight var(--duration-normal) var(--ease-in);
+}
+
+/* 成功通知弹跳效果 */
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.3);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-notification {
+  animation: bounceIn var(--duration-slower) var(--ease-bounce);
+}
+
+/* ==================== 导航动画 ==================== */
+
+/* 面包屑导航动画 */
+.breadcrumb-item {
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.breadcrumb-item:hover {
+  color: #14b8a6;
+  transform: translateX(2px);
+}
+
+/* 导航按钮旋转动画 */
+.nav-button {
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.nav-button:hover {
+  transform: rotate(5deg) scale(1.1);
+}
+
+/* ==================== 模态框动画 ==================== */
+
+/* 模态框背景动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.modal-backdrop {
+  animation: fadeIn var(--duration-normal) ease;
+}
+
+.modal-backdrop.closing {
+  animation: fadeOut var(--duration-normal) ease;
+}
+
+/* 模态框内容动画 */
+@keyframes modalSlideIn {
+  from {
+    transform: scale(0.9) translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes modalSlideOut {
+  from {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.9) translateY(-10px);
+    opacity: 0;
+  }
+}
+
+.modal-content {
+  animation: modalSlideIn var(--duration-slow) var(--ease-out);
+}
+
+.modal-content.closing {
+  animation: modalSlideOut var(--duration-normal) var(--ease-in);
+}
+
+/* ==================== 列表动画 ==================== */
+
+/* 列表项交错动画 */
+@keyframes listItemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.list-item {
+  animation: listItemSlideIn var(--duration-normal) var(--ease-out);
+}
+
+.list-item:nth-child(odd) { animation-delay: 0ms; }
+.list-item:nth-child(even) { animation-delay: 50ms; }
+
+/* ==================== 状态指示器动画 ==================== */
+
+/* 状态标签动画 */
+.status-badge {
+  transition: all var(--duration-normal) var(--ease-out);
+  position: relative;
+  overflow: hidden;
+}
+
+.status-badge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  transition: left var(--duration-slower) ease;
+}
+
+.status-badge:hover::before {
+  left: 100%;
+}
+
+/* 进度条动画 */
+@keyframes progressFill {
+  from { width: 0%; }
+  to { width: var(--progress-width, 0%); }
+}
+
+.progress-bar {
+  animation: progressFill 1s var(--ease-out);
+}
+
+/* ==================== 图标动画 ==================== */
+
+/* 图标悬停动画 */
+.icon-hover {
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.icon-hover:hover {
+  transform: scale(1.1) rotate(5deg);
+  color: #14b8a6;
+}
+
+/* 图标脉冲动画 */
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+}
+
+.icon-pulse {
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+/* ==================== 高级动画效果 ==================== */
+
+/* 磁性悬停效果 */
+.magnetic-hover {
+  transition: all var(--duration-normal) var(--ease-out);
+  cursor: pointer;
+}
+
+.magnetic-hover:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+/* 3D翻转效果 */
+@keyframes flip3D {
+  0% {
+    transform: perspective(400px) rotateY(0);
+  }
+  100% {
+    transform: perspective(400px) rotateY(360deg);
+  }
+}
+
+.flip-3d {
+  animation: flip3D 0.6s ease-in-out;
+}
+
+/* 打字机效果 */
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.typewriter {
+  overflow: hidden;
+  border-right: 2px solid #14b8a6;
+  white-space: nowrap;
+  animation: typewriter 2s steps(40) 1s both,
+             blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  50% { border-color: transparent; }
+}
+
+/* ==================== 性能优化 ==================== */
+
+/* GPU加速 */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* 合成层提升 */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+.will-change-scroll {
+  will-change: scroll-position;
+}
+
+/* ==================== 主题过渡 ==================== */
+
+/* 主题切换动画 */
+* {
+  transition: background-color var(--duration-normal) ease,
+              border-color var(--duration-normal) ease,
+              color var(--duration-normal) ease;
+}
+
+/* 主题切换时的淡入淡出 */
+.theme-transition {
+  transition: all var(--duration-slow) ease;
+}
+
+/* ==================== 辅助动画类 ==================== */
+
+/* 悬停时放大 */
+.hover-scale:hover {
+  transform: scale(1.05);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+/* 悬停时旋转 */
+.hover-rotate:hover {
+  transform: rotate(5deg);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+/* 悬停时倾斜 */
+.hover-skew:hover {
+  transform: skew(-2deg, 1deg);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+/* 淡入动画 */
+.fade-in {
+  animation: fadeIn var(--duration-slow) var(--ease-out);
+}
+
+/* 从下方滑入 */
+.slide-up {
+  animation: slideUp var(--duration-slow) var(--ease-out);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 弹性进入 */
+.bounce-in {
+  animation: bounceIn var(--duration-slower) var(--ease-bounce);
+}
+
+/* ==================== 视差滚动效果 ==================== */
+
+.parallax {
+  transform: translateZ(0);
+  transition: transform 0.1s ease-out;
+}
+
+/* ==================== 响应式动画 ==================== */
+
+@media (max-width: 768px) {
+  /* 移动设备上简化动画 */
+  .patient-card:hover {
+    transform: translateY(-2px) scale(1.01);
+  }
+  
+  .btn:hover,
+  .detail-action-btn:hover {
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-width: 480px) {
+  /* 小屏幕设备进一步简化 */
+  .patient-card:hover {
+    transform: none;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+}
