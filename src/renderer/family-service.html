@@ -101,6 +101,7 @@
              focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)];
     }
 
+    /* ===================== 视图模式样式 ===================== */
     .service-record-card {
       @apply rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] 
              shadow-sm hover:shadow-md hover:border-[var(--brand-primary)]/50 
@@ -110,6 +111,36 @@
 
     .service-record-card:hover {
       transform: translateY(-2px);
+    }
+    
+    /* 列表视图样式 */
+    .service-list-view .service-record-card.list-mode {
+      @apply flex items-center space-x-4 p-4;
+    }
+    
+    .service-list-view .service-record-card.list-mode .card-header {
+      @apply flex-shrink-0 w-24 text-center;
+    }
+    
+    .service-list-view .service-record-card.list-mode .card-content {
+      @apply flex-1 grid grid-cols-4 gap-4 items-center;
+    }
+    
+    .service-list-view .service-record-card.list-mode .stat-item {
+      @apply bg-transparent p-1;
+    }
+    
+    /* 网格视图样式 */
+    .service-grid-view .service-record-card.grid-mode {
+      @apply block;
+    }
+    
+    .service-grid-view .service-record-card.grid-mode .card-header {
+      @apply mb-4;
+    }
+    
+    .service-grid-view .service-record-card.grid-mode .card-content {
+      @apply grid grid-cols-2 gap-4;
     }
 
     .stat-item {
@@ -310,8 +341,25 @@
             </select>
           </div>
           
+          <!-- 视图切换选项 -->
+          <div class="md:col-span-1 flex items-center space-x-2">
+            <span class="text-sm text-gray-500">视图:</span>
+            <div class="flex bg-gray-100 rounded-lg p-1">
+              <button id="gridViewBtn" class="px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-all" title="网格视图">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                </svg>
+              </button>
+              <button id="listViewBtn" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-md shadow-sm transition-all" title="列表视图">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+          
           <!-- 操作按钮 -->
-          <div class="md:col-span-2 flex gap-2">
+          <div class="md:col-span-1 flex gap-2">
             <button id="resetBtn" class="action-btn-secondary flex-1">重置</button>
             <button id="exportBtn" class="action-btn-primary flex-1">导出</button>
           </div>

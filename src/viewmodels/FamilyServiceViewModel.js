@@ -27,7 +27,8 @@ class FamilyServiceViewModel {
                 order: 'desc'
             },
             stats: null,
-            filterOptions: null
+            filterOptions: null,
+            viewMode: 'list' // 默认列表视图
         };
         
         // 事件监听器
@@ -40,6 +41,9 @@ class FamilyServiceViewModel {
     async init() {
         try {
             this.setState({ loading: true, error: null });
+            
+            // 初始化视图模式
+            this.initViewMode();
             
             // 并行加载数据
             const [statsData, filterOptions] = await Promise.all([
@@ -261,6 +265,70 @@ class FamilyServiceViewModel {
                 console.error(`事件处理器错误 (${event}):`, error);
             }
         });
+    }
+    
+    /**
+     * 初始化视图模式
+     */
+    initViewMode() {
+        // 从本地存储恢复视图模式，默认为列表视图
+        const savedViewMode = localStorage.getItem('family-service-view-mode') || 'list';
+        this.setState({ viewMode: savedViewMode });
+        this.applyViewMode();
+    }
+    
+    /**
+     * 设置视图模式
+     */
+    setViewMode(mode) {
+        if (mode !== 'grid' && mode !== 'list') {
+            console.warn(`无效的视图模式: ${mode}`);
+            return;
+        }
+        
+        this.setState({ viewMode: mode });
+        
+        // 保存视图模式到本地存储
+        localStorage.setItem('family-service-view-mode', mode);
+        
+        // 应用视图模式
+        this.applyViewMode();
+        
+        // 触发视图模式变化事件
+        this.emit('viewModeChanged', mode);
+    }
+    
+    /**
+     * 应用视图模式
+     */
+    applyViewMode() {
+        const serviceRecordGrid = document.getElementById('serviceRecordGrid');
+        if (!serviceRecordGrid) return;
+        
+        const cards = serviceRecordGrid.querySelectorAll('.service-record-card');
+        
+        if (this.state.viewMode === 'list') {
+            // 应用列表视图样式
+            serviceRecordGrid.className = 'service-list-view space-y-4';
+            cards.forEach(card => {
+                card.classList.add('list-mode');
+                card.classList.remove('grid-mode');
+            });
+        } else {
+            // 应用网格视图样式
+            serviceRecordGrid.className = 'service-grid-view grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8';
+            cards.forEach(card => {
+                card.classList.add('grid-mode');
+                card.classList.remove('list-mode');
+            });
+        }
+    }
+    
+    /**
+     * 获取当前视图模式
+     */
+    getViewMode() {
+        return this.state.viewMode;
     }
     
     /**

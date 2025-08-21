@@ -32,6 +32,7 @@ class PatientApp {
             detailView: document.getElementById('detailView'),
             statisticsView: document.getElementById('statisticsView'),
             familyServiceView: document.getElementById('familyServiceView'),
+            familyServiceDetailView: document.getElementById('familyServiceDetailView'),
             homeBtn: document.getElementById('homeBtn'),
             backBtn: document.getElementById('backBtn'),
             
@@ -615,6 +616,177 @@ class PatientApp {
         }
     }
 
+    // 显示家庭服务详情
+    async showFamilyServiceDetail(recordId) {
+        try {
+            this.showLoading('加载服务详情...');
+            
+            // 获取详情数据（目前直接从列表中查找）
+            if (!this.familyServiceVM || !this.familyServiceVM.state.data) {
+                throw new Error('没有可用的家庭服务数据');
+            }
+            
+            const record = this.familyServiceVM.state.data.find(r => r.id === recordId);
+            if (!record) {
+                throw new Error('未找到指定的服务记录');
+            }
+            
+            this.renderFamilyServiceDetail(record);
+            this.setPage('familyServiceDetail');
+            this.hideLoading();
+        } catch (error) {
+            this.hideLoading();
+            console.error('加载家庭服务详情失败:', error);
+            this.showError('加载家庭服务详情失败');
+        }
+    }
+
+    // 渲染家庭服务详情页面
+    renderFamilyServiceDetail(record) {
+        if (!record) {
+            document.getElementById('familyServiceDetailContent').innerHTML = 
+                '<p class="text-center text-[var(--text-secondary)]">服务记录不存在</p>';
+            return;
+        }
+
+        // 更新标题
+        const date = new Date(record.year_month);
+        const yearMonth = `${date.getFullYear()}年${(date.getMonth() + 1).toString().padStart(2, '0')}月`;
+        document.getElementById('fsDetailTitle').textContent = `${yearMonth} 家庭服务详情`;
+        document.getElementById('fsDetailSubtitle').textContent = `服务家庭 ${record.family_count} 个，入住人数 ${record.residents_count} 人`;
+
+        // 生成详情内容
+        const detailContent = `
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 border-b border-[var(--border-secondary)] pb-8 mb-8">
+                <section>
+                    <h3 class="font-semibold text-lg mb-4 text-[var(--brand-secondary)]">基础统计</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-[var(--bg-tertiary)] rounded-lg">
+                            <span class="text-[var(--text-secondary)]">服务年月</span>
+                            <span class="font-medium text-[var(--text-primary)]">${yearMonth}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-[var(--bg-tertiary)] rounded-lg">
+                            <span class="text-[var(--text-secondary)]">家庭数量</span>
+                            <span class="font-bold text-[var(--brand-primary)] text-lg">${record.family_count}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-[var(--bg-tertiary)] rounded-lg">
+                            <span class="text-[var(--text-secondary)]">入住人数</span>
+                            <span class="font-medium text-[var(--text-primary)]">${record.residents_count}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-[var(--bg-tertiary)] rounded-lg">
+                            <span class="text-[var(--text-secondary)]">总入住天数</span>
+                            <span class="font-medium text-[var(--text-primary)]">${record.residence_days}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-[var(--bg-tertiary)] rounded-lg">
+                            <span class="text-[var(--text-secondary)]">平均入住天数</span>
+                            <span class="font-medium text-[var(--text-primary)]">${record.family_count > 0 ? Math.round(record.residence_days / record.family_count * 10) / 10 : 0}</span>
+                        </div>
+                    </div>
+                </section>
+                
+                <section>
+                    <h3 class="font-semibold text-lg mb-4 text-[var(--brand-secondary)]">服务详情</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-[var(--bg-tertiary)] rounded-lg">
+                            <span class="text-[var(--text-secondary)]">住宿人次</span>
+                            <span class="font-medium text-[var(--text-primary)]">${record.accommodation_count}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-[var(--bg-tertiary)] rounded-lg">
+                            <span class="text-[var(--text-secondary)]">关爱服务人次</span>
+                            <span class="font-medium text-[var(--text-primary)]">${record.care_service_count}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-[var(--bg-tertiary)] rounded-lg">
+                            <span class="text-[var(--text-secondary)]">志愿服务人次</span>
+                            <span class="font-medium text-[var(--text-primary)]">${record.volunteer_service_count}</span>
+                        </div>
+                        <div class="flex justify-between items-center p-3 bg-gradient-to-r from-[var(--brand-tag-bg)] to-[var(--bg-tertiary)] rounded-lg border border-[var(--brand-primary)]/20">
+                            <span class="font-medium text-[var(--brand-secondary)]">总服务人次</span>
+                            <span class="font-bold text-[var(--brand-primary)] text-xl">${record.total_service_count}</span>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <section>
+                <h3 class="font-semibold text-lg mb-4 text-[var(--brand-secondary)]">累计统计</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 p-6 rounded-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-blue-600 dark:text-blue-400 mb-1">累计入住天数</p>
+                                <p class="text-2xl font-bold text-blue-800 dark:text-blue-200">${record.cumulative_residence_days}</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 p-6 rounded-xl">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-green-600 dark:text-green-400 mb-1">累计服务人次</p>
+                                <p class="text-2xl font-bold text-green-800 dark:text-green-200">${record.cumulative_service_count}</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-500 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                ${record.notes ? `
+                    <div class="bg-[var(--bg-tertiary)] p-4 rounded-xl">
+                        <h4 class="font-medium text-[var(--text-primary)] mb-2">备注说明</h4>
+                        <p class="text-[var(--text-secondary)] leading-relaxed">${record.notes}</p>
+                    </div>
+                ` : ''}
+                
+                <div class="mt-6 pt-6 border-t border-[var(--border-secondary)] text-xs text-[var(--text-muted)]">
+                    <div class="flex justify-between">
+                        <span>记录创建：${new Date(record.created_at).toLocaleString()}</span>
+                        <span>最后更新：${new Date(record.updated_at).toLocaleString()}</span>
+                    </div>
+                </div>
+            </section>
+        `;
+
+        document.getElementById('familyServiceDetailContent').innerHTML = detailContent;
+        
+        // 绑定导出按钮事件
+        const exportBtn = document.getElementById('exportFsDetail');
+        if (exportBtn) {
+            exportBtn.onclick = () => this.exportFamilyServiceDetail(record);
+        }
+    }
+
+    // 导出家庭服务详情
+    exportFamilyServiceDetail(record) {
+        const date = new Date(record.year_month);
+        const yearMonth = `${date.getFullYear()}年${(date.getMonth() + 1).toString().padStart(2, '0')}月`;
+        
+        const exportData = {
+            title: `${yearMonth}家庭服务详情`,
+            data: record,
+            timestamp: new Date().toLocaleString()
+        };
+        
+        const jsonString = JSON.stringify(exportData, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${yearMonth}-家庭服务详情.json`;
+        a.click();
+        
+        URL.revokeObjectURL(url);
+    }
+
     async importExcel() {
         try {
             this.showLoading('导入Excel文件...');
@@ -737,7 +909,7 @@ class PatientApp {
     }
 
     async setPage(pageName, addToHistory = true) {
-        const pages = ['home', 'list', 'detail', 'statistics', 'familyService'];
+        const pages = ['home', 'list', 'detail', 'statistics', 'familyService', 'familyServiceDetail'];
         pages.forEach(page => {
             const element = this.elements[`${page}View`];
             if (element) {
@@ -887,6 +1059,11 @@ class PatientApp {
             this.updateFamilyServiceStats(state.stats);
             this.updateFamilyServiceFilters(state.filterOptions);
         });
+        
+        // 监听视图模式变化
+        this.familyServiceVM.on('viewModeChanged', (mode) => {
+            this.updateFamilyServiceViewButtons(mode);
+        });
 
         // 设置DOM事件监听器
         this.setupFamilyServiceDOMListeners();
@@ -919,10 +1096,28 @@ class PatientApp {
         }
 
         // 导出按钮
-        const exportBtn = document.getElementById('fsExportBtn');
+        const exportBtn = document.getElementById('exportBtn');
         if (exportBtn) {
             exportBtn.addEventListener('click', () => {
                 this.exportFamilyServiceData();
+            });
+        }
+        
+        // 视图切换按钮
+        const gridViewBtn = document.getElementById('gridViewBtn');
+        const listViewBtn = document.getElementById('listViewBtn');
+        if (gridViewBtn) {
+            gridViewBtn.addEventListener('click', () => {
+                if (this.familyServiceVM) {
+                    this.familyServiceVM.setViewMode('grid');
+                }
+            });
+        }
+        if (listViewBtn) {
+            listViewBtn.addEventListener('click', () => {
+                if (this.familyServiceVM) {
+                    this.familyServiceVM.setViewMode('list');
+                }
             });
         }
 
@@ -1007,54 +1202,135 @@ class PatientApp {
     renderFamilyServiceTable(data) {
         if (!this.familyServiceVM) return;
         
-        const columns = this.familyServiceVM.getColumns();
-        const tableHeader = document.getElementById('fsTableHeader');
-        const tableBody = document.getElementById('fsTableBody');
-
-        if (!tableHeader || !tableBody) return;
-
-        // 渲染表头
-        tableHeader.innerHTML = `
-            <tr>
-                ${columns.map(col => `
-                    <th class="px-4 py-3 text-left text-sm font-medium text-[var(--text-secondary)] ${col.align ? 'text-' + col.align : ''}"
-                        ${col.width ? 'style="width: ' + col.width + 'px"' : ''}>
-                        ${col.title}
-                        ${col.sorter ? '<span class="sort-indicator ml-1">↕</span>' : ''}
-                    </th>
-                `).join('')}
-            </tr>
-        `;
-
-        // 渲染数据行
-        tableBody.innerHTML = data.map(record => `
-            <tr class="border-t border-[var(--border-primary)] hover:bg-[var(--bg-secondary)]">
-                ${columns.map(col => {
-                    let value = record[col.key];
-                    if (col.formatter) {
-                        value = this.familyServiceVM.formatValue(value, col.formatter);
-                    }
-                    return `
-                        <td class="px-4 py-3 text-sm text-[var(--text-primary)] ${col.align ? 'text-' + col.align : ''} ${col.className || ''}"
-                            ${col.ellipsis ? 'style="max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;"' : ''}>
-                            ${value || '-'}
-                        </td>
-                    `;
-                }).join('')}
-            </tr>
-        `).join('');
+        // 使用家庭服务页面的实际元素ID
+        const serviceRecordGrid = document.getElementById('serviceRecordGrid');
+        if (!serviceRecordGrid) {
+            console.warn('serviceRecordGrid element not found');
+            return;
+        }
 
         // 更新记录计数
-        const recordCountElement = document.getElementById('fsRecordCount');
+        const recordCountElement = document.getElementById('resultCount');
         if (recordCountElement) {
             recordCountElement.textContent = `共 ${data.length} 条记录`;
         }
 
         // 显示/隐藏空状态
-        const emptyState = document.getElementById('fsEmptyState');
+        const emptyState = document.getElementById('emptyState');
         if (emptyState) {
-            emptyState.style.display = data.length === 0 ? 'block' : 'none';
+            emptyState.classList.toggle('hidden', data.length > 0);
         }
+
+        if (data.length === 0) {
+            serviceRecordGrid.innerHTML = '';
+            return;
+        }
+
+        // 渲染服务记录卡片
+        const cards = data.map(record => this.createFamilyServiceCard(record));
+        
+        // 插入卡片到容器
+        serviceRecordGrid.innerHTML = cards.join('');
+
+        // 应用当前视图模式
+        if (this.familyServiceVM) {
+            this.familyServiceVM.applyViewMode();
+        }
+
+        // 绑定卡片点击事件
+        serviceRecordGrid.addEventListener('click', (e) => {
+            const card = e.target.closest('.service-record-card[data-id]');
+            if (card) {
+                const recordId = parseInt(card.dataset.id);
+                this.showFamilyServiceDetail(recordId);
+            }
+        });
+    }
+
+    // 更新视图切换按钮状态
+    updateFamilyServiceViewButtons(mode) {
+        const gridViewBtn = document.getElementById('gridViewBtn');
+        const listViewBtn = document.getElementById('listViewBtn');
+        
+        if (!gridViewBtn || !listViewBtn) return;
+        
+        // 重置按钮样式
+        gridViewBtn.className = 'px-3 py-1.5 text-sm font-medium transition-all';
+        listViewBtn.className = 'px-3 py-1.5 text-sm font-medium transition-all';
+        
+        if (mode === 'grid') {
+            gridViewBtn.className += ' text-gray-700 bg-white rounded-md shadow-sm';
+            listViewBtn.className += ' text-gray-500 hover:text-gray-700';
+        } else {
+            listViewBtn.className += ' text-gray-700 bg-white rounded-md shadow-sm';
+            gridViewBtn.className += ' text-gray-500 hover:text-gray-700';
+        }
+    }
+    
+    // 创建家庭服务卡片
+    createFamilyServiceCard(record) {
+        const date = new Date(record.year_month);
+        const yearMonth = `${date.getFullYear()}年${(date.getMonth() + 1).toString().padStart(2, '0')}月`;
+        
+        return `
+            <div class="service-record-card cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02]" 
+                 role="button" 
+                 tabindex="0" 
+                 aria-label="查看 ${yearMonth} 家庭服务详情" 
+                 data-id="${record.id}">
+                
+                <!-- 卡片主体 -->
+                <div class="bg-[var(--bg-secondary)] border border-[var(--border-primary)] rounded-xl p-5 h-full">
+                    
+                    <!-- 头部信息 -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-bold text-[var(--brand-secondary)]">${yearMonth}</h3>
+                            <p class="text-sm text-[var(--text-secondary)]">家庭服务记录</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gradient-to-br from-[var(--brand-primary)] to-[var(--brand-light)] rounded-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- 核心指标 -->
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-[var(--brand-primary)]">${record.family_count}</div>
+                            <div class="text-xs text-[var(--text-secondary)]">家庭数量</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-[var(--brand-primary)]">${record.residents_count}</div>
+                            <div class="text-xs text-[var(--text-secondary)]">入住人数</div>
+                        </div>
+                    </div>
+
+                    <!-- 详细统计 -->
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-[var(--text-secondary)]">总入住天数</span>
+                            <span class="font-medium text-[var(--text-primary)]">${record.residence_days}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-[var(--text-secondary)]">住宿人次</span>
+                            <span class="font-medium text-[var(--text-primary)]">${record.accommodation_count}</span>
+                        </div>
+                    </div>
+
+                    <!-- 操作提示 -->
+                    <div class="mt-4 pt-4 border-t border-[var(--border-secondary)]">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-[var(--text-muted)]">点击查看完整信息</span>
+                            <svg class="w-4 h-4 text-[var(--brand-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     // 搜索处理
@@ -1184,7 +1460,8 @@ class PatientApp {
             list: '患儿列表 - 患儿入住信息管理系统',
             detail: '患儿详情 - 患儿入住信息管理系统',
             statistics: '数据统计分析 - 患儿入住信息管理系统',
-            familyService: '家庭服务统计 - 患儿入住信息管理系统'
+            familyService: '家庭服务统计 - 患儿入住信息管理系统',
+            familyServiceDetail: '家庭服务详情 - 患儿入住信息管理系统'
         };
         
         const title = titles[pageName] || titles.home;
