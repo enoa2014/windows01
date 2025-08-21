@@ -415,35 +415,52 @@ class DatabaseManager {
                 `)
             ]);
 
-            // 3. 年龄统计摘要
+            // 3. 年龄统计摘要 - 修复总数不一致问题
             const ageSummary = await this.get(`
-                WITH age_calculations AS (
+                WITH all_patients AS (
                     SELECT 
                         p.id as person_id,
                         p.name,
-                        pp.birth_date,
+                        -- 每个患者只取一个出生日期（最新的非空记录）
+                        (SELECT pp.birth_date 
+                         FROM patient_profiles pp 
+                         WHERE pp.person_id = p.id 
+                         AND pp.birth_date IS NOT NULL 
+                         AND pp.birth_date != ''
+                         ORDER BY pp.id DESC 
+                         LIMIT 1) as birth_date
+                    FROM persons p
+                ),
+                age_calculations AS (
+                    SELECT 
+                        person_id,
+                        name,
+                        birth_date,
                         CASE 
-                            WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9][0-9]' THEN
-                                SUBSTR(pp.birth_date, 1, 4) || '-0' || SUBSTR(pp.birth_date, 6, 1) || '-' || SUBSTR(pp.birth_date, 8, 2)
-                            WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]' THEN
-                                SUBSTR(pp.birth_date, 1, 4) || '-' || SUBSTR(pp.birth_date, 6, 2) || '-' || SUBSTR(pp.birth_date, 9, 2)
-                            ELSE pp.birth_date
-                        END as standardized_birth_date,
-                        CASE 
-                            WHEN pp.birth_date IS NOT NULL AND pp.birth_date != '' THEN
+                            WHEN birth_date IS NOT NULL AND birth_date != '' THEN
                                 CAST((julianday('now') - julianday(
                                     CASE 
-                                        WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9][0-9]' THEN
-                                            SUBSTR(pp.birth_date, 1, 4) || '-0' || SUBSTR(pp.birth_date, 6, 1) || '-' || SUBSTR(pp.birth_date, 8, 2)
-                                        WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]' THEN
-                                            SUBSTR(pp.birth_date, 1, 4) || '-' || SUBSTR(pp.birth_date, 6, 2) || '-' || SUBSTR(pp.birth_date, 9, 2)
-                                        ELSE pp.birth_date
+                                        -- 处理点号分隔的日期格式 (2014.3.27 -> 2014-03-27)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-0' || SUBSTR(birth_date, 6, 1) || '-0' || SUBSTR(birth_date, 8, 1)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9][0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-0' || SUBSTR(birth_date, 6, 1) || '-' || SUBSTR(birth_date, 8, 2)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-' || SUBSTR(birth_date, 6, 2) || '-0' || SUBSTR(birth_date, 9, 1)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-' || SUBSTR(birth_date, 6, 2) || '-' || SUBSTR(birth_date, 9, 2)
+                                        -- 处理已经是标准格式的日期
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' THEN
+                                            birth_date
+                                        -- 尝试将点号替换为短横线
+                                        WHEN birth_date LIKE '%.%.%' THEN
+                                            REPLACE(birth_date, '.', '-')
+                                        ELSE birth_date
                                     END
                                 )) / 365.25 AS INTEGER)
                             ELSE NULL
                         END as age
-                    FROM persons p
-                    LEFT JOIN patient_profiles pp ON p.id = pp.person_id
+                    FROM all_patients
                 )
                 SELECT 
                     COUNT(*) as totalCount,
@@ -455,29 +472,59 @@ class DatabaseManager {
                 FROM age_calculations
             `);
 
-            // 4. 年龄分布统计
+            // 4. 年龄分布统计 - 确保与年龄摘要使用相同逻辑
             const ageDistribution = await this.all(`
-                WITH age_calculations AS (
+                WITH patient_birth_dates AS (
                     SELECT 
                         p.id as person_id,
                         p.name,
-                        pp.birth_date,
+                        -- 每个患者只取一个出生日期（最新的非空记录）
+                        (SELECT pp.birth_date 
+                         FROM patient_profiles pp 
+                         WHERE pp.person_id = p.id 
+                         AND pp.birth_date IS NOT NULL 
+                         AND pp.birth_date != ''
+                         ORDER BY pp.id DESC 
+                         LIMIT 1) as birth_date
+                    FROM persons p
+                    WHERE (SELECT pp.birth_date 
+                           FROM patient_profiles pp 
+                           WHERE pp.person_id = p.id 
+                           AND pp.birth_date IS NOT NULL 
+                           AND pp.birth_date != ''
+                           ORDER BY pp.id DESC 
+                           LIMIT 1) IS NOT NULL
+                ),
+                age_calculations AS (
+                    SELECT 
+                        person_id,
+                        name,
+                        birth_date,
                         CASE 
-                            WHEN pp.birth_date IS NOT NULL AND pp.birth_date != '' THEN
+                            WHEN birth_date IS NOT NULL AND birth_date != '' THEN
                                 CAST((julianday('now') - julianday(
                                     CASE 
-                                        WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9][0-9]' THEN
-                                            SUBSTR(pp.birth_date, 1, 4) || '-0' || SUBSTR(pp.birth_date, 6, 1) || '-' || SUBSTR(pp.birth_date, 8, 2)
-                                        WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]' THEN
-                                            SUBSTR(pp.birth_date, 1, 4) || '-' || SUBSTR(pp.birth_date, 6, 2) || '-' || SUBSTR(pp.birth_date, 9, 2)
-                                        ELSE pp.birth_date
+                                        -- 处理点号分隔的日期格式 (2014.3.27 -> 2014-03-27)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-0' || SUBSTR(birth_date, 6, 1) || '-0' || SUBSTR(birth_date, 8, 1)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9][0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-0' || SUBSTR(birth_date, 6, 1) || '-' || SUBSTR(birth_date, 8, 2)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-' || SUBSTR(birth_date, 6, 2) || '-0' || SUBSTR(birth_date, 9, 1)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-' || SUBSTR(birth_date, 6, 2) || '-' || SUBSTR(birth_date, 9, 2)
+                                        -- 处理已经是标准格式的日期
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' THEN
+                                            birth_date
+                                        -- 尝试将点号替换为短横线
+                                        WHEN birth_date LIKE '%.%.%' THEN
+                                            REPLACE(birth_date, '.', '-')
+                                        ELSE birth_date
                                     END
                                 )) / 365.25 AS INTEGER)
                             ELSE NULL
                         END as age
-                    FROM persons p
-                    LEFT JOIN patient_profiles pp ON p.id = pp.person_id
-                    WHERE pp.birth_date IS NOT NULL AND pp.birth_date != ''
+                    FROM patient_birth_dates
                 ),
                 age_ranges AS (
                     SELECT 
@@ -561,7 +608,7 @@ class DatabaseManager {
             const result = {
                 totalPatients: totalPatients?.count || 0,
                 totalRecords: totalRecords?.count || 0,
-                averageAge: averageAge?.avg_age || 0,
+                averageAge: ageSummary?.averageAge || 0, // 使用更准确的年龄计算
                 multipleAdmissions: multipleAdmissions?.count || 0,
                 genderStats: genderStats?.reduce((acc, item) => {
                     if (item.gender && item.count) {
@@ -602,56 +649,115 @@ class DatabaseManager {
         try {
             let ageCondition;
             switch (ageRange) {
-                case '0-3岁':
-                    ageCondition = 'age BETWEEN 0 AND 3';
+                case '0-1岁':
+                    ageCondition = 'age < 1';
+                    break;
+                case '1-3岁':
+                    ageCondition = 'age BETWEEN 1 AND 3';
                     break;
                 case '4-6岁':
                     ageCondition = 'age BETWEEN 4 AND 6';
                     break;
-                case '7-10岁':
-                    ageCondition = 'age BETWEEN 7 AND 10';
+                case '7-12岁':
+                    ageCondition = 'age BETWEEN 7 AND 12';
                     break;
-                case '11-15岁':
-                    ageCondition = 'age BETWEEN 11 AND 15';
+                case '13-18岁':
+                    ageCondition = 'age BETWEEN 13 AND 18';
                     break;
-                case '16-18岁':
-                    ageCondition = 'age BETWEEN 16 AND 18';
+                case '18岁以上':
+                    ageCondition = 'age > 18';
                     break;
                 default:
                     ageCondition = 'age < 0';
             }
 
             const patients = await this.all(`
-                WITH age_calc AS (
+                WITH patient_birth_dates AS (
                     SELECT 
-                        p.id,
+                        p.id as person_id,
                         p.name,
-                        pp.gender,
-                        pp.birth_date,
+                        -- 每个患者只取一个出生日期（最新的非空记录）- 与统计查询保持完全一致
+                        (SELECT pp.birth_date 
+                         FROM patient_profiles pp 
+                         WHERE pp.person_id = p.id 
+                         AND pp.birth_date IS NOT NULL 
+                         AND pp.birth_date != ''
+                         ORDER BY pp.id DESC 
+                         LIMIT 1) as birth_date,
+                        -- 获取性别信息（最新记录）
+                        (SELECT pp.gender 
+                         FROM patient_profiles pp 
+                         WHERE pp.person_id = p.id 
+                         AND pp.gender IS NOT NULL 
+                         AND pp.gender != ''
+                         ORDER BY pp.id DESC 
+                         LIMIT 1) as gender
+                    FROM persons p
+                    WHERE (SELECT pp.birth_date 
+                           FROM patient_profiles pp 
+                           WHERE pp.person_id = p.id 
+                           AND pp.birth_date IS NOT NULL 
+                           AND pp.birth_date != ''
+                           ORDER BY pp.id DESC 
+                           LIMIT 1) IS NOT NULL
+                ),
+                age_calculations AS (
+                    SELECT 
+                        person_id,
+                        name,
+                        birth_date,
+                        gender,
+                        -- 使用与统计查询完全相同的年龄计算逻辑
                         CASE 
-                            WHEN pp.birth_date IS NOT NULL AND pp.birth_date != '' THEN
-                                CASE 
-                                    -- 处理点号分隔的日期格式 (2014.3.27)
-                                    WHEN pp.birth_date LIKE '%.%.%' THEN
-                                        CAST((julianday('now') - julianday(REPLACE(REPLACE(pp.birth_date, '.', '-'), '--', '-'))) / 365.25 AS INTEGER)
-                                    -- 处理标准格式的日期
-                                    WHEN date(pp.birth_date) IS NOT NULL THEN
-                                        CAST((julianday('now') - julianday(date(pp.birth_date))) / 365.25 AS INTEGER)
-                                    ELSE -1
-                                END
-                            ELSE -1
-                        END as age,
-                        COUNT(cir.id) as check_in_count,
+                            WHEN birth_date IS NOT NULL AND birth_date != '' THEN
+                                CAST((julianday('now') - julianday(
+                                    CASE 
+                                        -- 处理点号分隔的日期格式 (2014.3.27 -> 2014-03-27)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-0' || SUBSTR(birth_date, 6, 1) || '-0' || SUBSTR(birth_date, 8, 1)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9][0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-0' || SUBSTR(birth_date, 6, 1) || '-' || SUBSTR(birth_date, 8, 2)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-' || SUBSTR(birth_date, 6, 2) || '-0' || SUBSTR(birth_date, 9, 1)
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]' THEN
+                                            SUBSTR(birth_date, 1, 4) || '-' || SUBSTR(birth_date, 6, 2) || '-' || SUBSTR(birth_date, 9, 2)
+                                        -- 处理已经是标准格式的日期
+                                        WHEN birth_date GLOB '[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]' THEN
+                                            birth_date
+                                        -- 尝试将点号替换为短横线
+                                        WHEN birth_date LIKE '%.%.%' THEN
+                                            REPLACE(birth_date, '.', '-')
+                                        ELSE birth_date
+                                    END
+                                )) / 365.25 AS INTEGER)
+                            ELSE NULL
+                        END as age
+                    FROM patient_birth_dates
+                ),
+                patient_with_age AS (
+                    SELECT 
+                        person_id as id,
+                        name,
+                        age,
+                        gender,
+                        -- 获取入住次数
+                        (SELECT COUNT(*) 
+                         FROM check_in_records cir 
+                         WHERE cir.person_id = person_id) as check_in_count,
+                        -- 获取最新诊断
                         (SELECT mi.diagnosis 
                          FROM medical_info mi 
-                         WHERE mi.person_id = p.id 
+                         WHERE mi.person_id = person_id
+                         AND mi.diagnosis IS NOT NULL 
+                         AND mi.diagnosis != ''
                          ORDER BY mi.record_date DESC 
                          LIMIT 1) as latest_diagnosis,
-                        MAX(cir.check_in_date) as latest_check_in
-                    FROM persons p
-                    LEFT JOIN patient_profiles pp ON p.id = pp.person_id
-                    LEFT JOIN check_in_records cir ON p.id = cir.person_id
-                    GROUP BY p.id, p.name, pp.gender, pp.birth_date
+                        -- 获取最近入住时间
+                        (SELECT MAX(cir.check_in_date) 
+                         FROM check_in_records cir 
+                         WHERE cir.person_id = person_id) as latest_check_in
+                    FROM age_calculations
+                    WHERE age IS NOT NULL AND ${ageCondition}
                 )
                 SELECT 
                     id,
@@ -661,8 +767,7 @@ class DatabaseManager {
                     COALESCE(latest_diagnosis, '无诊断信息') as main_diagnosis,
                     check_in_count,
                     latest_check_in
-                FROM age_calc
-                WHERE ${ageCondition}
+                FROM patient_with_age
                 ORDER BY name
             `);
 

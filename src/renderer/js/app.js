@@ -15,6 +15,12 @@ class PatientApp {
             trendChart: null
         };
         
+        // 页面状态标志，防止重复加载
+        this.pageStates = {
+            statisticsLoading: false,
+            statisticsLoaded: false
+        };
+        
         // DOM元素引用
         this.elements = {
             // 视图切换
@@ -197,12 +203,19 @@ class PatientApp {
 
     initStatisticsEvents() {
         // 年龄段模态框关闭事件
-        const ageModal = document.getElementById('ageModal');
-        const ageModalClose = document.getElementById('ageModalClose');
+        const ageModal = document.getElementById('ageDetailModal');
+        const ageModalClose = document.getElementById('closeAgeModal');
+        const ageModalCloseBtn = document.getElementById('closeAgeModalBtn');
         
         if (ageModalClose) {
             ageModalClose.addEventListener('click', () => {
-                ageModal.classList.remove('active');
+                ageModal.classList.add('hidden');
+            });
+        }
+        
+        if (ageModalCloseBtn) {
+            ageModalCloseBtn.addEventListener('click', () => {
+                ageModal.classList.add('hidden');
             });
         }
         
@@ -210,15 +223,15 @@ class PatientApp {
         if (ageModal) {
             ageModal.addEventListener('click', (e) => {
                 if (e.target === ageModal) {
-                    ageModal.classList.remove('active');
+                    ageModal.classList.add('hidden');
                 }
             });
         }
         
         // ESC键关闭模态框
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && ageModal.classList.contains('active')) {
-                ageModal.classList.remove('active');
+            if (e.key === 'Escape' && !ageModal.classList.contains('hidden')) {
+                ageModal.classList.add('hidden');
             }
         });
     }
@@ -695,6 +708,10 @@ class PatientApp {
                 break;
             case 'statistics':
                 this.setPage('statistics');
+                // 重置统计页面状态，允许重新加载（但仍然防止连续调用）
+                if (!this.pageStates.statisticsLoading) {
+                    this.pageStates.statisticsLoaded = false;
+                }
                 this.loadStatisticsPage();
                 break;
             default:
@@ -980,6 +997,22 @@ class PatientApp {
         try {
             console.log('🔍 [DEBUG] 开始加载统计页面...');
             
+            // 防止重复加载 - 关键修复！
+            if (this.pageStates.statisticsLoading) {
+                console.log('🔍 [DEBUG] 统计页面正在加载中，跳过重复调用');
+                return;
+            }
+            
+            // 如果已经加载过且没有错误，也跳过
+            if (this.pageStates.statisticsLoaded) {
+                console.log('🔍 [DEBUG] 统计页面已加载，跳过重复调用');
+                return;
+            }
+            
+            // 设置加载状态
+            this.pageStates.statisticsLoading = true;
+            console.log('🔍 [DEBUG] 设置加载状态为true');
+            
             // 清理现有的Chart实例，防止重复创建导致的问题
             this.destroyAllCharts();
             
@@ -1028,13 +1061,24 @@ class PatientApp {
             if (loadingEl) loadingEl.classList.add('hidden');
             this.hideLoading();
             
+            // 标记加载完成
+            this.pageStates.statisticsLoading = false;
+            this.pageStates.statisticsLoaded = true;
+            console.log('🔍 [DEBUG] 统计页面加载完成');
+            
         } catch (error) {
             this.hideLoading();
             console.error('加载统计数据失败:', error);
             
+            // 重置加载状态，允许重试
+            this.pageStates.statisticsLoading = false;
+            this.pageStates.statisticsLoaded = false;
+            
             // 显示错误状态
-            document.getElementById('statisticsLoading').classList.add('hidden');
-            document.getElementById('statisticsError').classList.remove('hidden');
+            const errorEl = document.getElementById('statisticsError');
+            const loadingEl = document.getElementById('statisticsLoading');
+            if (loadingEl) loadingEl.classList.add('hidden');
+            if (errorEl) errorEl.classList.remove('hidden');
             
             // 更详细的错误信息
             const errorMsg = error.message || '未知错误';
@@ -1180,7 +1224,9 @@ class PatientApp {
             const colorClass = colors[index] || colors[colors.length - 1];
             
             return `
-                <div class="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                <div class="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer age-group-card" 
+                     onclick="app.showAgeGroupModal('${item.age_range}')" 
+                     data-age-range="${item.age_range}">
                     <div class="flex items-center justify-between mb-3">
                         <div class="flex items-center gap-3">
                             <h4 class="text-lg font-semibold text-[var(--text-primary)]">${item.age_range}</h4>
@@ -1207,6 +1253,7 @@ class PatientApp {
                         <div class="border-t border-gray-100 pt-3">
                             <div class="flex items-center gap-2 mb-2">
                                 <span class="text-sm text-[var(--text-secondary)]">患者示例：</span>
+                                <span class="text-xs text-blue-600 font-medium">点击查看全部</span>
                             </div>
                             <div class="flex flex-wrap gap-2">
                                 ${examples.split(', ').map(name => 
@@ -1218,6 +1265,17 @@ class PatientApp {
                     ` : `
                         <div class="text-sm text-[var(--text-muted)] italic">暂无患者示例</div>
                     `}
+                    
+                    <!-- 点击提示 -->
+                    <div class="mt-3 pt-3 border-t border-gray-100">
+                        <div class="flex items-center justify-center gap-2 text-sm text-blue-600 hover:text-blue-700">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            <span>点击查看详细列表</span>
+                        </div>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -1401,38 +1459,101 @@ class PatientApp {
             const patients = await window.electronAPI.getAgeGroupPatients(ageRange);
             
             // 更新模态框内容
-            document.getElementById('ageModalTitle').textContent = `${ageRange} 患者列表 (${patients.length}人)`;
+            const modalTitle = document.getElementById('ageModalTitle');
+            const modalSubtitle = document.getElementById('ageModalSubtitle');
+            const modalPatients = document.getElementById('ageModalPatients');
+            
+            if (modalTitle) {
+                modalTitle.textContent = `${ageRange} 患者列表`;
+            }
+            if (modalSubtitle) {
+                modalSubtitle.textContent = `共 ${patients.length} 位患者`;
+            }
             
             // 生成患者列表HTML
-            const patientListHTML = patients.map(patient => `
-                <li class="patient-item">
-                    <div class="patient-info">
-                        <div class="patient-name" onclick="app.showPatientDetail(${patient.id})" data-id="${patient.id}">
-                            ${patient.name}
+            if (patients.length === 0) {
+                modalPatients.innerHTML = `
+                    <div class="text-center py-8 text-[var(--text-secondary)]">
+                        <svg class="mx-auto w-12 h-12 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.25 2.25 0 11-4.5 0 2.25 2.25 0 014.5 0z"/>
+                        </svg>
+                        <p>该年龄段暂无患者</p>
+                    </div>
+                `;
+            } else {
+                const patientListHTML = patients.map(patient => `
+                    <div class="bg-white rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow cursor-pointer patient-card-modal"
+                         onclick="app.navigateToPatientDetail(${patient.id})" 
+                         data-patient-id="${patient.id}">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                                    ${patient.name ? patient.name.charAt(0) : '?'}
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-[var(--text-primary)] hover:text-blue-600 transition-colors">
+                                        ${patient.name}
+                                    </h4>
+                                    <div class="text-sm text-[var(--text-secondary)]">
+                                        ${patient.age}岁 · ${patient.gender || '未知'}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-sm font-medium text-[var(--text-primary)]">
+                                    ${patient.check_in_count}次入住
+                                </div>
+                                <div class="text-xs text-[var(--text-muted)]">
+                                    ${patient.latest_check_in ? new Date(patient.latest_check_in).toLocaleDateString('zh-CN') : '无记录'}
+                                </div>
+                            </div>
                         </div>
-                        <div class="patient-details">
-                            <span>年龄: ${patient.age}岁</span>
-                            <span>性别: ${patient.gender || '未知'}</span>
-                            <span>诊断: ${patient.main_diagnosis}</span>
+                        <div class="mt-3 pt-3 border-t border-gray-100">
+                            <div class="text-sm text-[var(--text-secondary)]">
+                                <span class="font-medium">诊断：</span>${patient.main_diagnosis}
+                            </div>
+                        </div>
+                        <div class="mt-2 flex items-center justify-end">
+                            <span class="text-xs text-blue-600 font-medium flex items-center gap-1">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                                </svg>
+                                查看详情
+                            </span>
                         </div>
                     </div>
-                    <div class="patient-meta">
-                        <div>入住次数: ${patient.check_in_count}</div>
-                        <div>最近入住: ${patient.latest_check_in ? new Date(patient.latest_check_in).toLocaleDateString() : '无记录'}</div>
-                    </div>
-                </li>
-            `).join('');
-            
-            document.getElementById('ageModalPatientList').innerHTML = patientListHTML;
+                `).join('');
+                modalPatients.innerHTML = patientListHTML;
+            }
             
             // 显示模态框
-            document.getElementById('ageModal').classList.add('active');
+            const modal = document.getElementById('ageDetailModal');
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
             
             this.hideLoading();
         } catch (error) {
             this.hideLoading();
             console.error('加载年龄段患者失败:', error);
             this.showError('加载患者详情失败，请重试');
+        }
+    }
+
+    // 从模态框导航到患者详情页面
+    async navigateToPatientDetail(personId) {
+        try {
+            // 关闭年龄段模态框
+            const modal = document.getElementById('ageDetailModal');
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+            
+            // 导航到患者详情页面
+            await this.showPatientDetail(personId);
+        } catch (error) {
+            console.error('导航到患者详情失败:', error);
+            this.showError('无法打开患者详情页面');
         }
     }
 
@@ -1500,7 +1621,10 @@ class PatientApp {
             this.renderPatientDetail();
             
             // 关闭模态框（如果打开）
-            document.getElementById('ageModal').classList.remove('active');
+            const ageModal = document.getElementById('ageDetailModal');
+            if (ageModal) {
+                ageModal.classList.add('hidden');
+            }
             
             this.hideLoading();
         } catch (error) {

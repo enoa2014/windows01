@@ -131,6 +131,32 @@ class App {
                 throw error;
             }
         });
+
+        // 获取扩展统计信息
+        ipcMain.handle('get-extended-statistics', async () => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.dbManager.getExtendedStatistics();
+            } catch (error) {
+                console.error('获取扩展统计信息失败:', error);
+                throw error;
+            }
+        });
+
+        // 获取年龄段患者列表
+        ipcMain.handle('get-age-group-patients', async (event, ageRange) => {
+            try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
+                return await this.dbManager.getAgeGroupPatients(ageRange);
+            } catch (error) {
+                console.error('获取年龄段患者列表失败:', error);
+                throw error;
+            }
+        });
     }
 }
 

@@ -8,7 +8,8 @@
     "dev": "electron . --dev",
     "build-win": "electron-builder --win",
     "build": "electron-builder",
-    "test": "jest"
+    "test": "jest",
+    "fix-names": "node fix-names.js"
   },
   "keywords": ["electron", "sqlite", "excel", "患儿管理"],
   "author": "Your Name",

@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
     getPatientDetail: (personId) => ipcRenderer.invoke('get-patient-detail', personId),
     searchPatients: (query) => ipcRenderer.invoke('search-patients', query),
     getStatistics: () => ipcRenderer.invoke('get-statistics'),
+    getExtendedStatistics: () => ipcRenderer.invoke('get-extended-statistics'),
+    getAgeGroupPatients: (ageRange) => ipcRenderer.invoke('get-age-group-patients', ageRange),
     
     // 文件操作
     importExcel: () => ipcRenderer.invoke('import-excel'),

@@ -168,7 +168,93 @@
     font-weight: 600;
 }
 
+/* 年龄段卡片可点击样式 */
+.age-group-card {
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.age-group-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    border-color: var(--brand-primary);
+}
+
+.age-group-card:active {
+    transform: translateY(0);
+}
+
 /* 年龄段详情模态框样式 */
+.age-detail-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.age-detail-modal.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.age-detail-modal .modal-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 700px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    transform: scale(0.95);
+    transition: transform 0.3s ease;
+}
+
+.age-detail-modal:not(.hidden) .modal-content {
+    transform: scale(1);
+}
+
+.age-detail-modal .modal-header {
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.age-detail-modal .modal-body {
+    padding: 1rem 1.5rem;
+    max-height: 50vh;
+    overflow-y: auto;
+}
+
+.age-detail-modal .modal-footer {
+    padding: 1rem 1.5rem 1.5rem;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
+/* 患者卡片模态框样式 */
+.patient-card-modal {
+    transition: all 0.2s ease;
+}
+
+.patient-card-modal:hover {
+    transform: translateY(-1px);
+    border-color: var(--brand-primary);
+}
+
+.patient-card-modal:active {
+    transform: translateY(0);
+}
+
+/* 保持原有模态框样式兼容性 */
 .age-modal {
     position: fixed;
     top: 0;

@@ -2,7 +2,13 @@
   "permissions": {
     "allow": [
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "mcp__sequential-thinking__sequentialthinking",
+      "Bash(node:*)",
+      "Bash(npm run dev:*)",
+      "Bash(git push:*)",
+      "Bash(npm start:*)",
+      "Bash(git rm:*)"
     ],
     "deny": [],
     "ask": []
