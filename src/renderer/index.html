@@ -873,6 +873,181 @@
       </div>
     </section>
 
+    <!-- 家庭服务统计页面 -->
+    <section id="familyServiceView" class="page" aria-labelledby="familyServiceTitle">
+      <h2 id="familyServiceTitle" class="sr-only">家庭服务统计</h2>
+      
+      <!-- 页面标题 -->
+      <div class="mb-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-[var(--text-primary)] mb-2">家庭服务统计</h1>
+        <p class="text-[var(--text-secondary)] text-sm md:text-base">家庭服务记录统计与分析</p>
+      </div>
+
+      <!-- 加载状态 -->
+      <div id="familyServiceLoading" class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)] mx-auto mb-4"></div>
+        <p class="text-[var(--text-secondary)]">加载中...</p>
+      </div>
+
+      <!-- 错误状态 -->
+      <div id="familyServiceError" class="text-center py-8 hidden">
+        <div class="text-red-500 mb-4">
+          <svg class="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <p class="text-[var(--text-secondary)] mb-4">加载失败</p>
+        <button id="retryFamilyService" class="btn btn-primary" onclick="app.loadFamilyServicePage()">重试</button>
+      </div>
+
+      <!-- 内容区域 -->
+      <div id="familyServiceContent" class="hidden">
+        <!-- 统计概览卡片 -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+          <div class="stat-card">
+            <div class="stat-value" id="fsStatTotalRecords">-</div>
+            <div class="stat-label">记录总数</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="fsStatTotalFamilies">-</div>
+            <div class="stat-label">服务家庭</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="fsStatTotalServices">-</div>
+            <div class="stat-label">总服务人次</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="fsStatAvgDays">-</div>
+            <div class="stat-label">平均天数</div>
+          </div>
+        </div>
+
+        <!-- 筛选工具栏 -->
+        <div class="card p-6 mb-6">
+          <div class="flex flex-wrap gap-4 items-end">
+            <!-- 年份筛选 -->
+            <div class="flex-1 min-w-32">
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-2">年份</label>
+              <select id="fsYearFilter" class="w-full p-2 border border-[var(--border-primary)] rounded-lg bg-[var(--bg-primary)] text-[var(--text-primary)]">
+                <option value="">全部年份</option>
+              </select>
+            </div>
+            
+            <!-- 搜索框 -->
+            <div class="flex-1 min-w-48">
+              <label class="block text-sm font-medium text-[var(--text-secondary)] mb-2">搜索</label>
+              <input type="text" id="fsSearchInput" placeholder="搜索备注内容..." 
+                     class="w-full p-2 border border-[var(--border-primary)] rounded-lg bg-[var(--bg-primary)] text-[var(--text-primary)]">
+            </div>
+
+            <!-- 操作按钮 -->
+            <div class="flex gap-2">
+              <button id="fsResetBtn" class="btn btn-secondary">重置</button>
+              <button id="fsExportBtn" class="btn btn-primary">导出Excel</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="card">
+          <div class="p-6 border-b border-[var(--border-primary)]">
+            <div class="flex items-center justify-between">
+              <h3 class="text-lg font-semibold text-[var(--text-primary)]">家庭服务记录</h3>
+              <div class="flex items-center space-x-4">
+                <span id="fsRecordCount" class="text-sm text-[var(--text-secondary)]">共 0 条记录</span>
+                <!-- 视图切换选项 -->
+                <div class="flex items-center space-x-2">
+                  <span class="text-sm text-gray-500">视图:</span>
+                  <div class="flex bg-gray-100 rounded-lg p-1">
+                    <button id="fsGridViewBtn" class="px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-all" title="网格视图">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 2 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                      </svg>
+                    </button>
+                    <button id="fsListViewBtn" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-md shadow-sm transition-all" title="列表视图">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 服务记录网格/列表容器 -->
+          <div id="serviceRecordGrid" class="service-list-view space-y-4 p-6">
+            <!-- 卡片内容动态生成 -->
+          </div>
+          
+          <!-- 保留原表格结构以防需要切换回来 -->
+          <div class="overflow-x-auto" style="display: none;">
+            <table class="w-full">
+              <thead id="fsTableHeader" class="bg-[var(--bg-secondary)]">
+                <!-- 表头动态生成 -->
+              </thead>
+              <tbody id="fsTableBody">
+                <!-- 表格内容动态生成 -->
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- 分页 -->
+          <div id="fsPagination" class="p-4 border-t border-[var(--border-primary)] flex items-center justify-between">
+            <span class="text-sm text-[var(--text-secondary)]">
+              第 <span id="fsCurrentPage">1</span> 页，共 <span id="fsTotalPages">1</span> 页
+            </span>
+            <div class="flex gap-2">
+              <button id="fsPrevPage" class="btn btn-secondary btn-sm">上一页</button>
+              <button id="fsNextPage" class="btn btn-secondary btn-sm">下一页</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 空状态 -->
+        <div id="fsEmptyState" class="text-center py-12 hidden">
+          <svg class="w-16 h-16 text-[var(--text-muted)] mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <h3 class="text-lg font-semibold text-[var(--text-secondary)] mb-2">暂无数据</h3>
+          <p class="text-[var(--text-muted)]">没有符合条件的记录</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 家庭服务详情页面 -->
+    <section id="familyServiceDetailView" class="page" aria-labelledby="familyServiceDetailTitle">
+      <h2 id="familyServiceDetailTitle" class="sr-only">家庭服务详情</h2>
+      
+      <!-- 页面标题栏 -->
+      <div class="mb-6 no-print">
+        <div class="flex flex-wrap items-center gap-3">
+          <div class="size-12 rounded-full bg-[var(--brand-primary)] text-[var(--brand-text)] grid place-items-center text-lg font-semibold">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"/>
+            </svg>
+          </div>
+          <div>
+            <h2 id="fsDetailTitle" class="text-2xl md:text-3xl font-extrabold text-[var(--brand-secondary)]">家庭服务详情</h2>
+            <p id="fsDetailSubtitle" class="text-[var(--text-secondary)]">服务记录详细信息</p>
+          </div>
+          <div class="ml-auto flex items-center gap-2">
+            <button onclick="window.print()" class="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-primary)] px-3 py-2 text-sm hover:bg-[var(--bg-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)]">
+              打印
+            </button>
+            <button id="exportFsDetail" class="inline-flex items-center gap-1.5 rounded-xl border border-[var(--border-primary)] px-3 py-2 text-sm hover:bg-[var(--bg-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)]">
+              导出
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 详情内容区域 -->
+      <div id="familyServiceDetailContent" class="rounded-2xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] p-5 md:p-7 shadow-sm print-container">
+        <!-- 内容将通过JavaScript动态生成 -->
+      </div>
+    </section>
+
     <!-- 年龄段详情模态框 -->
     <div id="ageDetailModal" class="age-detail-modal hidden">
       <div class="modal-content">
@@ -904,6 +1079,41 @@
     © <span id="year"></span> 患儿入住信息管理系统 · <span id="appVersion"></span> · <span id="printTime" class="hidden md:inline"></span>
   </footer>
 
+  <!-- 配置文件 -->
+  <script src="../config/resources.js"></script>
+  <script src="../config/columns.js"></script>
+  <script src="../config/filters.js"></script>
+  <script src="../viewmodels/FamilyServiceViewModel.js"></script>
+  
   <script src="./js/app.js"></script>
+  
+  <!-- 紧急调试脚本 - 确认JavaScript可以执行 -->
+  <script>
+    console.log('🚨 紧急调试：index.html中的JavaScript正在执行');
+    console.log('  📅 时间戳:', new Date().toISOString());
+    console.log('  🌐 当前URL:', window.location.href);
+    console.log('  📦 electronAPI可用:', !!window.electronAPI);
+    
+    // 显示一个明显的视觉指示器
+    document.addEventListener('DOMContentLoaded', () => {
+      console.log('🎯 DOM加载完成');
+      const indicator = document.createElement('div');
+      indicator.style.cssText = `
+        position: fixed; 
+        top: 50px; 
+        right: 10px; 
+        background: orange; 
+        color: white; 
+        padding: 10px; 
+        z-index: 10000; 
+        border: 2px solid red;
+        font-weight: bold;
+      `;
+      indicator.textContent = 'JavaScript正在运行';
+      document.body.appendChild(indicator);
+      
+      console.log('🔸 橙色指示器已添加到页面');
+    });
+  </script>
 </body>
 </html>

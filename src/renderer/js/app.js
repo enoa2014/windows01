@@ -1072,7 +1072,7 @@ class PatientApp {
     // 设置DOM事件监听器
     setupFamilyServiceDOMListeners() {
         // 搜索框 - 修正元素ID
-        const searchInput = document.getElementById('searchInput');
+        const searchInput = document.getElementById('fsSearchInput');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 this.debounce(() => this.handleFamilyServiceSearch(e.target.value), 300)();
@@ -1080,7 +1080,7 @@ class PatientApp {
         }
 
         // 年份筛选 - 修正元素ID
-        const yearFilter = document.getElementById('yearFilter');
+        const yearFilter = document.getElementById('fsYearFilter');
         if (yearFilter) {
             yearFilter.addEventListener('change', (e) => {
                 this.handleFamilyServiceYearFilter(e.target.value);
@@ -1088,7 +1088,7 @@ class PatientApp {
         }
 
         // 重置按钮 - 修正元素ID
-        const resetBtn = document.getElementById('resetBtn');
+        const resetBtn = document.getElementById('fsResetBtn');
         if (resetBtn) {
             resetBtn.addEventListener('click', () => {
                 this.resetFamilyServiceFilters();
@@ -1096,7 +1096,7 @@ class PatientApp {
         }
 
         // 导出按钮
-        const exportBtn = document.getElementById('exportBtn');
+        const exportBtn = document.getElementById('fsExportBtn');
         if (exportBtn) {
             exportBtn.addEventListener('click', () => {
                 this.exportFamilyServiceData();
@@ -1104,8 +1104,8 @@ class PatientApp {
         }
         
         // 视图切换按钮
-        const gridViewBtn = document.getElementById('gridViewBtn');
-        const listViewBtn = document.getElementById('listViewBtn');
+        const gridViewBtn = document.getElementById('fsGridViewBtn');
+        const listViewBtn = document.getElementById('fsListViewBtn');
         if (gridViewBtn) {
             gridViewBtn.addEventListener('click', () => {
                 if (this.familyServiceVM) {
@@ -1200,23 +1200,29 @@ class PatientApp {
 
     // 渲染数据表格
     renderFamilyServiceTable(data) {
+        console.log('🎨 [App] renderFamilyServiceTable 被调用');
+        console.log('  📊 data.length:', data.length);
+        console.log('  🔍 familyServiceVM 存在:', !!this.familyServiceVM);
+        
         if (!this.familyServiceVM) return;
         
         // 使用家庭服务页面的实际元素ID
         const serviceRecordGrid = document.getElementById('serviceRecordGrid');
+        console.log('  🎯 serviceRecordGrid 元素:', !!serviceRecordGrid);
+        
         if (!serviceRecordGrid) {
-            console.warn('serviceRecordGrid element not found');
+            console.error('❌ serviceRecordGrid element not found - 这是数据无法显示的原因！');
             return;
         }
 
         // 更新记录计数
-        const recordCountElement = document.getElementById('resultCount');
+        const recordCountElement = document.getElementById('fsRecordCount');
         if (recordCountElement) {
             recordCountElement.textContent = `共 ${data.length} 条记录`;
         }
 
         // 显示/隐藏空状态
-        const emptyState = document.getElementById('emptyState');
+        const emptyState = document.getElementById('fsEmptyState');
         if (emptyState) {
             emptyState.classList.toggle('hidden', data.length > 0);
         }
@@ -1249,8 +1255,8 @@ class PatientApp {
 
     // 更新视图切换按钮状态
     updateFamilyServiceViewButtons(mode) {
-        const gridViewBtn = document.getElementById('gridViewBtn');
-        const listViewBtn = document.getElementById('listViewBtn');
+        const gridViewBtn = document.getElementById('fsGridViewBtn');
+        const listViewBtn = document.getElementById('fsListViewBtn');
         
         if (!gridViewBtn || !listViewBtn) return;
         
