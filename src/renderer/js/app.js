@@ -1071,24 +1071,24 @@ class PatientApp {
 
     // 设置DOM事件监听器
     setupFamilyServiceDOMListeners() {
-        // 搜索框
-        const searchInput = document.getElementById('fsSearchInput');
+        // 搜索框 - 修正元素ID
+        const searchInput = document.getElementById('searchInput');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => {
                 this.debounce(() => this.handleFamilyServiceSearch(e.target.value), 300)();
             });
         }
 
-        // 年份筛选
-        const yearFilter = document.getElementById('fsYearFilter');
+        // 年份筛选 - 修正元素ID
+        const yearFilter = document.getElementById('yearFilter');
         if (yearFilter) {
             yearFilter.addEventListener('change', (e) => {
                 this.handleFamilyServiceYearFilter(e.target.value);
             });
         }
 
-        // 重置按钮
-        const resetBtn = document.getElementById('fsResetBtn');
+        // 重置按钮 - 修正元素ID
+        const resetBtn = document.getElementById('resetBtn');
         if (resetBtn) {
             resetBtn.addEventListener('click', () => {
                 this.resetFamilyServiceFilters();
@@ -1181,8 +1181,8 @@ class PatientApp {
     updateFamilyServiceFilters(filterOptions) {
         if (!filterOptions) return;
 
-        // 更新年份选择器
-        const yearFilter = document.getElementById('fsYearFilter');
+        // 更新年份选择器 - 修正元素ID
+        const yearFilter = document.getElementById('yearFilter');
         if (yearFilter && filterOptions.years) {
             const currentValue = yearFilter.value;
             yearFilter.innerHTML = '<option value="">全部年份</option>';
@@ -1337,9 +1337,12 @@ class PatientApp {
     handleFamilyServiceSearch(searchText) {
         if (!this.familyServiceVM) return;
         
+        // 修复：trim()处理空格，避免空格被当作有效条件
+        const trimmedText = searchText?.trim() || '';
+        
         const filters = { ...this.familyServiceVM.state.filters };
-        if (searchText) {
-            filters.search = searchText;
+        if (trimmedText) {
+            filters.search = trimmedText;
         } else {
             delete filters.search;
         }
@@ -1363,8 +1366,8 @@ class PatientApp {
 
     // 重置筛选
     resetFamilyServiceFilters() {
-        const searchInput = document.getElementById('fsSearchInput');
-        const yearFilter = document.getElementById('fsYearFilter');
+        const searchInput = document.getElementById('searchInput');
+        const yearFilter = document.getElementById('yearFilter');
         
         if (searchInput) searchInput.value = '';
         if (yearFilter) yearFilter.value = '';
