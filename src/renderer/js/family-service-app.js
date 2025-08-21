@@ -288,7 +288,18 @@ class FamilyServiceApp {
                 offset: (this.state.pagination.currentPage - 1) * this.state.pagination.pageSize
             };
 
+            // 调试日志：记录传递给IPC的参数
+            console.log('🔍 FamilyServiceApp.loadRecords 调用参数:');
+            console.log('  filters:', JSON.stringify(filters));
+            console.log('  pagination:', JSON.stringify(pagination));
+
             const records = await window.electronAPI.familyService.getRecords(filters, pagination);
+            
+            // 调试日志：记录返回结果
+            console.log('  返回记录数:', records.length);
+            if (records.length === 0) {
+                console.warn('  ⚠️ 返回了0条记录！');
+            }
             
             this.state.records = records;
             this.state.filteredRecords = records;

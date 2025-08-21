@@ -13,11 +13,22 @@ class DatabaseManager {
 
     async initialize() {
         try {
+            console.log('🔧 DatabaseManager 初始化...');
+            console.log('📁 数据库路径:', this.dbPath);
+            console.log('📊 是否为Electron环境:', !!app);
+            
             // 确保数据目录存在
             await fs.mkdir(path.dirname(this.dbPath), { recursive: true });
             
             // 连接数据库
             this.db = await this.connectDatabase();
+            
+            // 检查数据库中的记录数量
+            const familyServiceCount = await this.get('SELECT COUNT(*) as count FROM family_service_records').catch(() => ({ count: 0 }));
+            const personsCount = await this.get('SELECT COUNT(*) as count FROM persons').catch(() => ({ count: 0 }));
+            console.log('📋 当前数据库记录统计:');
+            console.log(`   family_service_records: ${familyServiceCount.count} 条`);
+            console.log(`   persons: ${personsCount.count} 条`);
             
             // 启用外键约束
             await this.run('PRAGMA foreign_keys = ON');
@@ -25,7 +36,7 @@ class DatabaseManager {
             // 创建表结构
             await this.createTables();
             
-            console.log('数据库初始化完成:', this.dbPath);
+            console.log('✅ 数据库初始化完成:', this.dbPath);
         } catch (error) {
             console.error('数据库初始化失败:', error);
             throw error;
