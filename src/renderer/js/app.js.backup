@@ -261,7 +261,7 @@ class PatientApp {
             
             // 如果当前在主页，更新主页统计
             if (this.currentView === 'home') {
-                await this.updateHomeStatistics();
+                this.updateHomeStatistics();
             }
             
             this.hideLoading();
@@ -736,7 +736,7 @@ class PatientApp {
         }
     }
 
-    async setPage(pageName, addToHistory = true) {
+    setPage(pageName, addToHistory = true) {
         const pages = ['home', 'list', 'detail', 'statistics', 'familyService'];
         pages.forEach(page => {
             const element = this.elements[`${page}View`];
@@ -764,7 +764,7 @@ class PatientApp {
         
         // 如果是主页，更新统计数据
         if (pageName === 'home') {
-            await this.updateHomeStatistics();
+            this.updateHomeStatistics();
         }
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1198,7 +1198,7 @@ class PatientApp {
         }
     }
 
-    async updateHomeStatistics() {
+    updateHomeStatistics() {
         // 更新主页统计数据
         if (this.pageStates.dataLoaded && this.patients) {
             const patientCount = this.patients.length;
@@ -1211,22 +1211,6 @@ class PatientApp {
             // 数据未加载时显示默认值
             this.elements.homePatientCount.textContent = '-';
             this.elements.homeRecordCount.textContent = '-';
-        }
-
-        // 新增：加载家庭服务统计
-        try {
-            const familyStats = await window.electronAPI.familyService.getOverviewStats();
-            if (familyStats?.overall) {
-                this.elements.homeFamilyCount.textContent = familyStats.overall.totalFamilies || '-';
-                this.elements.homeServiceCount.textContent = familyStats.overall.totalServices || '-';
-            } else {
-                this.elements.homeFamilyCount.textContent = '-';
-                this.elements.homeServiceCount.textContent = '-';
-            }
-        } catch (error) {
-            console.error('加载家庭服务统计失败:', error);
-            this.elements.homeFamilyCount.textContent = '-';
-            this.elements.homeServiceCount.textContent = '-';
         }
     }
 
