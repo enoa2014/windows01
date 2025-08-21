@@ -54,10 +54,15 @@ class FamilyServiceManager {
                 params.push(searchPattern, searchPattern, searchPattern);
             }
 
-            // 年份筛选 - 修复"all"值问题
-            if (filters.year && filters.year !== 'all' && filters.year.trim()) {
-                conditions.push("strftime('%Y', year_month) = ?");
-                params.push(filters.year.toString());
+            // 年份筛选 - 修复各种无效年份值问题
+            if (filters.year && filters.year.trim()) {
+                const year = filters.year.toString().trim();
+                // 只处理4位数字的有效年份
+                if (/^\d{4}$/.test(year)) {
+                    conditions.push("strftime('%Y', year_month) = ?");
+                    params.push(year);
+                }
+                // 忽略所有非数字年份值：'all', '全部', '全部年份', 'undefined' 等
             }
 
             // 月份筛选

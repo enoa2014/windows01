@@ -169,6 +169,7 @@ class App {
                 if (!this.isInitialized) {
                     throw new Error('应用未完全初始化');
                 }
+                
                 return await this.familyServiceManager.getRecords(filters, pagination);
             } catch (error) {
                 console.error('获取家庭服务记录失败:', error);
