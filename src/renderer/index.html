@@ -6,6 +6,7 @@
   <title>患儿入住信息管理系统</title>
   <meta name="color-scheme" content="light dark" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -14,6 +15,7 @@
   <link rel="stylesheet" href="./styles/patient-detail.css">
   <link rel="stylesheet" href="./styles/animations.css">
   <link rel="stylesheet" href="./styles/responsive.css">
+  <link rel="stylesheet" href="./styles/statistics.css">
   <style>
     /* ===================== 主题系统（CSS 变量） ===================== */
     :root {
@@ -504,6 +506,32 @@
           </div>
         </div>
 
+        <!-- 数据统计分析 -->
+        <div class="card group cursor-pointer" onclick="app.navigateTo('statistics')">
+          <div class="card-header-bg p-6">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-white">数据统计分析</h3>
+                <p class="text-white/80 text-sm">入住统计 · 分布分析</p>
+              </div>
+            </div>
+          </div>
+          <div class="p-6">
+            <p class="text-[var(--text-secondary)] mb-4">查看患儿入住数据统计、年龄分布、疾病分析等综合报表</p>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-[var(--brand-primary)] font-medium">立即访问</span>
+              <svg class="w-4 h-4 text-[var(--brand-primary)] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
         <!-- 关怀服务管理 -->
         <div class="card group cursor-pointer opacity-75" onclick="app.showComingSoon('关怀服务管理')">
           <div class="p-6 border-b border-[var(--border-primary)]">
@@ -688,6 +716,156 @@
     </section>
 
     <section id="detailView" class="page" aria-labelledby="detailTitle"></section>
+
+    <!-- 统计页面 -->
+    <section id="statisticsView" class="page" aria-labelledby="statisticsTitle">
+      <h2 id="statisticsTitle" class="sr-only">数据统计分析</h2>
+      
+      <!-- 页面标题 -->
+      <div class="mb-8">
+        <h1 class="text-2xl md:text-3xl font-bold text-[var(--text-primary)] mb-2">数据统计分析</h1>
+        <p class="text-[var(--text-secondary)] text-sm md:text-base">全面了解患儿入住情况和分布特征</p>
+      </div>
+
+      <!-- 快速统计卡片 -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
+        <!-- 患者总数 -->
+        <div class="stat-card">
+          <div class="stat-value" id="statTotalPatients">-</div>
+          <div class="stat-label">患者总数</div>
+        </div>
+        
+        <!-- 总记录数 -->
+        <div class="stat-card">
+          <div class="stat-value" id="statTotalRecords">-</div>
+          <div class="stat-label">入住记录</div>
+        </div>
+        
+        <!-- 平均年龄 -->
+        <div class="stat-card">
+          <div class="stat-value" id="statAverageAge">-</div>
+          <div class="stat-label">平均年龄</div>
+        </div>
+        
+        <!-- 多次入住 -->
+        <div class="stat-card">
+          <div class="stat-value" id="statMultipleAdmissions">-</div>
+          <div class="stat-label">多次入住</div>
+        </div>
+      </div>
+
+      <!-- 年龄分布详细分析 -->
+      <div class="mb-8">
+        <div class="flex items-center gap-2 mb-6">
+          <span class="text-2xl">🎂</span>
+          <h3 class="text-xl font-bold text-[var(--text-primary)]">年龄分布详细分析</h3>
+        </div>
+        
+        <!-- 年龄统计概览 -->
+        <div class="bg-gradient-to-r from-teal-50 to-blue-50 rounded-xl p-6 mb-6 border border-teal-100">
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div>
+              <div class="text-sm text-[var(--text-secondary)] mb-1">有效年龄记录</div>
+              <div class="text-2xl font-bold text-[var(--brand-primary)]">
+                <span id="validAgeCount">-</span>人 
+                <span class="text-sm font-normal">(<span id="validAgePercentage">-</span>%)</span>
+              </div>
+            </div>
+            <div>
+              <div class="text-sm text-[var(--text-secondary)] mb-1">平均年龄</div>
+              <div class="text-2xl font-bold text-[var(--brand-primary)]" id="detailedAvgAge">-</div>
+            </div>
+            <div>
+              <div class="text-sm text-[var(--text-secondary)] mb-1">最小年龄</div>
+              <div class="text-2xl font-bold text-[var(--brand-primary)]" id="minAge">-</div>
+            </div>
+            <div>
+              <div class="text-sm text-[var(--text-secondary)] mb-1">最大年龄</div>
+              <div class="text-2xl font-bold text-[var(--brand-primary)]" id="maxAge">-</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 年龄段分布 -->
+        <div id="ageDistributionContainer" class="space-y-4">
+          <!-- 动态生成年龄段分布 -->
+        </div>
+      </div>
+
+      <!-- 其他图表区域 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- 性别分布 -->
+        <div class="chart-container">
+          <h3 class="chart-title">性别分布</h3>
+          <canvas id="genderChart" width="400" height="300"></canvas>
+        </div>
+        
+        <!-- 籍贯分布 -->
+        <div class="chart-container">
+          <h3 class="chart-title">主要籍贯分布</h3>
+          <canvas id="locationChart" width="400" height="300"></canvas>
+        </div>
+        
+        <!-- 疾病分布 -->
+        <div class="chart-container">
+          <h3 class="chart-title">主要疾病分布</h3>
+          <canvas id="diseaseChart" width="400" height="300"></canvas>
+        </div>
+        
+        <!-- 医生统计 -->
+        <div class="chart-container">
+          <h3 class="chart-title">主要医生统计</h3>
+          <canvas id="doctorChart" width="400" height="300"></canvas>
+        </div>
+        
+        <!-- 入住趋势 -->
+        <div class="chart-container">
+          <h3 class="chart-title">入住趋势</h3>
+          <canvas id="trendChart" width="400" height="300"></canvas>
+        </div>
+      </div>
+      
+      <!-- 加载状态 -->
+      <div id="statisticsLoading" class="hidden text-center py-12">
+        <div class="spinner mx-auto mb-4"></div>
+        <p class="text-[var(--text-secondary)]">加载统计数据中...</p>
+      </div>
+      
+      <!-- 错误状态 -->
+      <div id="statisticsError" class="hidden text-center py-12">
+        <svg class="mx-auto w-16 h-16 text-[var(--text-muted)] mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+        </svg>
+        <p class="text-[var(--text-secondary)] mb-4">加载统计数据失败</p>
+        <button id="retryStatistics" class="btn btn-primary" onclick="app.loadStatisticsPage()">重试</button>
+      </div>
+    </section>
+
+    <!-- 年龄段详情模态框 -->
+    <div id="ageDetailModal" class="age-detail-modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="flex items-center justify-between">
+            <h3 id="ageModalTitle" class="text-lg font-semibold text-[var(--text-primary)]">年龄段详情</h3>
+            <button id="closeAgeModal" class="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          <p id="ageModalSubtitle" class="text-sm text-[var(--text-secondary)] mt-1">共 - 位患者</p>
+        </div>
+        <div class="modal-body">
+          <div id="ageModalPatients" class="space-y-2">
+            <!-- 患者列表动态生成 -->
+          </div>
+        </div>
+        <div class="modal-footer p-6 border-t border-[var(--border-primary)]">
+          <button id="exportAgeGroup" class="btn btn-secondary mr-3">导出列表</button>
+          <button id="closeAgeModalBtn" class="btn btn-primary">关闭</button>
+        </div>
+      </div>
+    </div>
   </main>
 
   <footer class="mt-10 pb-10 text-center text-xs text-[var(--text-muted)] no-print" role="contentinfo">

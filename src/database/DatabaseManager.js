@@ -351,6 +351,328 @@ class DatabaseManager {
         };
     }
 
+    async getExtendedStatistics() {
+        try {
+            // 优化：分批获取统计数据，减少并发查询压力
+            // 1. 基础统计（高优先级）
+            const [totalPatients, totalRecords] = await Promise.all([
+                this.get('SELECT COUNT(DISTINCT p.id) as count FROM persons p'),
+                this.get('SELECT COUNT(*) as count FROM check_in_records')
+            ]);
+
+            // 2. 患者相关统计（中优先级）
+            const [genderStats, multipleAdmissions, averageAge] = await Promise.all([
+                this.all(`
+                    SELECT pp.gender, COUNT(*) as count 
+                    FROM persons p 
+                    LEFT JOIN patient_profiles pp ON p.id = pp.person_id 
+                    WHERE pp.gender IS NOT NULL AND pp.gender != ''
+                    GROUP BY pp.gender
+                `),
+                this.get(`
+                    SELECT COUNT(*) as count 
+                    FROM persons p 
+                    WHERE (
+                        SELECT COUNT(*) 
+                        FROM check_in_records cir 
+                        WHERE cir.person_id = p.id
+                    ) > 1
+                `),
+                this.get(`
+                    SELECT ROUND(AVG(
+                        CASE 
+                            WHEN pp.birth_date IS NOT NULL 
+                            AND pp.birth_date != '' 
+                            THEN 
+                                CASE 
+                                    -- 处理点号分隔的日期格式 (2014.3.27 -> 2014-03-27)
+                                    WHEN pp.birth_date LIKE '%.%.%' THEN
+                                        (julianday('now') - julianday(
+                                            CASE 
+                                                WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9]' THEN
+                                                    SUBSTR(pp.birth_date, 1, 4) || '-0' || SUBSTR(pp.birth_date, 6, 1) || '-0' || SUBSTR(pp.birth_date, 8, 1)
+                                                WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9][0-9]' THEN
+                                                    SUBSTR(pp.birth_date, 1, 4) || '-0' || SUBSTR(pp.birth_date, 6, 1) || '-' || SUBSTR(pp.birth_date, 8, 2)
+                                                WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9]' THEN
+                                                    SUBSTR(pp.birth_date, 1, 4) || '-' || SUBSTR(pp.birth_date, 6, 2) || '-0' || SUBSTR(pp.birth_date, 9, 1)
+                                                WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]' THEN
+                                                    SUBSTR(pp.birth_date, 1, 4) || '-' || SUBSTR(pp.birth_date, 6, 2) || '-' || SUBSTR(pp.birth_date, 9, 2)
+                                                ELSE REPLACE(pp.birth_date, '.', '-')
+                                            END
+                                        )) / 365.25
+                                    -- 处理标准格式的日期
+                                    WHEN date(pp.birth_date) IS NOT NULL THEN
+                                        (julianday('now') - julianday(date(pp.birth_date))) / 365.25
+                                    ELSE NULL
+                                END
+                            ELSE NULL
+                        END
+                    ), 1) as avg_age
+                    FROM persons p
+                    LEFT JOIN patient_profiles pp ON p.id = pp.person_id
+                    WHERE pp.birth_date IS NOT NULL 
+                    AND pp.birth_date != ''
+                `)
+            ]);
+
+            // 3. 年龄统计摘要
+            const ageSummary = await this.get(`
+                WITH age_calculations AS (
+                    SELECT 
+                        p.id as person_id,
+                        p.name,
+                        pp.birth_date,
+                        CASE 
+                            WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9][0-9]' THEN
+                                SUBSTR(pp.birth_date, 1, 4) || '-0' || SUBSTR(pp.birth_date, 6, 1) || '-' || SUBSTR(pp.birth_date, 8, 2)
+                            WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]' THEN
+                                SUBSTR(pp.birth_date, 1, 4) || '-' || SUBSTR(pp.birth_date, 6, 2) || '-' || SUBSTR(pp.birth_date, 9, 2)
+                            ELSE pp.birth_date
+                        END as standardized_birth_date,
+                        CASE 
+                            WHEN pp.birth_date IS NOT NULL AND pp.birth_date != '' THEN
+                                CAST((julianday('now') - julianday(
+                                    CASE 
+                                        WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9][0-9]' THEN
+                                            SUBSTR(pp.birth_date, 1, 4) || '-0' || SUBSTR(pp.birth_date, 6, 1) || '-' || SUBSTR(pp.birth_date, 8, 2)
+                                        WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]' THEN
+                                            SUBSTR(pp.birth_date, 1, 4) || '-' || SUBSTR(pp.birth_date, 6, 2) || '-' || SUBSTR(pp.birth_date, 9, 2)
+                                        ELSE pp.birth_date
+                                    END
+                                )) / 365.25 AS INTEGER)
+                            ELSE NULL
+                        END as age
+                    FROM persons p
+                    LEFT JOIN patient_profiles pp ON p.id = pp.person_id
+                )
+                SELECT 
+                    COUNT(*) as totalCount,
+                    COUNT(age) as validCount,
+                    ROUND(COUNT(age) * 100.0 / COUNT(*), 1) as validPercentage,
+                    ROUND(AVG(age), 1) as averageAge,
+                    MIN(age) as minAge,
+                    MAX(age) as maxAge
+                FROM age_calculations
+            `);
+
+            // 4. 年龄分布统计
+            const ageDistribution = await this.all(`
+                WITH age_calculations AS (
+                    SELECT 
+                        p.id as person_id,
+                        p.name,
+                        pp.birth_date,
+                        CASE 
+                            WHEN pp.birth_date IS NOT NULL AND pp.birth_date != '' THEN
+                                CAST((julianday('now') - julianday(
+                                    CASE 
+                                        WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9].[0-9][0-9]' THEN
+                                            SUBSTR(pp.birth_date, 1, 4) || '-0' || SUBSTR(pp.birth_date, 6, 1) || '-' || SUBSTR(pp.birth_date, 8, 2)
+                                        WHEN pp.birth_date GLOB '[0-9][0-9][0-9][0-9].[0-9][0-9].[0-9][0-9]' THEN
+                                            SUBSTR(pp.birth_date, 1, 4) || '-' || SUBSTR(pp.birth_date, 6, 2) || '-' || SUBSTR(pp.birth_date, 9, 2)
+                                        ELSE pp.birth_date
+                                    END
+                                )) / 365.25 AS INTEGER)
+                            ELSE NULL
+                        END as age
+                    FROM persons p
+                    LEFT JOIN patient_profiles pp ON p.id = pp.person_id
+                    WHERE pp.birth_date IS NOT NULL AND pp.birth_date != ''
+                ),
+                age_ranges AS (
+                    SELECT 
+                        CASE 
+                            WHEN age < 1 THEN '0-1岁'
+                            WHEN age <= 3 THEN '1-3岁'
+                            WHEN age <= 6 THEN '4-6岁'
+                            WHEN age <= 12 THEN '7-12岁'
+                            WHEN age <= 18 THEN '13-18岁'
+                            ELSE '18岁以上'
+                        END as age_range,
+                        age,
+                        name,
+                        person_id
+                    FROM age_calculations
+                    WHERE age IS NOT NULL
+                )
+                SELECT 
+                    age_range,
+                    COUNT(*) as count,
+                    ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM age_ranges), 1) as percentage,
+                    ROUND(AVG(age), 1) as range_avg_age,
+                    GROUP_CONCAT(name, ', ') as patient_examples
+                FROM age_ranges
+                GROUP BY age_range
+                ORDER BY 
+                    CASE age_range
+                        WHEN '0-1岁' THEN 1
+                        WHEN '1-3岁' THEN 2
+                        WHEN '4-6岁' THEN 3
+                        WHEN '7-12岁' THEN 4
+                        WHEN '13-18岁' THEN 5
+                        WHEN '18岁以上' THEN 6
+                    END
+            `);
+
+            // 籍贯分布统计
+            const locationStats = await this.all(`
+                SELECT pp.hometown, COUNT(*) as count
+                FROM persons p
+                LEFT JOIN patient_profiles pp ON p.id = pp.person_id
+                WHERE pp.hometown IS NOT NULL AND pp.hometown != ''
+                GROUP BY pp.hometown
+                ORDER BY count DESC
+                LIMIT 10
+            `);
+
+            // 疾病分布统计
+            const diseaseStats = await this.all(`
+                SELECT mi.diagnosis, COUNT(*) as count
+                FROM medical_info mi
+                WHERE mi.diagnosis IS NOT NULL AND mi.diagnosis != ''
+                GROUP BY mi.diagnosis
+                ORDER BY count DESC
+                LIMIT 10
+            `);
+
+            // 医生统计
+            const doctorStats = await this.all(`
+                SELECT mi.doctor_name, COUNT(*) as patient_count
+                FROM medical_info mi
+                WHERE mi.doctor_name IS NOT NULL AND mi.doctor_name != ''
+                GROUP BY mi.doctor_name
+                ORDER BY patient_count DESC
+                LIMIT 10
+            `);
+
+            // 月度趋势（最近12个月）
+            const monthlyTrend = await this.all(`
+                SELECT 
+                    strftime('%Y-%m', cir.check_in_date) as month,
+                    COUNT(*) as admissions
+                FROM check_in_records cir
+                WHERE cir.check_in_date IS NOT NULL
+                    AND date(cir.check_in_date) >= date('now', '-12 months')
+                GROUP BY month
+                ORDER BY month
+            `);
+
+            // 确保数据完整性和降级处理
+            const result = {
+                totalPatients: totalPatients?.count || 0,
+                totalRecords: totalRecords?.count || 0,
+                averageAge: averageAge?.avg_age || 0,
+                multipleAdmissions: multipleAdmissions?.count || 0,
+                genderStats: genderStats?.reduce((acc, item) => {
+                    if (item.gender && item.count) {
+                        acc[item.gender] = item.count;
+                    }
+                    return acc;
+                }, {}) || {},
+                // 新增年龄分析数据
+                ageSummary: {
+                    totalCount: ageSummary?.totalCount || 0,
+                    validCount: ageSummary?.validCount || 0,
+                    validPercentage: ageSummary?.validPercentage || 0,
+                    averageAge: ageSummary?.averageAge || 0,
+                    minAge: ageSummary?.minAge || 0,
+                    maxAge: ageSummary?.maxAge || 0
+                },
+                ageDistribution: ageDistribution || [],
+                locationStats: locationStats || [],
+                diseaseStats: diseaseStats || [],
+                doctorStats: doctorStats || [],
+                monthlyTrend: monthlyTrend || []
+            };
+
+            console.log('统计数据计算完成:', { 
+                totalPatients: result.totalPatients, 
+                averageAge: result.averageAge,
+                hasAgeDistribution: result.ageDistribution.length > 0
+            });
+
+            return result;
+        } catch (error) {
+            console.error('获取扩展统计数据失败:', error);
+            throw error;
+        }
+    }
+
+    async getAgeGroupPatients(ageRange) {
+        try {
+            let ageCondition;
+            switch (ageRange) {
+                case '0-3岁':
+                    ageCondition = 'age BETWEEN 0 AND 3';
+                    break;
+                case '4-6岁':
+                    ageCondition = 'age BETWEEN 4 AND 6';
+                    break;
+                case '7-10岁':
+                    ageCondition = 'age BETWEEN 7 AND 10';
+                    break;
+                case '11-15岁':
+                    ageCondition = 'age BETWEEN 11 AND 15';
+                    break;
+                case '16-18岁':
+                    ageCondition = 'age BETWEEN 16 AND 18';
+                    break;
+                default:
+                    ageCondition = 'age < 0';
+            }
+
+            const patients = await this.all(`
+                WITH age_calc AS (
+                    SELECT 
+                        p.id,
+                        p.name,
+                        pp.gender,
+                        pp.birth_date,
+                        CASE 
+                            WHEN pp.birth_date IS NOT NULL AND pp.birth_date != '' THEN
+                                CASE 
+                                    -- 处理点号分隔的日期格式 (2014.3.27)
+                                    WHEN pp.birth_date LIKE '%.%.%' THEN
+                                        CAST((julianday('now') - julianday(REPLACE(REPLACE(pp.birth_date, '.', '-'), '--', '-'))) / 365.25 AS INTEGER)
+                                    -- 处理标准格式的日期
+                                    WHEN date(pp.birth_date) IS NOT NULL THEN
+                                        CAST((julianday('now') - julianday(date(pp.birth_date))) / 365.25 AS INTEGER)
+                                    ELSE -1
+                                END
+                            ELSE -1
+                        END as age,
+                        COUNT(cir.id) as check_in_count,
+                        (SELECT mi.diagnosis 
+                         FROM medical_info mi 
+                         WHERE mi.person_id = p.id 
+                         ORDER BY mi.record_date DESC 
+                         LIMIT 1) as latest_diagnosis,
+                        MAX(cir.check_in_date) as latest_check_in
+                    FROM persons p
+                    LEFT JOIN patient_profiles pp ON p.id = pp.person_id
+                    LEFT JOIN check_in_records cir ON p.id = cir.person_id
+                    GROUP BY p.id, p.name, pp.gender, pp.birth_date
+                )
+                SELECT 
+                    id,
+                    name,
+                    age,
+                    gender,
+                    COALESCE(latest_diagnosis, '无诊断信息') as main_diagnosis,
+                    check_in_count,
+                    latest_check_in
+                FROM age_calc
+                WHERE ${ageCondition}
+                ORDER BY name
+            `);
+
+            return patients;
+        } catch (error) {
+            console.error('获取年龄段患者列表失败:', error);
+            throw error;
+        }
+    }
+
     async close() {
         return new Promise((resolve) => {
             if (this.db) {

@@ -6,12 +6,22 @@ class PatientApp {
         this.currentView = 'home';
         this.currentViewMode = 'list'; // 默认为列表视图
         
+        // Chart.js 实例存储，防止内存泄漏
+        this.charts = {
+            genderChart: null,
+            locationChart: null,
+            diseaseChart: null,
+            doctorChart: null,
+            trendChart: null
+        };
+        
         // DOM元素引用
         this.elements = {
             // 视图切换
             homeView: document.getElementById('homeView'),
             listView: document.getElementById('listView'),
             detailView: document.getElementById('detailView'),
+            statisticsView: document.getElementById('statisticsView'),
             homeBtn: document.getElementById('homeBtn'),
             backBtn: document.getElementById('backBtn'),
             
@@ -180,6 +190,37 @@ class PatientApp {
         
         // 初始化视图模式
         this.initViewMode();
+        
+        // 统计页面模态框事件
+        this.initStatisticsEvents();
+    }
+
+    initStatisticsEvents() {
+        // 年龄段模态框关闭事件
+        const ageModal = document.getElementById('ageModal');
+        const ageModalClose = document.getElementById('ageModalClose');
+        
+        if (ageModalClose) {
+            ageModalClose.addEventListener('click', () => {
+                ageModal.classList.remove('active');
+            });
+        }
+        
+        // 点击模态框背景关闭
+        if (ageModal) {
+            ageModal.addEventListener('click', (e) => {
+                if (e.target === ageModal) {
+                    ageModal.classList.remove('active');
+                }
+            });
+        }
+        
+        // ESC键关闭模态框
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && ageModal.classList.contains('active')) {
+                ageModal.classList.remove('active');
+            }
+        });
     }
 
     async loadData() {
@@ -652,13 +693,17 @@ class PatientApp {
             case 'patientList':
                 this.setPage('list');
                 break;
+            case 'statistics':
+                this.setPage('statistics');
+                this.loadStatisticsPage();
+                break;
             default:
                 console.warn(`未知页面: ${page}`);
         }
     }
 
     setPage(pageName) {
-        const pages = ['home', 'list', 'detail'];
+        const pages = ['home', 'list', 'detail', 'statistics'];
         pages.forEach(page => {
             const element = this.elements[`${page}View`];
             if (element) {
@@ -704,6 +749,9 @@ class PatientApp {
                 case 'detail':
                     current.textContent = '患儿详情';
                     break;
+                case 'statistics':
+                    current.textContent = '数据统计分析';
+                    break;
                 default:
                     current.textContent = pageName;
             }
@@ -714,7 +762,8 @@ class PatientApp {
         const titles = {
             home: '患儿入住信息管理系统',
             list: '患儿列表 - 患儿入住信息管理系统',
-            detail: '患儿详情 - 患儿入住信息管理系统'
+            detail: '患儿详情 - 患儿入住信息管理系统',
+            statistics: '数据统计分析 - 患儿入住信息管理系统'
         };
         
         const title = titles[pageName] || titles.home;
@@ -773,7 +822,13 @@ class PatientApp {
         if (!birthDate) return -1;
         
         try {
-            const birth = new Date(birthDate.replace(/\./g, '-'));
+            // 处理点号分隔的日期格式 (2014.3.27)
+            let dateString = birthDate;
+            if (birthDate.includes('.')) {
+                dateString = birthDate.replace(/\./g, '-');
+            }
+            
+            const birth = new Date(dateString);
             if (isNaN(birth)) return -1;
             
             const today = new Date();
@@ -784,7 +839,7 @@ class PatientApp {
                 age--;
             }
             
-            return age;
+            return age >= 0 ? age : -1;
         } catch {
             return -1;
         }
@@ -918,6 +973,575 @@ class PatientApp {
             clearTimeout(timeout);
             timeout = setTimeout(later, wait);
         };
+    }
+
+    // 统计页面功能
+    async loadStatisticsPage() {
+        try {
+            console.log('🔍 [DEBUG] 开始加载统计页面...');
+            
+            // 清理现有的Chart实例，防止重复创建导致的问题
+            this.destroyAllCharts();
+            
+            this.showLoading('加载统计数据...');
+            
+            // 隐藏错误状态，显示加载状态
+            const errorEl = document.getElementById('statisticsError');
+            const loadingEl = document.getElementById('statisticsLoading');
+            
+            console.log('🔍 [DEBUG] DOM 元素检查:', {
+                errorEl: !!errorEl,
+                loadingEl: !!loadingEl
+            });
+            
+            if (errorEl) errorEl.classList.add('hidden');
+            if (loadingEl) loadingEl.classList.remove('hidden');
+            
+            // 获取扩展统计数据
+            console.log('🔍 [DEBUG] 开始获取统计数据...');
+            const stats = await window.electronAPI.getExtendedStatistics();
+            
+            console.log('🔍 [DEBUG] 收到统计数据:', stats);
+            
+            // 验证数据完整性
+            if (!stats || typeof stats !== 'object') {
+                throw new Error('统计数据格式无效');
+            }
+            
+            // 分步骤加载，提供更好的用户体验
+            console.log('🔍 [DEBUG] 开始更新统计卡片...');
+            this.showLoading('更新统计卡片...');
+            this.updateStatCards(stats);
+            
+            console.log('🔍 [DEBUG] 开始生成图表...');
+            this.showLoading('生成图表...');
+            await new Promise(resolve => setTimeout(resolve, 100)); // 允许UI更新
+            this.createCharts(stats);
+            
+            console.log('🔍 [DEBUG] 开始加载分布数据...');
+            this.showLoading('加载分布数据...');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            this.updateDistributionLists(stats);
+            
+            // 隐藏加载状态
+            console.log('🔍 [DEBUG] 完成加载，隐藏加载状态...');
+            if (loadingEl) loadingEl.classList.add('hidden');
+            this.hideLoading();
+            
+        } catch (error) {
+            this.hideLoading();
+            console.error('加载统计数据失败:', error);
+            
+            // 显示错误状态
+            document.getElementById('statisticsLoading').classList.add('hidden');
+            document.getElementById('statisticsError').classList.remove('hidden');
+            
+            // 更详细的错误信息
+            const errorMsg = error.message || '未知错误';
+            this.showError(`加载统计数据失败: ${errorMsg}`);
+            
+            // 降级显示：至少显示基本信息
+            this.showBasicStatistics();
+        }
+    }
+
+    updateStatCards(stats) {
+        // 基础统计卡片，增加数据验证
+        const statTotalPatients = document.getElementById('statTotalPatients');
+        const statTotalRecords = document.getElementById('statTotalRecords');
+        const statAverageAge = document.getElementById('statAverageAge');
+        const statMultipleAdmissions = document.getElementById('statMultipleAdmissions');
+        
+        if (statTotalPatients) {
+            statTotalPatients.textContent = stats.totalPatients || 0;
+        }
+        if (statTotalRecords) {
+            statTotalRecords.textContent = stats.totalRecords || 0;
+        }
+        if (statAverageAge) {
+            const avgAge = stats.averageAge;
+            if (avgAge && avgAge > 0) {
+                statAverageAge.textContent = `${avgAge}岁`;
+            } else {
+                statAverageAge.textContent = '暂无数据';
+            }
+        }
+        if (statMultipleAdmissions) {
+            statMultipleAdmissions.textContent = stats.multipleAdmissions || 0;
+        }
+        
+        // 更新年龄分析概览
+        this.updateAgeAnalysisOverview(stats.ageSummary);
+        
+        // 更新年龄分布横向图表
+        this.updateAgeDistribution(stats.ageDistribution);
+        
+        console.log('统计卡片更新完成:', {
+            patients: stats.totalPatients,
+            records: stats.totalRecords,
+            averageAge: stats.averageAge,
+            multiple: stats.multipleAdmissions,
+            ageSummary: stats.ageSummary
+        });
+    }
+
+    createCharts(stats) {
+        // 创建性别分布图表
+        this.createGenderChart(stats.genderStats);
+        
+        // 年龄分布已经在updateStatCards中处理，这里不再创建传统图表
+    }
+
+    // 更新年龄分析概览
+    updateAgeAnalysisOverview(ageSummary) {
+        if (!ageSummary) return;
+        
+        const validAgeCount = document.getElementById('validAgeCount');
+        const validAgePercentage = document.getElementById('validAgePercentage');
+        const detailedAvgAge = document.getElementById('detailedAvgAge');
+        const minAge = document.getElementById('minAge');
+        const maxAge = document.getElementById('maxAge');
+        
+        if (validAgeCount) {
+            validAgeCount.textContent = ageSummary.validCount || 0;
+        }
+        if (validAgePercentage) {
+            validAgePercentage.textContent = ageSummary.validPercentage || 0;
+        }
+        if (detailedAvgAge) {
+            detailedAvgAge.textContent = ageSummary.averageAge ? `${ageSummary.averageAge}岁` : '-';
+        }
+        if (minAge) {
+            minAge.textContent = ageSummary.minAge ? `${ageSummary.minAge}岁` : '-';
+        }
+        if (maxAge) {
+            maxAge.textContent = ageSummary.maxAge ? `${ageSummary.maxAge}岁` : '-';
+        }
+    }
+
+    // 更新年龄分布横向图表
+    updateAgeDistribution(ageDistribution) {
+        console.log('🔍 [DEBUG] updateAgeDistribution 被调用:', {
+            ageDistribution: ageDistribution,
+            length: ageDistribution ? ageDistribution.length : 0
+        });
+        
+        const container = document.getElementById('ageDistributionContainer');
+        console.log('🔍 [DEBUG] ageDistributionContainer 元素:', !!container);
+        
+        if (!container || !ageDistribution || ageDistribution.length === 0) {
+            console.log('🔍 [DEBUG] 无数据或无容器，显示占位符');
+            if (container) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-[var(--text-secondary)]">
+                        <svg class="mx-auto w-12 h-12 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <p>暂无年龄分布数据</p>
+                    </div>
+                `;
+            }
+            return;
+        }
+        
+        // 生成年龄段分布HTML
+        console.log('🔍 [DEBUG] 开始生成HTML，年龄分布数据:', ageDistribution);
+        
+        const maxCount = Math.max(...ageDistribution.map(item => item.count));
+        console.log('🔍 [DEBUG] 最大计数:', maxCount);
+        
+        const distributionHTML = ageDistribution.map((item, index) => {
+            const percentage = item.percentage || 0;
+            const widthPercentage = Math.max((item.count / maxCount) * 100, 5); // 最小宽度5%
+            
+            // 截取患者示例，最多显示4个名字
+            console.log('🔍 [DEBUG] 处理患者示例:', {
+                ageRange: item.age_range,
+                patientExamples: item.patient_examples,
+                count: item.count,
+                percentage: item.percentage
+            });
+            
+            const examples = item.patient_examples ? 
+                item.patient_examples.split(', ').slice(0, 4).join(', ') : '';
+            const exampleCount = item.patient_examples ? 
+                item.patient_examples.split(', ').length : 0;
+            const moreCount = Math.max(0, exampleCount - 4);
+            
+            // 不同年龄段使用不同颜色
+            const colors = [
+                'from-blue-400 to-blue-500',    // 0-2岁
+                'from-green-400 to-green-500',   // 3-5岁  
+                'from-purple-400 to-purple-500', // 6-10岁
+                'from-orange-400 to-orange-500', // 11-15岁
+                'from-red-400 to-red-500',      // 16-18岁
+                'from-gray-400 to-gray-500'     // 18岁以上
+            ];
+            const colorClass = colors[index] || colors[colors.length - 1];
+            
+            return `
+                <div class="bg-white rounded-xl p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                    <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-3">
+                            <h4 class="text-lg font-semibold text-[var(--text-primary)]">${item.age_range}</h4>
+                            <span class="text-2xl font-bold text-[var(--brand-primary)]">${item.count}人</span>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-2xl font-bold text-[var(--brand-secondary)]">${percentage}%</div>
+                            <div class="text-xs text-[var(--text-muted)]">
+                                (有效年龄中${percentage}%)
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 横向进度条 -->
+                    <div class="mb-3">
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r ${colorClass} h-3 rounded-full transition-all duration-500" 
+                                 style="width: ${widthPercentage}%"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- 患者示例 -->
+                    ${examples ? `
+                        <div class="border-t border-gray-100 pt-3">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="text-sm text-[var(--text-secondary)]">患者示例：</span>
+                            </div>
+                            <div class="flex flex-wrap gap-2">
+                                ${examples.split(', ').map(name => 
+                                    `<span class="px-2 py-1 bg-[var(--brand-tag-bg)] text-[var(--brand-tag-text)] text-sm rounded-full">${name}</span>`
+                                ).join('')}
+                                ${moreCount > 0 ? `<span class="text-sm text-[var(--text-muted)]">等${exampleCount}人</span>` : ''}
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="text-sm text-[var(--text-muted)] italic">暂无患者示例</div>
+                    `}
+                </div>
+            `;
+        }).join('');
+        
+        console.log('🔍 [DEBUG] HTML生成完成，长度:', distributionHTML.length);
+        console.log('🔍 [DEBUG] 设置容器HTML...');
+        
+        try {
+            container.innerHTML = distributionHTML;
+            console.log('🔍 [DEBUG] 年龄分布更新完成');
+        } catch (error) {
+            console.error('🔍 [DEBUG] 设置HTML时出错:', error);
+        }
+    }
+
+    createGenderChart(genderStats) {
+        console.log('🔍 [DEBUG] createGenderChart 被调用:', genderStats);
+        
+        const ctx = document.getElementById('genderChart');
+        if (!ctx) {
+            console.warn('🔍 [DEBUG] genderChart Canvas元素不存在');
+            return;
+        }
+        
+        // 销毁现有的Chart实例，防止重复创建导致的问题
+        if (this.charts.genderChart) {
+            console.log('🔍 [DEBUG] 销毁现有的性别图表实例');
+            this.charts.genderChart.destroy();
+            this.charts.genderChart = null;
+        }
+        
+        // 确保有性别数据
+        if (!genderStats || Object.keys(genderStats).length === 0) {
+            console.warn('🔍 [DEBUG] 无性别统计数据');
+            ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+            return;
+        }
+        
+        // 按性别排序，确保颜色对应正确：男性蓝色，女性粉色
+        const genderOrder = ['男', '女'];
+        const labels = [];
+        const data = [];
+        const colors = [];
+        
+        // 按指定顺序处理性别数据
+        genderOrder.forEach(gender => {
+            if (genderStats[gender]) {
+                labels.push(gender);
+                data.push(genderStats[gender]);
+                colors.push(gender === '男' ? '#3b82f6' : '#ec4899'); // 男性蓝色，女性粉色
+            }
+        });
+        
+        // 处理其他性别（如果有）
+        Object.keys(genderStats).forEach(gender => {
+            if (!genderOrder.includes(gender)) {
+                labels.push(gender);
+                data.push(genderStats[gender]);
+                colors.push('#8b5cf6'); // 其他性别紫色
+            }
+        });
+        
+        console.log('🔍 [DEBUG] 图表数据:', { labels, data, colors });
+        
+        try {
+            this.charts.genderChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors,
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return `${context.label}: ${context.parsed}人 (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000 // 限制动画时长，防止过长的渲染
+                    }
+                }
+            });
+            
+            console.log('🔍 [DEBUG] 性别图表创建成功');
+        } catch (error) {
+            console.error('🔍 [DEBUG] 创建性别图表时出错:', error);
+        }
+    }
+
+    // 清理所有Chart实例，防止内存泄漏
+    destroyAllCharts() {
+        console.log('🔍 [DEBUG] 清理所有Chart实例');
+        Object.keys(this.charts).forEach(chartKey => {
+            if (this.charts[chartKey]) {
+                console.log('🔍 [DEBUG] 销毁图表:', chartKey);
+                this.charts[chartKey].destroy();
+                this.charts[chartKey] = null;
+            }
+        });
+    }
+
+    createAgeChart(ageDistribution) {
+        const ctx = document.getElementById('ageChart');
+        if (ctx) {
+            const labels = ageDistribution.map(item => item.age_range);
+            const data = ageDistribution.map(item => item.count);
+
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '患者数量',
+                        data: data,
+                        backgroundColor: '#0d9488',
+                        borderColor: '#0f766e',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const ageRange = labels[index];
+                            this.showAgeGroupModal(ageRange);
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                afterLabel: function() {
+                                    return '点击查看详细信息';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    async showAgeGroupModal(ageRange) {
+        try {
+            this.showLoading('加载患者详情...');
+            
+            // 获取年龄段患者列表
+            const patients = await window.electronAPI.getAgeGroupPatients(ageRange);
+            
+            // 更新模态框内容
+            document.getElementById('ageModalTitle').textContent = `${ageRange} 患者列表 (${patients.length}人)`;
+            
+            // 生成患者列表HTML
+            const patientListHTML = patients.map(patient => `
+                <li class="patient-item">
+                    <div class="patient-info">
+                        <div class="patient-name" onclick="app.showPatientDetail(${patient.id})" data-id="${patient.id}">
+                            ${patient.name}
+                        </div>
+                        <div class="patient-details">
+                            <span>年龄: ${patient.age}岁</span>
+                            <span>性别: ${patient.gender || '未知'}</span>
+                            <span>诊断: ${patient.main_diagnosis}</span>
+                        </div>
+                    </div>
+                    <div class="patient-meta">
+                        <div>入住次数: ${patient.check_in_count}</div>
+                        <div>最近入住: ${patient.latest_check_in ? new Date(patient.latest_check_in).toLocaleDateString() : '无记录'}</div>
+                    </div>
+                </li>
+            `).join('');
+            
+            document.getElementById('ageModalPatientList').innerHTML = patientListHTML;
+            
+            // 显示模态框
+            document.getElementById('ageModal').classList.add('active');
+            
+            this.hideLoading();
+        } catch (error) {
+            this.hideLoading();
+            console.error('加载年龄段患者失败:', error);
+            this.showError('加载患者详情失败，请重试');
+        }
+    }
+
+    updateDistributionLists(stats) {
+        console.log('🔍 [DEBUG] updateDistributionLists 被调用:', stats);
+        
+        // 更新籍贯分布
+        this.updateDistributionList('locationList', stats.locationStats, '籍贯');
+        
+        // 更新疾病分布
+        this.updateDistributionList('diseaseList', stats.diseaseStats, '诊断');
+        
+        // 更新医生分布
+        this.updateDistributionList('doctorList', stats.doctorStats, '医生', 'patient_count');
+        
+        console.log('🔍 [DEBUG] updateDistributionLists 完成');
+    }
+
+    updateDistributionList(listId, data, label, countField = 'count') {
+        console.log('🔍 [DEBUG] updateDistributionList 被调用:', {
+            listId,
+            hasData: !!data,
+            dataLength: data ? data.length : 0,
+            label,
+            countField
+        });
+        
+        const listElement = document.getElementById(listId);
+        console.log('🔍 [DEBUG] DOM元素检查:', {
+            listId,
+            elementExists: !!listElement
+        });
+        
+        if (!listElement) {
+            console.warn('🔍 [DEBUG] DOM元素不存在:', listId);
+            return; // 如果元素不存在，直接返回，不要抛出错误
+        }
+        
+        if (data && data.length > 0) {
+            const itemsHTML = data.map(item => `
+                <li class="distribution-item">
+                    <span class="distribution-label">${item[Object.keys(item)[0]]}</span>
+                    <span class="distribution-count">${item[countField]}</span>
+                </li>
+            `).join('');
+            
+            listElement.innerHTML = itemsHTML;
+            console.log('🔍 [DEBUG] 成功更新分布列表:', listId);
+        } else {
+            listElement.innerHTML = `<li class="distribution-item"><span class="distribution-label">暂无数据</span></li>`;
+            console.log('🔍 [DEBUG] 设置为无数据状态:', listId);
+        }
+    }
+
+    // 患者详情显示（用于从统计页面跳转）
+    async showPatientDetail(personId) {
+        try {
+            this.showLoading('加载患者详情...');
+            
+            const detail = await window.electronAPI.getPatientDetail(personId);
+            this.currentPatientDetail = detail;
+            
+            // 导航到详情页面
+            this.setPage('detail');
+            this.renderPatientDetail();
+            
+            // 关闭模态框（如果打开）
+            document.getElementById('ageModal').classList.remove('active');
+            
+            this.hideLoading();
+        } catch (error) {
+            this.hideLoading();
+            console.error('加载患者详情失败:', error);
+            this.showError('加载患者详情失败，请重试');
+        }
+    }
+
+    // 降级显示基本统计信息
+    showBasicStatistics() {
+        try {
+            console.log('显示降级统计信息');
+            
+            // 显示基本患者数量
+            const basicStats = {
+                totalPatients: this.patients?.length || 0,
+                totalRecords: this.patients?.reduce((sum, p) => sum + (p.check_in_count || 0), 0) || 0,
+                averageAge: 0,
+                multipleAdmissions: 0
+            };
+            
+            this.updateStatCards(basicStats);
+            
+            // 隐藏图表区域，显示提示信息
+            const chartContainers = document.querySelectorAll('.chart-container');
+            chartContainers.forEach(container => {
+                container.innerHTML = `
+                    <div class="text-center py-8">
+                        <svg class="mx-auto w-12 h-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                        <p class="text-gray-500">图表数据加载失败</p>
+                        <p class="text-sm text-gray-400 mt-1">请重试或联系管理员</p>
+                    </div>
+                `;
+            });
+            
+        } catch (error) {
+            console.error('显示降级统计信息失败:', error);
+        }
     }
 }
 
