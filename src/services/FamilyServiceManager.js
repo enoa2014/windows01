@@ -43,19 +43,19 @@ class FamilyServiceManager {
             const params = [];
             const conditions = [];
 
-            // 搜索条件
-            if (filters.search) {
+            // 搜索条件 - 修复空白字符问题
+            if (filters.search && filters.search.trim()) {
                 conditions.push(`(
                     notes LIKE ? OR 
                     strftime('%Y', year_month) LIKE ? OR 
                     strftime('%m', year_month) LIKE ?
                 )`);
-                const searchPattern = `%${filters.search}%`;
+                const searchPattern = `%${filters.search.trim()}%`;
                 params.push(searchPattern, searchPattern, searchPattern);
             }
 
-            // 年份筛选
-            if (filters.year) {
+            // 年份筛选 - 修复"all"值问题
+            if (filters.year && filters.year !== 'all' && filters.year.trim()) {
                 conditions.push("strftime('%Y', year_month) = ?");
                 params.push(filters.year.toString());
             }
