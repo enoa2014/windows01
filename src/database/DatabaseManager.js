@@ -736,18 +736,18 @@ class DatabaseManager {
                 ),
                 patient_with_age AS (
                     SELECT 
-                        person_id as id,
-                        name,
-                        age,
-                        gender,
+                        ac.person_id as id,
+                        ac.name,
+                        ac.age,
+                        ac.gender,
                         -- 获取入住次数
                         (SELECT COUNT(*) 
                          FROM check_in_records cir 
-                         WHERE cir.person_id = person_id) as check_in_count,
+                         WHERE cir.person_id = ac.person_id) as check_in_count,
                         -- 获取最新诊断
                         (SELECT mi.diagnosis 
                          FROM medical_info mi 
-                         WHERE mi.person_id = person_id
+                         WHERE mi.person_id = ac.person_id
                          AND mi.diagnosis IS NOT NULL 
                          AND mi.diagnosis != ''
                          ORDER BY mi.record_date DESC 
@@ -755,9 +755,9 @@ class DatabaseManager {
                         -- 获取最近入住时间
                         (SELECT MAX(cir.check_in_date) 
                          FROM check_in_records cir 
-                         WHERE cir.person_id = person_id) as latest_check_in
-                    FROM age_calculations
-                    WHERE age IS NOT NULL AND ${ageCondition}
+                         WHERE cir.person_id = ac.person_id) as latest_check_in
+                    FROM age_calculations ac
+                    WHERE ac.age IS NOT NULL AND ${ageCondition}
                 )
                 SELECT 
                     id,
@@ -770,7 +770,7 @@ class DatabaseManager {
                 FROM patient_with_age
                 ORDER BY name
             `);
-
+            
             return patients;
         } catch (error) {
             console.error('获取年龄段患者列表失败:', error);

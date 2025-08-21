@@ -5,6 +5,8 @@ class PatientApp {
         this.filteredPatients = [];
         this.currentView = 'home';
         this.currentViewMode = 'list'; // 默认为列表视图
+        this.navigationHistory = []; // 页面导航历史栈
+        this.modalContext = null; // 记录模态框上下文
         
         // Chart.js 实例存储，防止内存泄漏
         this.charts = {
@@ -113,7 +115,7 @@ class PatientApp {
     initEventListeners() {
         // 视图切换
         this.elements.homeBtn.addEventListener('click', () => this.navigateTo('home'));
-        this.elements.backBtn.addEventListener('click', () => this.navigateTo('patientList'));
+        this.elements.backBtn.addEventListener('click', () => this.goBack());
         
         // 搜索和排序
         this.elements.searchInput.addEventListener('input', this.debounce(() => this.filterAndSort(), 300));
@@ -210,12 +212,14 @@ class PatientApp {
         if (ageModalClose) {
             ageModalClose.addEventListener('click', () => {
                 ageModal.classList.add('hidden');
+                this.modalContext = null; // 清除模态框上下文
             });
         }
         
         if (ageModalCloseBtn) {
             ageModalCloseBtn.addEventListener('click', () => {
                 ageModal.classList.add('hidden');
+                this.modalContext = null; // 清除模态框上下文
             });
         }
         
@@ -224,6 +228,7 @@ class PatientApp {
             ageModal.addEventListener('click', (e) => {
                 if (e.target === ageModal) {
                     ageModal.classList.add('hidden');
+                    this.modalContext = null; // 清除模态框上下文
                 }
             });
         }
@@ -232,6 +237,7 @@ class PatientApp {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !ageModal.classList.contains('hidden')) {
                 ageModal.classList.add('hidden');
+                this.modalContext = null; // 清除模态框上下文
             }
         });
     }
@@ -411,6 +417,12 @@ class PatientApp {
             const patientDetail = await window.electronAPI.getPatientDetail(personId);
             this.renderPatientDetail(patientDetail);
             this.setPage('detail');
+            
+            // 关闭年龄模态框（如果打开）
+            const ageModal = document.getElementById('ageDetailModal');
+            if (ageModal) {
+                ageModal.classList.add('hidden');
+            }
             
             this.hideLoading();
         } catch (error) {
@@ -719,7 +731,7 @@ class PatientApp {
         }
     }
 
-    setPage(pageName) {
+    setPage(pageName, addToHistory = true) {
         const pages = ['home', 'list', 'detail', 'statistics'];
         pages.forEach(page => {
             const element = this.elements[`${page}View`];
@@ -727,6 +739,11 @@ class PatientApp {
                 element.classList.toggle('active', page === pageName);
             }
         });
+        
+        // 管理导航历史
+        if (addToHistory && this.currentView !== pageName) {
+            this.pushToHistory(this.currentView);
+        }
         
         // 更新导航按钮状态
         this.elements.homeBtn.style.display = (pageName === 'home') ? 'none' : 'flex';
@@ -746,6 +763,51 @@ class PatientApp {
         }
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // 历史栈管理方法
+    pushToHistory(pageName) {
+        if (pageName && pageName !== 'home') {
+            this.navigationHistory.push({
+                page: pageName,
+                modalContext: this.modalContext
+            });
+            // 限制历史栈大小，避免内存泄漏
+            if (this.navigationHistory.length > 10) {
+                this.navigationHistory.shift();
+            }
+        }
+    }
+
+    goBack() {
+        if (this.navigationHistory.length > 0) {
+            const lastHistory = this.navigationHistory.pop();
+            
+            // 如果上一个页面有模态框上下文，需要恢复
+            if (lastHistory.modalContext) {
+                this.setPage(lastHistory.page, false);
+                this.restoreModalContext(lastHistory.modalContext);
+            } else {
+                this.setPage(lastHistory.page, false);
+            }
+        } else {
+            // 如果没有历史记录，返回到患儿列表
+            this.navigateTo('patientList');
+        }
+    }
+
+    // 设置模态框上下文（例如年龄组模态框）
+    setModalContext(context) {
+        this.modalContext = context;
+    }
+
+    // 恢复模态框上下文
+    restoreModalContext(context) {
+        if (context && context.type === 'ageGroup') {
+            // 重新显示年龄组模态框
+            this.showAgeGroupModal(context.ageRange);
+        }
+        this.modalContext = context;
     }
 
     updateBreadcrumb(pageName) {
@@ -1133,6 +1195,18 @@ class PatientApp {
         // 创建性别分布图表
         this.createGenderChart(stats.genderStats);
         
+        // 创建籍贯分布图表
+        this.createLocationChart(stats.locationStats);
+        
+        // 创建疾病分布图表
+        this.createDiseaseChart(stats.diseaseStats);
+        
+        // 创建医生统计图表
+        this.createDoctorChart(stats.doctorStats);
+        
+        // 创建入住趋势图表
+        this.createTrendChart(stats.monthlyTrend);
+        
         // 年龄分布已经在updateStatCards中处理，这里不再创建传统图表
     }
 
@@ -1385,6 +1459,341 @@ class PatientApp {
         }
     }
 
+    createLocationChart(locationStats) {
+        const ctx = document.getElementById('locationChart');
+        if (!ctx) {
+            console.warn('locationChart Canvas元素不存在');
+            return;
+        }
+        
+        // 销毁现有的Chart实例
+        if (this.charts.locationChart) {
+            this.charts.locationChart.destroy();
+            this.charts.locationChart = null;
+        }
+        
+        if (!locationStats || locationStats.length === 0) {
+            console.warn('无籍贯统计数据');
+            ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+            return;
+        }
+        
+        const labels = locationStats.map(item => item.hometown);
+        const data = locationStats.map(item => item.count);
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#14b8a6'];
+        
+        try {
+            this.charts.locationChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '患者人数',
+                        data: data,
+                        backgroundColor: colors.slice(0, data.length),
+                        borderWidth: 0,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.parsed.y}人`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxRotation: 45
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('创建籍贯图表时出错:', error);
+        }
+    }
+
+    createDiseaseChart(diseaseStats) {
+        const ctx = document.getElementById('diseaseChart');
+        if (!ctx) {
+            console.warn('diseaseChart Canvas元素不存在');
+            return;
+        }
+        
+        // 销毁现有的Chart实例
+        if (this.charts.diseaseChart) {
+            this.charts.diseaseChart.destroy();
+            this.charts.diseaseChart = null;
+        }
+        
+        if (!diseaseStats || diseaseStats.length === 0) {
+            console.warn('无疾病统计数据');
+            ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+            return;
+        }
+        
+        const labels = diseaseStats.map(item => item.diagnosis);
+        const data = diseaseStats.map(item => item.count);
+        const colors = ['#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6', '#06b6d4', '#0ea5e9'];
+        
+        try {
+            this.charts.diseaseChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '患者人数',
+                        data: data,
+                        backgroundColor: colors.slice(0, data.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.parsed.x}人`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('创建疾病图表时出错:', error);
+        }
+    }
+
+    createDoctorChart(doctorStats) {
+        const ctx = document.getElementById('doctorChart');
+        if (!ctx) {
+            console.warn('doctorChart Canvas元素不存在');
+            return;
+        }
+        
+        // 销毁现有的Chart实例
+        if (this.charts.doctorChart) {
+            this.charts.doctorChart.destroy();
+            this.charts.doctorChart = null;
+        }
+        
+        if (!doctorStats || doctorStats.length === 0) {
+            console.warn('无医生统计数据');
+            ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+            return;
+        }
+        
+        const labels = doctorStats.map(item => item.doctor_name);
+        const data = doctorStats.map(item => item.patient_count);
+        const colors = ['#8b5cf6', '#a855f7', '#c084fc', '#d8b4fe', '#e9d5ff', '#f3e8ff', '#06b6d4', '#0891b2', '#0e7490', '#155e75'];
+        
+        try {
+            this.charts.doctorChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, data.length),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true,
+                                font: {
+                                    size: 11
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return `${context.label}: ${context.parsed}人 (${percentage}%)`;
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('创建医生图表时出错:', error);
+        }
+    }
+
+    createTrendChart(monthlyTrend) {
+        const ctx = document.getElementById('trendChart');
+        if (!ctx) {
+            console.warn('trendChart Canvas元素不存在');
+            return;
+        }
+        
+        // 销毁现有的Chart实例
+        if (this.charts.trendChart) {
+            this.charts.trendChart.destroy();
+            this.charts.trendChart = null;
+        }
+        
+        if (!monthlyTrend || monthlyTrend.length === 0) {
+            console.warn('无趋势数据，将显示空白图表');
+            ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
+            return;
+        }
+        
+        // 处理数据：转换月份格式和确保数据完整性
+        const processedData = monthlyTrend.map(item => ({
+            month: item.month,
+            admissions: item.admissions || 0,
+            // 将 YYYY-MM 格式转换为更友好的显示格式
+            label: new Date(item.month + '-01').toLocaleDateString('zh-CN', { 
+                year: 'numeric', 
+                month: 'short' 
+            })
+        }));
+        
+        const labels = processedData.map(item => item.label);
+        const data = processedData.map(item => item.admissions);
+        
+        try {
+            this.charts.trendChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '入住人次',
+                        data: data,
+                        borderColor: '#3b82f6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#3b82f6',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 2,
+                        pointRadius: 6,
+                        pointHoverRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: '#ffffff',
+                            bodyColor: '#ffffff',
+                            cornerRadius: 8,
+                            displayColors: false,
+                            callbacks: {
+                                title: function(context) {
+                                    return context[0].label;
+                                },
+                                label: function(context) {
+                                    return `入住人次: ${context.parsed.y}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                },
+                                maxRotation: 45
+                            }
+                        },
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            },
+                            ticks: {
+                                font: {
+                                    size: 11
+                                },
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1500,
+                        easing: 'easeInOutQuart'
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('创建趋势图表时出错:', error);
+        }
+    }
+
     // 清理所有Chart实例，防止内存泄漏
     destroyAllCharts() {
         console.log('🔍 [DEBUG] 清理所有Chart实例');
@@ -1453,6 +1862,12 @@ class PatientApp {
 
     async showAgeGroupModal(ageRange) {
         try {
+            // 设置模态框上下文，用于返回导航
+            this.setModalContext({
+                type: 'ageGroup',
+                ageRange: ageRange
+            });
+            
             this.showLoading('加载患者详情...');
             
             // 获取年龄段患者列表
@@ -1501,7 +1916,7 @@ class PatientApp {
                             </div>
                             <div class="text-right">
                                 <div class="text-sm font-medium text-[var(--text-primary)]">
-                                    ${patient.check_in_count}次入住
+                                    ${patient.check_in_count || 0}次入住
                                 </div>
                                 <div class="text-xs text-[var(--text-muted)]">
                                     ${patient.latest_check_in ? new Date(patient.latest_check_in).toLocaleDateString('zh-CN') : '无记录'}
@@ -1608,31 +2023,6 @@ class PatientApp {
         }
     }
 
-    // 患者详情显示（用于从统计页面跳转）
-    async showPatientDetail(personId) {
-        try {
-            this.showLoading('加载患者详情...');
-            
-            const detail = await window.electronAPI.getPatientDetail(personId);
-            this.currentPatientDetail = detail;
-            
-            // 导航到详情页面
-            this.setPage('detail');
-            this.renderPatientDetail();
-            
-            // 关闭模态框（如果打开）
-            const ageModal = document.getElementById('ageDetailModal');
-            if (ageModal) {
-                ageModal.classList.add('hidden');
-            }
-            
-            this.hideLoading();
-        } catch (error) {
-            this.hideLoading();
-            console.error('加载患者详情失败:', error);
-            this.showError('加载患者详情失败，请重试');
-        }
-    }
 
     // 降级显示基本统计信息
     showBasicStatistics() {

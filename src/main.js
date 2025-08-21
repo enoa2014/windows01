@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
+const os = require('os');
 const DatabaseManager = require('./database/DatabaseManager');
 const ExcelImporter = require('./services/ExcelImporter');
 
@@ -158,6 +159,21 @@ class App {
             }
         });
     }
+}
+
+// 修复Electron缓存权限问题 - 更彻底的解决方案
+app.commandLine.appendSwitch('--disable-http-cache');
+app.commandLine.appendSwitch('--disable-gpu-sandbox');
+app.commandLine.appendSwitch('--disable-dev-shm-usage');
+app.commandLine.appendSwitch('--no-sandbox');
+
+// 设置自定义缓存路径
+try {
+    const userDataPath = app.getPath('userData');
+    const cachePath = path.join(userDataPath, 'app-cache');
+    app.setPath('userCache', cachePath);
+} catch (error) {
+    console.warn('设置缓存路径失败，继续使用默认设置:', error.message);
 }
 
 // 应用初始化
