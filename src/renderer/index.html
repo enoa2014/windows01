@@ -462,20 +462,20 @@
 
       <!-- 功能模块导航 -->
       <div class="space-y-8 mb-8">
-        <!-- 患儿入住信息管理组 -->
+        <!-- 核心业务模块 -->
         <div>
-          <div class="flex items-center gap-3 mb-4">
+          <div class="flex items-center gap-3 mb-6">
             <div class="w-8 h-8 bg-gradient-to-br from-teal-500 to-teal-600 rounded-lg flex items-center justify-center">
               <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
               </svg>
             </div>
-            <h3 class="text-xl font-bold text-[var(--text-primary)]">患儿入住信息管理</h3>
+            <h3 class="text-xl font-bold text-[var(--text-primary)]">核心业务</h3>
             <div class="flex-1 h-px bg-gradient-to-r from-[var(--border-primary)] to-transparent"></div>
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- 入住信息列表 -->
+            <!-- 入住信息管理 -->
             <div class="card group cursor-pointer" onclick="app.navigateToPatientList()">
               <div class="card-header-bg p-6">
                 <div class="flex items-center gap-4">
@@ -485,7 +485,7 @@
                     </svg>
                   </div>
                   <div>
-                    <h4 class="text-lg font-semibold text-white">入住信息列表</h4>
+                    <h4 class="text-lg font-semibold text-white">入住信息</h4>
                     <p class="text-white/80 text-sm">患儿档案 · 入住记录</p>
                   </div>
                 </div>
@@ -520,23 +520,7 @@
               </div>
             </div>
 
-          </div>
-        </div>
-
-        <!-- 其他功能模块 -->
-        <div>
-          <div class="flex items-center gap-3 mb-4">
-            <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
-              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-              </svg>
-            </div>
-            <h3 class="text-xl font-bold text-[var(--text-primary)]">其他服务</h3>
-            <div class="flex-1 h-px bg-gradient-to-r from-[var(--border-primary)] to-transparent"></div>
-          </div>
-          
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- 家庭服务列表 -->
+            <!-- 家庭服务管理 -->
             <div class="card group cursor-pointer" onclick="app.navigateToFamilyService()">
               <div class="card-header-bg p-6">
                 <div class="flex items-center gap-4">
@@ -546,7 +530,7 @@
                     </svg>
                   </div>
                   <div>
-                    <h4 class="text-lg font-semibold text-white">家庭服务列表</h4>
+                    <h4 class="text-lg font-semibold text-white">家庭服务</h4>
                     <p class="text-white/80 text-sm">服务记录 · 统计分析</p>
                   </div>
                 </div>
@@ -580,7 +564,22 @@
                 </div>
               </div>
             </div>
+          </div>
+        </div>
 
+        <!-- 扩展服务模块 -->
+        <div>
+          <div class="flex items-center gap-3 mb-6">
+            <div class="w-8 h-8 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+              </svg>
+            </div>
+            <h3 class="text-xl font-bold text-[var(--text-primary)]">扩展服务</h3>
+            <div class="flex-1 h-px bg-gradient-to-r from-[var(--border-primary)] to-transparent"></div>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- 关怀服务管理 -->
             <div class="card group cursor-pointer opacity-75" onclick="app.showComingSoon('关怀服务管理')">
               <div class="p-6 border-b border-[var(--border-primary)]">
@@ -602,6 +601,20 @@
                   <span class="text-sm text-[var(--success)] font-medium">即将推出</span>
                   <span class="px-2 py-1 bg-[var(--success-bg)] text-[var(--success)] text-xs rounded-full">开发中</span>
                 </div>
+              </div>
+            </div>
+
+            <!-- 预留扩展位置 -->
+            <div class="card group border-2 border-dashed border-[var(--border-primary)] bg-[var(--bg-tertiary)]/30 cursor-default">
+              <div class="p-6 text-center">
+                <div class="w-12 h-12 bg-[var(--text-muted)]/20 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <svg class="w-6 h-6 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                  </svg>
+                </div>
+                <h4 class="text-lg font-semibold text-[var(--text-muted)] mb-2">更多功能</h4>
+                <p class="text-[var(--text-muted)] text-sm mb-4">更多服务模块正在规划中</p>
+                <span class="px-3 py-1 bg-[var(--text-muted)]/10 text-[var(--text-muted)] text-xs rounded-full">敬请期待</span>
               </div>
             </div>
           </div>
