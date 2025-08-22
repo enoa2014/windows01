@@ -13,6 +13,28 @@ class FamilyServiceManager {
     }
 
     /**
+     * 获取筛选选项（如年份列表）
+     * 渲染端通过此接口构建筛选下拉
+     */
+    async getFilterOptions() {
+        try {
+            const years = await this.db.all(`
+                SELECT DISTINCT strftime('%Y', year_month) as year
+                FROM ${this.tableName}
+                WHERE year_month IS NOT NULL AND TRIM(year_month) != ''
+                ORDER BY year DESC
+            `);
+
+            return {
+                years: years.map(y => y.year).filter(Boolean)
+            };
+        } catch (error) {
+            console.error('获取筛选选项失败:', error);
+            throw new Error(`获取筛选选项失败: ${error.message}`);
+        }
+    }
+
+    /**
      * 获取家庭服务记录列表
      * @param {Object} filters 筛选条件
      * @param {Object} pagination 分页参数

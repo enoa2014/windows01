@@ -85,3 +85,26 @@ CREATE INDEX idx_medical_person_date ON medical_info(person_id, record_date);
 -- 创建唯一索引来防止重复
 CREATE UNIQUE INDEX idx_persons_unique_id_card ON persons(id_card) WHERE id_card IS NOT NULL AND id_card != '';
 CREATE UNIQUE INDEX idx_persons_unique_name_no_id ON persons(name) WHERE id_card IS NULL OR id_card = '';
+
+-- 家庭服务记录表（如已存在则忽略）
+CREATE TABLE IF NOT EXISTS family_service_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sequence_number TEXT,                 -- 序号
+    year_month TEXT NOT NULL,             -- 年月（建议存储为当月第一天：YYYY-MM-01）
+    family_count INTEGER DEFAULT 0,       -- 家庭数
+    residents_count INTEGER DEFAULT 0,    -- 入住人数
+    residence_days INTEGER DEFAULT 0,     -- 入住天数
+    accommodation_count INTEGER DEFAULT 0,-- 住宿人次
+    care_service_count INTEGER DEFAULT 0, -- 关怀服务人次
+    volunteer_service_count INTEGER DEFAULT 0, -- 志愿服务人次
+    total_service_count INTEGER DEFAULT 0,-- 总服务人次
+    notes TEXT,                           -- 备注
+    cumulative_residence_days INTEGER DEFAULT 0, -- 累计入住天数
+    cumulative_service_count INTEGER DEFAULT 0,  -- 累计服务人次
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 家庭服务索引
+CREATE INDEX IF NOT EXISTS idx_fsr_year_month ON family_service_records(year_month);
+CREATE INDEX IF NOT EXISTS idx_fsr_year ON family_service_records(strftime('%Y', year_month));

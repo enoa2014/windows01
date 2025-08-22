@@ -35,6 +35,9 @@ class DatabaseManager {
             
             // 创建表结构
             await this.createTables();
+
+            // 迁移/补全：确保家庭服务相关表与索引存在
+            await this.ensureFamilyServiceSchema();
             
             console.log('✅ 数据库初始化完成:', this.dbPath);
         } catch (error) {
@@ -107,6 +110,43 @@ class DatabaseManager {
         } catch (error) {
             console.error('创建表结构失败:', error);
             throw error;
+        }
+    }
+
+    // 确保家庭服务表与索引存在（用于老库补全）
+    async ensureFamilyServiceSchema() {
+        try {
+            const table = await this.get(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='family_service_records'"
+            );
+
+            if (!table) {
+                await this.run(`
+                    CREATE TABLE IF NOT EXISTS family_service_records (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        sequence_number TEXT,
+                        year_month TEXT NOT NULL,
+                        family_count INTEGER DEFAULT 0,
+                        residents_count INTEGER DEFAULT 0,
+                        residence_days INTEGER DEFAULT 0,
+                        accommodation_count INTEGER DEFAULT 0,
+                        care_service_count INTEGER DEFAULT 0,
+                        volunteer_service_count INTEGER DEFAULT 0,
+                        total_service_count INTEGER DEFAULT 0,
+                        notes TEXT,
+                        cumulative_residence_days INTEGER DEFAULT 0,
+                        cumulative_service_count INTEGER DEFAULT 0,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                `);
+            }
+
+            // 索引（存在即忽略）
+            await this.run(`CREATE INDEX IF NOT EXISTS idx_fsr_year_month ON family_service_records(year_month)`);
+            await this.run(`CREATE INDEX IF NOT EXISTS idx_fsr_year ON family_service_records(strftime('%Y', year_month))`);
+        } catch (error) {
+            console.warn('ensureFamilyServiceSchema 警告:', error.message);
         }
     }
 
