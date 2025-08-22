@@ -10,6 +10,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles/medical-design-system.css">
+  <link rel="stylesheet" href="./styles/icon-system.css">
+  <link rel="stylesheet" href="./styles/modern-cards.css">
+  <link rel="stylesheet" href="./styles/enhanced-search-filter.css">
+  <link rel="stylesheet" href="./styles/enhanced-upload.css">
+  <link rel="stylesheet" href="./styles/responsive-layout.css">
   <link rel="stylesheet" href="./styles/enhanced-design-system.css">
   <link rel="stylesheet" href="./styles/patient-card.css">
   <link rel="stylesheet" href="./styles/patient-detail.css">
@@ -34,22 +40,22 @@
       /* 边框色阶 */
       --border-primary: #e2e8f0; /* 主要边框 - 浅灰 */
       --border-secondary: #f1f5f9; /* 次要边框 - 极浅灰 */
-      --border-focus: #0d9488;   /* 聚焦边框 - 翡翠绿 */
+      --border-focus: #1E88E5;   /* 聚焦边框 - 医疗蓝 */
       
-      /* 品牌色阶 */
-      --brand-primary: #0d9488;   /* 主品牌色 - 翡翠绿 */
-      --brand-secondary: #0f766e; /* 次品牌色 - 深翡翠 */
+      /* 品牌色阶 - 医疗专业蓝绿色系 */
+      --brand-primary: #1E88E5;   /* 主品牌色 - 医疗蓝 */
+      --brand-secondary: #26A69A; /* 次品牌色 - 医疗绿 */
       --brand-text: #ffffff;      /* 品牌文字 - 白色 */
-      --brand-light: #14b8a6;     /* 浅品牌色 */
-      --brand-lighter: #5eead4;   /* 更浅品牌色 */
+      --brand-light: #38bdf8;     /* 浅品牌色 */
+      --brand-lighter: #7dd3fc;   /* 更浅品牌色 */
       
       /* 标签系统 */
-      --brand-tag-bg: #f0fdfa;    /* 标签背景 - 极浅翡翠 */
-      --brand-tag-text: #14532d;  /* 标签文字 - 深绿 */
+      --brand-tag-bg: #e0f2fe;    /* 标签背景 - 极浅医疗蓝 */
+      --brand-tag-text: #075985;  /* 标签文字 - 深医疗蓝 */
       
       /* 交互色彩 */
-      --ring-color: #34d399;      /* 聚焦环 - 亮翡翠 */
-      --selection-bg: #a7f3d0;    /* 选中背景 - 浅翡翠 */
+      --ring-color: #38bdf8;      /* 聚焦环 - 亮医疗蓝 */
+      --selection-bg: #bae6fd;    /* 选中背景 - 浅医疗蓝 */
       
       /* 状态颜色 */
       --success: #10b981;         /* 成功 - 绿色 */
@@ -82,20 +88,20 @@
       --radius-lg: 1rem;          /* 16px */
       --radius-xl: 1.5rem;        /* 24px */
     }
-    [data-theme="aurora"] {
-      --brand-primary: #BCB6FF; --brand-secondary: #B8E1FF; --brand-text: #1e293b;
+    [data-theme="cardiology"] {
+      --brand-primary: #dc2626; --brand-secondary: #991b1b; --brand-text: #ffffff;
       --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
-      --brand-tag-bg: #eef2ff; --brand-tag-text: #3730a3; --ring-color: #a5b4fc;
+      --brand-tag-bg: #fef2f2; --brand-tag-text: #7f1d1d; --ring-color: #f87171;
     }
-    [data-theme="sunrise"] {
-      --brand-primary: #E8AA14; --brand-secondary: #FF5714; --brand-text: #ffffff;
+    [data-theme="pediatric"] {
+      --brand-primary: #06b6d4; --brand-secondary: #0891b2; --brand-text: #ffffff;
       --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
-      --brand-tag-bg: #fffbeb; --brand-tag-text: #b45309; --ring-color: #f59e0b;
+      --brand-tag-bg: #cffafe; --brand-tag-text: #164e63; --ring-color: #67e8f9;
     }
-    [data-theme="berry"] {
-      --brand-primary: #C52184; --brand-secondary: #334139; --brand-text: #ffffff;
+    [data-theme="rehabilitation"] {
+      --brand-primary: #16a34a; --brand-secondary: #15803d; --brand-text: #ffffff;
       --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
-      --brand-tag-bg: #fce7f3; --brand-tag-text: #9d174d; --ring-color: #f472b6;
+      --brand-tag-bg: #dcfce7; --brand-tag-text: #14532d; --ring-color: #4ade80;
     }
 
     /* ===================== 基础样式 ===================== */
@@ -1334,7 +1340,14 @@
   <script src="../config/columns.js"></script>
   <script src="../config/filters.js"></script>
   <script src="../viewmodels/FamilyServiceViewModel.js"></script>
+  <script src="./js/icon-library.js"></script>
+  <script src="./js/enhanced-search.js"></script>
+  <script src="./js/enhanced-upload.js"></script>
+  <script src="./js/responsive-layout.js"></script>
   
+  <script>window.USE_RESOURCE_TABLE_PATIENTS = true;</script>
+  <script src="./js/components/resource-table.js"></script>
+  <script src="./js/patients-table.js"></script>
   <script src="./js/app.js"></script>
   
 </body>

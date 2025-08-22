@@ -161,8 +161,15 @@
         let items = [];
         let total = null;
         if (Array.isArray(resp)) {
-          items = resp;
-          total = null; // 兼容旧返回
+          // 兼容未分页 API：可选本地过滤 + 分页切片
+          const original = resp;
+          const clientFilter = (this.dom && this.dom.clientFilter) || null;
+          let filtered = Array.isArray(original) ? original.slice() : [];
+          if (clientFilter) {
+            try { filtered = original.filter(r => clientFilter(r, filters)); } catch(e) { /* 忽略过滤错误 */ }
+          }
+          total = filtered.length;
+          items = filtered.slice(offset, offset + limit);
         } else if (resp && Array.isArray(resp.items)) {
           items = resp.items;
           total = typeof resp.total === 'number' ? resp.total : null;

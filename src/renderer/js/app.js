@@ -118,11 +118,16 @@ class PatientApp {
         this.elements.homeBtn.addEventListener('click', () => this.navigateTo('home'));
         this.elements.backBtn.addEventListener('click', () => this.goBack());
         
+        // 若启用通用资源表格接管患者列表，则跳过旧的患者列表事件绑定
+        if (window.USE_RESOURCE_TABLE_PATIENTS) {
+            return;
+        }
+
         // 搜索和排序
         this.elements.searchInput.addEventListener('input', this.debounce(() => this.filterAndSort(), 300));
         this.elements.sortSelect.addEventListener('change', () => this.filterAndSort());
         this.elements.resetBtn.addEventListener('click', () => this.resetFilters());
-        
+
         // 导入功能
         this.elements.importBtn.addEventListener('click', () => this.importExcel());
         
@@ -138,24 +143,27 @@ class PatientApp {
         this.elements.gridViewBtn.addEventListener('click', () => this.setViewMode('grid'));
         this.elements.listViewBtn.addEventListener('click', () => this.setViewMode('list'));
         
-        // 患者卡片点击事件（事件委托）
-        this.elements.patientGrid.addEventListener('click', (e) => {
-            const card = e.target.closest('article[data-id]');
-            if (card) {
-                const patientId = parseInt(card.dataset.id);
-                this.showPatientDetail(patientId);
-            }
-        });
+        // 若使用通用组件接管，不再绑定患者列表的卡片事件与键盘导航
+        if (!window.USE_RESOURCE_TABLE_PATIENTS) {
+            // 患者卡片点击事件（事件委托）
+            this.elements.patientGrid.addEventListener('click', (e) => {
+                const card = e.target.closest('article[data-id]');
+                if (card) {
+                    const patientId = parseInt(card.dataset.id);
+                    this.showPatientDetail(patientId);
+                }
+            });
 
-        // 支持键盘导航
-        this.elements.patientGrid.addEventListener('keydown', (e) => {
-            const card = e.target.closest('article[data-id]');
-            if (card && (e.key === 'Enter' || e.key === ' ')) {
-                e.preventDefault();
-                const patientId = parseInt(card.dataset.id);
-                this.showPatientDetail(patientId);
-            }
-        });
+            // 支持键盘导航
+            this.elements.patientGrid.addEventListener('keydown', (e) => {
+                const card = e.target.closest('article[data-id]');
+                if (card && (e.key === 'Enter' || e.key === ' ')) {
+                    e.preventDefault();
+                    const patientId = parseInt(card.dataset.id);
+                    this.showPatientDetail(patientId);
+                }
+            });
+        }
     }
 
     initThemeSystem() {
