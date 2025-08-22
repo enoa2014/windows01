@@ -281,6 +281,14 @@
   <a href="#main" class="no-print sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-[var(--bg-secondary)] focus:px-3 focus:py-1.5 focus:rounded-md focus:shadow">跳到主要内容</a>
 
   <!-- 顶部栏 -->
+  <!-- 调试区域 -->
+  <div id="debugPanel" style="position: fixed; top: 10px; right: 10px; z-index: 9999; background: #f0f0f0; padding: 10px; border-radius: 5px; font-size: 12px; max-width: 300px;">
+    <button onclick="debugAppObject()" style="padding: 5px 10px; margin: 2px; background: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">Debug App</button>
+    <button onclick="debugNavigation()" style="padding: 5px 10px; margin: 2px; background: #28a745; color: white; border: none; border-radius: 3px; cursor: pointer;">Test Nav</button>
+    <button onclick="checkDOMElements()" style="padding: 5px 10px; margin: 2px; background: #ffc107; color: black; border: none; border-radius: 3px; cursor: pointer;">Check DOM</button>
+    <div id="debugOutput"></div>
+  </div>
+
   <header class="sticky top-0 z-30 backdrop-blur-md bg-white/80 border-b border-gray-200/50 shadow-sm no-print" role="banner">
     <div class="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
       <!-- Logo和标题区 -->
@@ -924,11 +932,11 @@
         <!-- 统计概览卡片 -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
           <div class="stat-card">
-            <div class="stat-value" id="fsStatTotalRecords">-</div>
+            <div class="stat-value" id="fsOverviewTotalRecords">-</div>
             <div class="stat-label">记录总数</div>
           </div>
           <div class="stat-card">
-            <div class="stat-value" id="fsStatTotalFamilies">-</div>
+            <div class="stat-value" id="fsOverviewTotalFamilies">-</div>
             <div class="stat-label">服务家庭</div>
           </div>
           <div class="stat-card">
@@ -1272,6 +1280,78 @@
   <script src="../viewmodels/FamilyServiceViewModel.js"></script>
   
   <script src="./js/app.js"></script>
+  
+  <script>
+    // 调试函数
+    function debugAppObject() {
+      const output = document.getElementById('debugOutput');
+      let html = '<div style="margin-top: 10px; font-size: 11px;">';
+      
+      html += `<div>window.app exists: ${typeof window.app !== 'undefined'}</div>`;
+      
+      if (typeof window.app !== 'undefined') {
+        html += `<div>app.navigateToFamilyServiceStatistics exists: ${typeof window.app.navigateToFamilyServiceStatistics === 'function'}</div>`;
+        html += `<div>app constructor: ${window.app.constructor.name}</div>`;
+        
+        // Test if the method is callable
+        try {
+          if (typeof window.app.navigateToFamilyServiceStatistics === 'function') {
+            html += '<div style="color: green;">✅ Method is callable</div>';
+          }
+        } catch (e) {
+          html += `<div style="color: red;">❌ Method error: ${e.message}</div>`;
+        }
+      } else {
+        html += '<div style="color: red;">❌ App object not found</div>';
+      }
+      
+      html += '</div>';
+      output.innerHTML = html;
+      console.log('🔍 Debug: App object check completed');
+    }
+    
+    function debugNavigation() {
+      const output = document.getElementById('debugOutput');
+      
+      if (typeof window.app !== 'undefined' && typeof window.app.navigateToFamilyServiceStatistics === 'function') {
+        try {
+          console.log('🧪 [Debug] Testing navigation method...');
+          window.app.navigateToFamilyServiceStatistics();
+          output.innerHTML += '<div style="color: green; margin-top: 5px;">✅ Navigation called successfully</div>';
+        } catch (error) {
+          output.innerHTML += `<div style="color: red; margin-top: 5px;">❌ Navigation failed: ${error.message}</div>`;
+          console.error('🧪 [Debug] Navigation test failed:', error);
+        }
+      } else {
+        output.innerHTML += '<div style="color: red; margin-top: 5px;">❌ Navigation method not available</div>';
+      }
+    }
+    
+    // 添加DOM元素检查功能
+    function checkDOMElements() {
+      const output = document.getElementById('debugOutput');
+      const elements = {
+        monthlyAvg: document.getElementById('fsStatMonthlyAverage'),
+        totalRecords: document.getElementById('fsStatTotalRecords'),
+        totalFamilies: document.getElementById('fsStatTotalFamilies'),
+        totalServiceDays: document.getElementById('fsStatTotalServiceDays'),
+        loading: document.getElementById('familyServiceStatisticsLoading'),
+        content: document.getElementById('familyServiceStatisticsContent')
+      };
+      
+      let html = '<div style="margin-top: 10px; font-size: 10px; border-top: 1px solid #ccc; padding-top: 5px;">';
+      html += '<strong>DOM Elements:</strong><br>';
+      
+      for (const [name, element] of Object.entries(elements)) {
+        const exists = element !== null;
+        const value = exists ? element.textContent || element.innerHTML : 'N/A';
+        html += `${name}: ${exists ? '✅' : '❌'} (${value})<br>`;
+      }
+      
+      html += '</div>';
+      output.innerHTML += html;
+    }
+  </script>
   
 </body>
 </html>

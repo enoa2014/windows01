@@ -1024,10 +1024,13 @@ class PatientApp {
 
     // 导航到家庭服务统计页面
     async navigateToFamilyServiceStatistics() {
+        console.log('🚀 [前端] navigateToFamilyServiceStatistics函数被调用');
         try {
             // 导航到家庭服务统计页面
+            console.log('📍 [前端] 调用navigateTo("familyServiceStatistics")');
             this.navigateTo('familyServiceStatistics');
             // 加载统计数据
+            console.log('📊 [前端] 准备调用loadFamilyServiceStatistics');
             await this.loadFamilyServiceStatistics();
         } catch (error) {
             console.error('导航到家庭服务统计页面失败:', error);
@@ -2731,6 +2734,7 @@ class PatientApp {
 
     // 家庭服务统计相关函数
     async loadFamilyServiceStatistics() {
+        console.log('🎯 [前端] loadFamilyServiceStatistics函数被调用');
         try {
             // 显示加载状态
             document.getElementById('familyServiceStatisticsLoading').classList.remove('hidden');
