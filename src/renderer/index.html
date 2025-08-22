@@ -495,31 +495,6 @@
               </div>
             </div>
 
-            <!-- 入住信息统计 -->
-            <div class="card group cursor-pointer" onclick="app.navigateToStatistics()">
-              <div class="card-header-bg p-6">
-                <div class="flex items-center gap-4">
-                  <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h4 class="text-lg font-semibold text-white">入住信息统计</h4>
-                    <p class="text-white/80 text-sm">数据分析 · 统计报表</p>
-                  </div>
-                </div>
-              </div>
-              <div class="p-6">
-                <p class="text-[var(--text-secondary)] mb-4">查看患儿入住数据统计、年龄分布、疾病分析等综合报表</p>
-                <div class="flex items-center justify-between">
-                  <span class="text-sm text-[var(--brand-primary)] font-medium">立即访问</span>
-                  <svg class="w-4 h-4 text-[var(--brand-primary)] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                  </svg>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
@@ -763,6 +738,89 @@
       <div id="emptyState" class="hidden mt-12 text-center text-[var(--text-secondary)]" role="status">
         <svg class="mx-auto size-16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 3h10a2 2 0 0 1 2 2v14l-7-4-7 4V5a2 2 0 0 1 2-2Z"/></svg>
         <p class="mt-3">没有匹配的结果。</p>
+      </div>
+
+      <!-- 统计分析区域 -->
+      <div class="mt-12 border-t border-[var(--border-primary)] pt-8 no-print">
+        <div class="card">
+          <div class="p-6 md:p-8">
+            <h3 class="text-xl font-semibold text-[var(--text-primary)] mb-6 flex items-center gap-3">
+              <svg class="w-6 h-6 text-[var(--brand-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+              </svg>
+              统计分析中心
+            </h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- 入住信息统计 -->
+              <div class="group cursor-pointer" onclick="app.navigateToStatistics()">
+                <div class="card-header-bg p-6 rounded-t-xl">
+                  <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-lg font-semibold text-white">入住信息统计</h4>
+                      <p class="text-white/80 text-sm">患儿数据 · 入住分析</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-white rounded-b-xl border border-t-0 border-[var(--border-primary)] p-6 group-hover:bg-[var(--bg-tertiary)] transition-colors">
+                  <p class="text-[var(--text-secondary)] mb-4">查看患儿年龄分布、性别比例、地区分布和入住趋势分析</p>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-[var(--brand-primary)] font-medium">查看详细统计</span>
+                    <svg class="w-4 h-4 text-[var(--brand-primary)] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 家庭服务统计 -->
+              <div class="group cursor-pointer" onclick="app.navigateToFamilyServiceStatistics()">
+                <div class="card-header-bg p-6 rounded-t-xl">
+                  <div class="flex items-center gap-4">
+                    <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                      <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 class="text-lg font-semibold text-white">家庭服务统计</h4>
+                      <p class="text-white/80 text-sm">服务记录 · 时间分析</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="bg-white rounded-b-xl border border-t-0 border-[var(--border-primary)] p-6 group-hover:bg-[var(--bg-tertiary)] transition-colors">
+                  <p class="text-[var(--text-secondary)] mb-4">查看月度、年度家庭服务数据和时间范围统计分析</p>
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm text-[var(--brand-primary)] font-medium">查看服务统计</span>
+                    <svg class="w-4 h-4 text-[var(--brand-primary)] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 统计功能说明 -->
+            <div class="mt-6 p-4 bg-[var(--bg-tertiary)] rounded-xl">
+              <div class="flex items-start gap-3">
+                <svg class="w-5 h-5 text-[var(--brand-primary)] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <div>
+                  <p class="text-sm font-medium text-[var(--text-primary)] mb-1">统计分析功能</p>
+                  <p class="text-xs text-[var(--text-secondary)]">
+                    提供多维度数据分析，包括年龄分布图表、性别比例、地区统计、入住趋势以及家庭服务时间分析等，帮助您全面了解患儿和服务数据。
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
