@@ -2944,19 +2944,23 @@ class PatientApp {
     bindFamilyServiceEvents(stats) {
         // 时间范围查询
         document.getElementById('fsApplyDateRange').addEventListener('click', async () => {
-            const startDate = document.getElementById('fsDateRangeStart').value;
-            const endDate = document.getElementById('fsDateRangeEnd').value;
-            
-            if (!startDate || !endDate) {
+            const startMonth = document.getElementById('fsDateRangeStart').value;
+            const endMonth = document.getElementById('fsDateRangeEnd').value;
+
+            if (!startMonth || !endMonth) {
                 alert('请选择开始和结束日期');
                 return;
             }
-            
+
+            const startDate = `${startMonth}-01`;
+            const [endYear, endMonthNum] = endMonth.split('-').map(Number);
+            const endDate = new Date(endYear, endMonthNum, 0).toISOString().split('T')[0];
+
             if (new Date(startDate) > new Date(endDate)) {
                 alert('开始日期不能晚于结束日期');
                 return;
             }
-            
+
             try {
                 const rangeStats = await window.electronAPI.familyService.getStatsByDateRange({ startDate, endDate });
                 this.displayDateRangeResults(rangeStats);
@@ -2996,8 +3000,8 @@ class PatientApp {
         document.getElementById('fsRangeRecords').textContent = rangeStats.totalRecords;
         document.getElementById('fsRangeFamilies').textContent = rangeStats.totalFamilies;
         document.getElementById('fsRangeServiceDays').textContent = rangeStats.totalServiceDays;
-        document.getElementById('fsRangePeriod').textContent = 
-            `${rangeStats.dateRange.startDate} 至 ${rangeStats.dateRange.endDate}`;
+        document.getElementById('fsRangePeriod').textContent =
+            `${rangeStats.dateRange.startDate.slice(0, 7)} 至 ${rangeStats.dateRange.endDate.slice(0, 7)}`;
         
         document.getElementById('fsDateRangeResults').classList.remove('hidden');
     }
