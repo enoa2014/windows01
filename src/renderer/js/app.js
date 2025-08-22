@@ -1014,8 +1014,9 @@ class PatientApp {
     // 新增：导航到家庭服务页面
     async navigateToFamilyService() {
         try {
-            // 导航到家庭服务列表页面
-            this.navigateTo('familyService');
+            console.log('🔄 导航到家庭服务页面：加载独立页面');
+            // 加载独立的家庭服务页面
+            window.location.href = './family-service.html';
         } catch (error) {
             console.error('导航到家庭服务页面失败:', error);
         }
@@ -2734,16 +2735,59 @@ class PatientApp {
             // 显示加载状态
             document.getElementById('familyServiceStatisticsLoading').classList.remove('hidden');
             document.getElementById('familyServiceStatisticsContent').classList.add('hidden');
-            document.getElementById('familyServiceStatisticsError').classList.add('hidden');
+            
+            // 安全地隐藏错误状态（如果存在）
+            const errorElement = document.getElementById('familyServiceStatisticsError');
+            if (errorElement) {
+                errorElement.classList.add('hidden');
+            }
 
             // 获取统计数据
-            const stats = await window.api.familyService.getStatistics();
+            const stats = await window.electronAPI.familyService.getOverviewStats();
+            console.log('🎯 [前端] 收到统计数据:', stats);
             
             // 更新基础统计卡片
-            document.getElementById('fsStatMonthlyAverage').textContent = stats.monthlyAverageFamilies || 0;
-            document.getElementById('fsStatTotalRecords').textContent = stats.totalRecords || 0;
-            document.getElementById('fsStatTotalFamilies').textContent = stats.totalFamilies || 0;
-            document.getElementById('fsStatTotalServiceDays').textContent = stats.totalServiceDays || 0;
+            const overall = stats.overall || {};
+            const currentYear = stats.currentYear || {};
+            console.log('📊 [前端] overall数据:', overall);
+            
+            // 检查DOM元素是否存在
+            const elements = {
+                monthlyAvg: document.getElementById('fsStatMonthlyAverage'),
+                totalRecords: document.getElementById('fsStatTotalRecords'),
+                totalFamilies: document.getElementById('fsStatTotalFamilies'),
+                totalServiceDays: document.getElementById('fsStatTotalServiceDays')
+            };
+            console.log('🔍 [前端] DOM元素检查:', elements);
+            
+            // 计算月平均家庭数
+            const monthlyAvg = (overall.totalFamilies && overall.totalRecords) ? 
+                Math.round(overall.totalFamilies / overall.totalRecords) : 0;
+            
+            // 获取基础数据（确保非空值）
+            const totalRecords = overall.totalRecords || 0;
+            const totalServices = overall.totalServices || 0;
+            const totalServiceDays = overall.totalResidenceDays || 0;
+            
+            console.log('📈 [前端] 计算出的值:', {
+                monthlyAvg, totalRecords, totalServices, totalServiceDays
+            });
+            
+            // 安全地更新DOM元素
+            if (elements.monthlyAvg) {
+                elements.monthlyAvg.textContent = monthlyAvg.toLocaleString();
+            }
+            if (elements.totalRecords) {
+                elements.totalRecords.textContent = totalRecords.toLocaleString();
+            }
+            if (elements.totalFamilies) {
+                elements.totalFamilies.textContent = totalServices.toLocaleString();
+            }
+            if (elements.totalServiceDays) {
+                elements.totalServiceDays.textContent = totalServiceDays.toLocaleString();
+            }
+            
+            console.log('✅ [前端] DOM更新完成');
 
             // 初始化图表
             await this.initializeFamilyServiceCharts(stats);
@@ -2759,12 +2803,22 @@ class PatientApp {
             document.getElementById('familyServiceStatisticsContent').classList.remove('hidden');
 
         } catch (error) {
-            console.error('加载家庭服务统计失败:', error);
+            console.error('❌ [前端] 加载家庭服务统计失败:', error);
             
-            // 显示错误状态
+            // 隐藏加载状态
             document.getElementById('familyServiceStatisticsLoading').classList.add('hidden');
             document.getElementById('familyServiceStatisticsContent').classList.add('hidden');
-            document.getElementById('familyServiceStatisticsError').classList.remove('hidden');
+            
+            // 显示错误状态（如果错误元素存在）
+            const errorElement = document.getElementById('familyServiceStatisticsError');
+            if (errorElement) {
+                errorElement.classList.remove('hidden');
+            } else {
+                // 如果没有错误状态元素，在控制台显示详细错误
+                console.error('❌ [前端] 家庭服务统计页面错误元素不存在，无法显示错误状态');
+                // 可以考虑显示一个简单的alert或者创建临时错误提示
+                alert('加载家庭服务统计失败：' + error.message);
+            }
         }
     }
 
@@ -2784,10 +2838,10 @@ class PatientApp {
             new Chart(monthlyCtx, {
                 type: 'line',
                 data: {
-                    labels: stats.monthlyStats.map(item => item.month),
+                    labels: (stats.monthlyTrend || []).map(item => item.month),
                     datasets: [{
                         label: '家庭数量',
-                        data: stats.monthlyStats.map(item => item.family_count),
+                        data: (stats.monthlyTrend || []).map(item => item.families),
                         borderColor: 'rgb(59, 130, 246)',
                         backgroundColor: 'rgba(59, 130, 246, 0.1)',
                         tension: 0.4,
@@ -2815,16 +2869,16 @@ class PatientApp {
             new Chart(yearlyCtx, {
                 type: 'bar',
                 data: {
-                    labels: stats.yearlyStats.map(item => item.year),
+                    labels: (stats.yearlyComparison || []).map(item => item.year),
                     datasets: [{
                         label: '记录数',
-                        data: stats.yearlyStats.map(item => item.total_records),
+                        data: (stats.yearlyComparison || []).map(item => item.records),
                         backgroundColor: 'rgba(16, 185, 129, 0.8)',
                         borderColor: 'rgb(16, 185, 129)',
                         borderWidth: 1
                     }, {
                         label: '家庭数',
-                        data: stats.yearlyStats.map(item => item.unique_families),
+                        data: (stats.yearlyComparison || []).map(item => item.families),
                         backgroundColor: 'rgba(245, 158, 11, 0.8)',
                         borderColor: 'rgb(245, 158, 11)',
                         borderWidth: 1
@@ -2848,12 +2902,13 @@ class PatientApp {
 
             // 3. 医院服务分布图
             const hospitalCtx = document.getElementById('fsHospitalChart').getContext('2d');
+            const hospitalData = stats.servicesByHospital || [{hospital: '暂无数据', service_count: 1}];
             new Chart(hospitalCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: stats.servicesByHospital.map(item => item.hospital),
+                    labels: hospitalData.map(item => item.hospital),
                     datasets: [{
-                        data: stats.servicesByHospital.map(item => item.service_count),
+                        data: hospitalData.map(item => item.service_count),
                         backgroundColor: [
                             'rgba(59, 130, 246, 0.8)',
                             'rgba(16, 185, 129, 0.8)',
@@ -2884,15 +2939,16 @@ class PatientApp {
 
             // 4. 诊断分类统计图
             const diagnosisCtx = document.getElementById('fsDiagnosisChart').getContext('2d');
+            const diagnosisData = stats.servicesByDiagnosis || [{diagnosis: '暂无数据', service_count: 1}];
             new Chart(diagnosisCtx, {
                 type: 'bar',
                 data: {
-                    labels: stats.servicesByDiagnosis.map(item => 
+                    labels: diagnosisData.map(item => 
                         item.diagnosis.length > 10 ? item.diagnosis.substring(0, 10) + '...' : item.diagnosis
                     ),
                     datasets: [{
                         label: '服务次数',
-                        data: stats.servicesByDiagnosis.map(item => item.service_count),
+                        data: diagnosisData.map(item => item.service_count),
                         backgroundColor: 'rgba(168, 85, 247, 0.8)',
                         borderColor: 'rgb(168, 85, 247)',
                         borderWidth: 1
@@ -3108,7 +3164,7 @@ class PatientApp {
             }
             
             try {
-                const rangeStats = await window.api.familyService.getStatsByDateRange({ startDate, endDate });
+                const rangeStats = await window.electronAPI.familyService.getStatsByDateRange({ startDate, endDate });
                 this.displayDateRangeResults(rangeStats);
             } catch (error) {
                 console.error('获取时间范围统计失败:', error);
@@ -3156,7 +3212,7 @@ class PatientApp {
     async exportFamilyServiceStatistics(stats) {
         try {
             // 调用导出API
-            await window.api.familyService.exportExcel({
+            await window.electronAPI.familyService.exportExcel({
                 type: 'statistics',
                 data: stats,
                 includeCharts: true

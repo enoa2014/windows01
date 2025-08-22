@@ -138,14 +138,24 @@ class DatabaseManager {
     }
 
     all(sql, params = []) {
+        console.log('🗃️ [DatabaseManager] all() 方法调用');
+        console.log('📝 [DatabaseManager] SQL:', sql.replace(/\s+/g, ' ').trim());
+        console.log('🔢 [DatabaseManager] 参数:', params);
         return new Promise((resolve, reject) => {
             if (!this.db) {
+                console.log('❌ [DatabaseManager] 数据库未初始化');
                 reject(new Error('数据库未初始化'));
                 return;
             }
             this.db.all(sql, params, (err, rows) => {
-                if (err) reject(err);
-                else resolve(rows);
+                if (err) {
+                    console.log('❌ [DatabaseManager] SQL执行错误:', err);
+                    reject(err);
+                } else {
+                    console.log('✅ [DatabaseManager] SQL执行成功，返回行数:', rows ? rows.length : 0);
+                    console.log('📊 [DatabaseManager] 返回数据样本:', rows ? rows.slice(0, 2) : []);
+                    resolve(rows);
+                }
             });
         });
     }
@@ -831,7 +841,10 @@ class DatabaseManager {
                             WHEN check_in_date IS NOT NULL AND check_in_date != '' THEN
                                 CASE 
                                     WHEN date(check_in_date) IS NOT NULL THEN
-                                        GREATEST(1, julianday('now') - julianday(check_in_date))
+                                        CASE 
+                                            WHEN (julianday('now') - julianday(check_in_date)) < 1 THEN 1
+                                            ELSE (julianday('now') - julianday(check_in_date))
+                                        END
                                     ELSE 1
                                 END
                             ELSE 0

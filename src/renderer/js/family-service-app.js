@@ -240,20 +240,43 @@ class FamilyServiceApp {
             this.showLoading(true);
             this.clearError();
 
-            // 并行加载数据
-            const [overviewStats, filterOptions] = await Promise.all([
-                this.loadOverviewStats(),
-                this.loadFilterOptions()
-            ]);
+            // 分别加载数据，确保即使某个失败也能继续
+            let overviewStats = null;
+            let filterOptions = null;
+
+            try {
+                overviewStats = await this.loadOverviewStats();
+                console.log('✅ 统计数据加载成功');
+            } catch (error) {
+                console.error('❌ 统计数据加载失败:', error);
+            }
+
+            try {
+                filterOptions = await this.loadFilterOptions();
+                console.log('✅ 筛选选项加载成功');
+            } catch (error) {
+                console.error('❌ 筛选选项加载失败:', error);
+            }
 
             // 更新概览卡片
-            this.updateOverviewCards(overviewStats);
+            if (overviewStats) {
+                this.updateOverviewCards(overviewStats);
+            }
 
             // 更新筛选选项
-            this.updateFilterOptions(filterOptions);
+            if (filterOptions) {
+                this.updateFilterOptions(filterOptions);
+            }
 
-            // 加载记录列表
-            await this.loadRecords();
+            // 加载记录列表 - 这是最重要的，确保一定会执行
+            try {
+                console.log('🔄 开始加载记录列表...');
+                await this.loadRecords();
+                console.log('✅ 记录列表加载成功');
+            } catch (error) {
+                console.error('❌ 记录列表加载失败:', error);
+                this.showError('记录列表加载失败：' + error.message);
+            }
 
             this.showLoading(false);
 
@@ -300,6 +323,7 @@ class FamilyServiceApp {
 
     async loadRecords() {
         try {
+            console.log('🔄 [FamilyServiceApp] loadRecords 开始执行');
             this.state.loading = true;
             this.updateResultCount('加载中...');
 
@@ -309,9 +333,22 @@ class FamilyServiceApp {
                 offset: (this.state.pagination.currentPage - 1) * this.state.pagination.pageSize
             };
 
+            console.log('📊 [FamilyServiceApp] 准备调用 electronAPI，参数:', { filters, pagination });
 
+            // 检查 electronAPI 是否可用
+            if (!window.electronAPI) {
+                throw new Error('electronAPI 不可用');
+            }
+            if (!window.electronAPI.familyService) {
+                throw new Error('familyService API 不可用');
+            }
+            if (!window.electronAPI.familyService.getRecords) {
+                throw new Error('getRecords 方法不可用');
+            }
+
+            console.log('✅ [FamilyServiceApp] electronAPI 检查通过，开始调用 getRecords');
             const records = await window.electronAPI.familyService.getRecords(filters, pagination);
-            
+            console.log('📋 [FamilyServiceApp] getRecords 返回结果:', records);
             
             this.state.records = records;
             this.state.filteredRecords = records;
@@ -320,14 +357,16 @@ class FamilyServiceApp {
             const totalRecords = records.length;
             this.state.pagination.totalPages = Math.ceil(totalRecords / this.state.pagination.pageSize);
 
+            console.log('🎨 [FamilyServiceApp] 开始渲染记录...');
             this.renderRecords();
             this.updatePagination();
             this.updateResultCount(`显示 ${totalRecords} 条记录`);
 
             this.state.loading = false;
+            console.log('✅ [FamilyServiceApp] loadRecords 执行完成');
 
         } catch (error) {
-            console.error('加载记录失败:', error);
+            console.error('❌ [FamilyServiceApp] 加载记录失败:', error);
             this.showError('加载记录失败：' + error.message);
             this.state.loading = false;
         }

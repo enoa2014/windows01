@@ -19,6 +19,8 @@ class FamilyServiceManager {
      * @returns {Array} 记录列表
      */
     async getRecords(filters = {}, pagination = {}) {
+        console.log('🔍 [FamilyServiceManager] getRecords 方法开始');
+        console.log('📊 [FamilyServiceManager] 接收到的参数:', { filters, pagination });
         try {
             let sql = `
                 SELECT 
@@ -128,7 +130,12 @@ class FamilyServiceManager {
                 }
             }
 
+            console.log('📝 [FamilyServiceManager] 执行的SQL:', sql);
+            console.log('🔢 [FamilyServiceManager] SQL参数:', params);
+            
             const records = await this.db.all(sql, params);
+            console.log('📋 [FamilyServiceManager] 数据库返回的原始记录数:', records.length);
+            console.log('📊 [FamilyServiceManager] 数据库返回的记录样本:', records.slice(0, 2));
 
             // 计算额外的统计字段
             const processedRecords = records.map(record => ({
@@ -140,10 +147,12 @@ class FamilyServiceManager {
                     (record.total_service_count / record.residents_count).toFixed(1) : '0'
             }));
             
+            console.log('✅ [FamilyServiceManager] 处理后的记录数:', processedRecords.length);
+            console.log('📤 [FamilyServiceManager] 返回的记录样本:', processedRecords.slice(0, 2));
             return processedRecords;
 
         } catch (error) {
-            console.error('获取家庭服务记录失败:', error);
+            console.error('❌ [FamilyServiceManager] 获取家庭服务记录失败:', error);
             throw new Error(`获取记录失败: ${error.message}`);
         }
     }
