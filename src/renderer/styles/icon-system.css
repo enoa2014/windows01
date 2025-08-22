@@ -1,0 +1,423 @@
+/* ===================== 统一图标系统 v2.0 ===================== */
+/* 基于UI优化工作流程 - 阶段1：统一图标系统 */
+
+/* ==================== 图标尺寸标准 ==================== */
+
+.icon {
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* 标准图标尺寸 */
+.icon-xs {
+  width: 12px;
+  height: 12px;
+}
+
+.icon-sm {
+  width: 16px;
+  height: 16px;
+}
+
+.icon-base {
+  width: 20px;
+  height: 20px;
+}
+
+.icon-lg {
+  width: 24px;
+  height: 24px;
+}
+
+.icon-xl {
+  width: 32px;
+  height: 32px;
+}
+
+.icon-2xl {
+  width: 40px;
+  height: 40px;
+}
+
+/* ==================== 功能模块专用图标样式 ==================== */
+
+/* 数据导入图标 */
+.icon-upload {
+  color: var(--medical-info-500);
+}
+
+.icon-upload-cloud {
+  color: var(--medical-primary-500);
+}
+
+/* 患儿列表图标 */
+.icon-users {
+  color: var(--medical-secondary-500);
+}
+
+.icon-user-group {
+  color: var(--medical-accent-500);
+}
+
+/* 搜索图标 */
+.icon-search {
+  color: var(--text-muted);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.icon-search:hover,
+.icon-search:focus {
+  color: var(--medical-primary-500);
+}
+
+/* 详情图标 */
+.icon-file-text {
+  color: var(--medical-info-500);
+}
+
+.icon-document {
+  color: var(--text-secondary);
+}
+
+/* 医疗信息图标 */
+.icon-heart-pulse {
+  color: var(--medical-emergency);
+}
+
+.icon-medical {
+  color: var(--medical-primary-500);
+}
+
+.icon-stethoscope {
+  color: var(--medical-secondary-500);
+}
+
+/* 统计分析图标 */
+.icon-chart-bar {
+  color: var(--medical-accent-500);
+}
+
+.icon-chart-pie {
+  color: var(--medical-primary-500);
+}
+
+.icon-trending-up {
+  color: var(--medical-success-500);
+}
+
+.icon-analytics {
+  color: var(--medical-info-500);
+}
+
+/* 导航图标 */
+.icon-home {
+  color: var(--text-secondary);
+}
+
+.icon-settings {
+  color: var(--text-muted);
+}
+
+.icon-help {
+  color: var(--medical-info-500);
+}
+
+/* 操作图标 */
+.icon-edit {
+  color: var(--medical-accent-500);
+}
+
+.icon-delete {
+  color: var(--medical-error-500);
+}
+
+.icon-save {
+  color: var(--medical-success-500);
+}
+
+.icon-cancel {
+  color: var(--text-muted);
+}
+
+.icon-print {
+  color: var(--text-secondary);
+}
+
+.icon-download {
+  color: var(--medical-primary-500);
+}
+
+/* 状态图标 */
+.icon-check {
+  color: var(--medical-success-500);
+}
+
+.icon-warning {
+  color: var(--medical-warning-500);
+}
+
+.icon-error {
+  color: var(--medical-error-500);
+}
+
+.icon-info {
+  color: var(--medical-info-500);
+}
+
+.icon-loading {
+  color: var(--medical-primary-500);
+  animation: spin 1s linear infinite;
+}
+
+/* 时间图标 */
+.icon-calendar {
+  color: var(--text-secondary);
+}
+
+.icon-clock {
+  color: var(--text-muted);
+}
+
+/* 筛选和排序图标 */
+.icon-filter {
+  color: var(--text-muted);
+  transition: color var(--duration-fast) var(--ease-out);
+}
+
+.icon-filter:hover,
+.icon-filter.active {
+  color: var(--medical-primary-500);
+}
+
+.icon-sort {
+  color: var(--text-muted);
+}
+
+.icon-sort-asc {
+  color: var(--medical-primary-500);
+}
+
+.icon-sort-desc {
+  color: var(--medical-primary-500);
+}
+
+/* ==================== 图标状态变体 ==================== */
+
+/* 悬停状态 */
+.icon-hover {
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.icon-hover:hover {
+  transform: scale(1.1);
+  color: var(--medical-primary-500);
+}
+
+/* 激活状态 */
+.icon-active {
+  color: var(--medical-primary-500);
+}
+
+/* 禁用状态 */
+.icon-disabled {
+  color: var(--text-muted);
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ==================== 图标按钮组合 ==================== */
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-2);
+  border-radius: var(--radius-base);
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+  color: var(--text-secondary);
+}
+
+.icon-button:hover {
+  background-color: var(--bg-tertiary);
+  color: var(--medical-primary-500);
+}
+
+.icon-button:active {
+  transform: scale(0.95);
+}
+
+.icon-button.primary {
+  background-color: var(--medical-primary-500);
+  color: var(--brand-text);
+}
+
+.icon-button.primary:hover {
+  background-color: var(--medical-primary-600);
+}
+
+.icon-button.secondary {
+  background-color: var(--medical-secondary-500);
+  color: var(--brand-text);
+}
+
+.icon-button.secondary:hover {
+  background-color: var(--medical-secondary-600);
+}
+
+/* 带文字的图标按钮 */
+.icon-text {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+.icon-text-reverse {
+  flex-direction: row-reverse;
+}
+
+/* ==================== 特殊图标效果 ==================== */
+
+/* 旋转动画 */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.icon-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* 脉冲动画 */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.icon-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* 弹跳动画 */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.icon-bounce {
+  animation: bounce 1s infinite;
+}
+
+/* ==================== 图标组容器 ==================== */
+
+.icon-group {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.icon-group-vertical {
+  flex-direction: column;
+  align-items: center;
+}
+
+.icon-group-wrap {
+  flex-wrap: wrap;
+}
+
+/* ==================== 医疗专业图标主题 ==================== */
+
+/* 紧急状态图标 */
+.icon-emergency {
+  color: var(--medical-emergency);
+  animation: pulse 1s infinite;
+}
+
+/* 普通状态图标 */
+.icon-normal {
+  color: var(--medical-normal);
+}
+
+/* 康复状态图标 */
+.icon-recovery {
+  color: var(--medical-recovery);
+}
+
+/* 稳定状态图标 */
+.icon-stable {
+  color: var(--medical-stable);
+}
+
+/* ==================== 响应式图标 ==================== */
+
+/* 移动端适配 */
+@media (max-width: 640px) {
+  .icon-responsive {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  .icon-responsive {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .icon-responsive {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* ==================== 可访问性支持 ==================== */
+
+.icon[aria-hidden="true"] {
+  pointer-events: none;
+}
+
+.icon-focusable:focus {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .icon {
+    filter: contrast(1.5);
+  }
+}
+
+/* 减少动画模式支持 */
+@media (prefers-reduced-motion: reduce) {
+  .icon-spin,
+  .icon-pulse,
+  .icon-bounce {
+    animation: none;
+  }
+  
+  .icon-hover {
+    transition: none;
+  }
+}

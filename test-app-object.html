@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>App Object Test</title>
+</head>
+<body>
+    <h1>App Object Debug Test</h1>
+    <button onclick="testAppObject()">Test App Object</button>
+    <button onclick="testNavigation()">Test Navigation Method</button>
+    <div id="results"></div>
+
+    <script>
+        function testAppObject() {
+            const results = document.getElementById('results');
+            let output = '<h3>App Object Test Results:</h3>';
+            
+            output += `<p>window.app exists: ${typeof window.app !== 'undefined'}</p>`;
+            
+            if (typeof window.app !== 'undefined') {
+                output += `<p>app.navigateToFamilyServiceStatistics exists: ${typeof window.app.navigateToFamilyServiceStatistics === 'function'}</p>`;
+                output += `<p>app constructor: ${window.app.constructor.name}</p>`;
+                
+                // List all methods
+                const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(window.app));
+                output += `<p>Available methods: ${methods.join(', ')}</p>`;
+            }
+            
+            results.innerHTML = output;
+        }
+        
+        function testNavigation() {
+            const results = document.getElementById('results');
+            
+            if (typeof window.app !== 'undefined' && typeof window.app.navigateToFamilyServiceStatistics === 'function') {
+                try {
+                    console.log('🧪 Testing navigation method...');
+                    window.app.navigateToFamilyServiceStatistics();
+                    results.innerHTML += '<p style="color: green;">✅ Navigation method called successfully</p>';
+                } catch (error) {
+                    results.innerHTML += `<p style="color: red;">❌ Navigation method failed: ${error.message}</p>`;
+                    console.error('Navigation test failed:', error);
+                }
+            } else {
+                results.innerHTML += '<p style="color: red;">❌ Navigation method not available</p>';
+            }
+        }
+        
+        // Auto-test on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(testAppObject, 1000); // Wait 1 second for app to initialize
+        });
+    </script>
+</body>
+</html>

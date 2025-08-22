@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>患者详情 - 患儿入住信息管理系统</title>
+    
+    <!-- Core Styles -->
+    <link rel="stylesheet" href="styles/medical-design-system.css">
+    <link rel="stylesheet" href="styles/icon-system.css">
+    <link rel="stylesheet" href="styles/modern-cards.css">
+    <link rel="stylesheet" href="styles/responsive-layout.css">
+    <link rel="stylesheet" href="styles/enhanced-detail-page.css">
+    
+    <!-- Accessibility -->
+    <meta name="description" content="患者详细信息管理页面">
+    <meta name="theme-color" content="#1E88E5">
+</head>
+<body>
+    <!-- Main Container -->
+    <div class="patient-detail-container">
+        <!-- Header Section -->
+        <header class="detail-header">
+            <div class="detail-header-content">
+                <div class="detail-header-info">
+                    <a href="index.html" class="back-button">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        返回列表
+                    </a>
+                    <div>
+                        <h1 class="patient-title">加载中...</h1>
+                        <p class="patient-subtitle">患者详细信息</p>
+                    </div>
+                </div>
+                
+                <div class="detail-actions">
+                    <button class="detail-action-btn secondary" data-action="edit" title="编辑患者信息 (Ctrl+E)">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        编辑
+                    </button>
+                    <button class="detail-action-btn secondary" data-action="export" title="导出数据 (Ctrl+E)">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7,10 12,15 17,10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        导出
+                    </button>
+                    <button class="detail-action-btn primary" data-action="print" title="打印详情 (Ctrl+P)">
+                        <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polyline points="6,9 6,2 18,2 18,9"/>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                            <rect width="12" height="8" x="6" y="14"/>
+                        </svg>
+                        打印
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="quick-stats">
+                <div class="stat-item">
+                    <div class="stat-value teal">-</div>
+                    <div class="stat-label">住院天数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value blue">-</div>
+                    <div class="stat-label">医疗记录</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value purple">-</div>
+                    <div class="stat-label">重要事件</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value green">-</div>
+                    <div class="stat-label">病情等级</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="detail-content">
+            <!-- Left Sidebar: Tabbed Information -->
+            <aside class="info-section">
+                <!-- Tab Navigation -->
+                <div class="detail-tabs-container">
+                    <nav class="detail-tabs" role="tablist">
+                        <button class="detail-tab active" data-tab="basic-info" role="tab" aria-selected="true" 
+                                aria-controls="basic-info-panel" id="basic-info-tab">
+                            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                            基本信息
+                        </button>
+                        <button class="detail-tab" data-tab="medical-info" role="tab" aria-selected="false"
+                                aria-controls="medical-info-panel" id="medical-info-tab">
+                            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            </svg>
+                            医疗信息
+                        </button>
+                        <button class="detail-tab" data-tab="admission-history" role="tab" aria-selected="false"
+                                aria-controls="admission-history-panel" id="admission-history-tab">
+                            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                                <line x1="3" y1="10" x2="21" y2="10"/>
+                            </svg>
+                            入住历史
+                        </button>
+                        <button class="detail-tab" data-tab="family-info" role="tab" aria-selected="false"
+                                aria-controls="family-info-panel" id="family-info-tab">
+                            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            家庭信息
+                        </button>
+                        <button class="detail-tab" data-tab="treatment-records" role="tab" aria-selected="false"
+                                aria-controls="treatment-records-panel" id="treatment-records-tab">
+                            <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14,2 14,8 20,8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10,9 9,9 8,9"/>
+                            </svg>
+                            治疗记录
+                        </button>
+                    </nav>
+                </div>
+
+                <!-- Tab Content Panels -->
+                <div class="detail-tab-panels">
+                    <div class="detail-tab-content active" data-tab="basic-info" role="tabpanel" 
+                         aria-labelledby="basic-info-tab" id="basic-info-panel">
+                        <div class="info-section-header">
+                            <h3 class="info-section-title">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                                患者基本信息
+                            </h3>
+                        </div>
+                        <div class="info-section-body">
+                            <!-- Content will be loaded by JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="detail-tab-content" data-tab="medical-info" role="tabpanel" 
+                         aria-labelledby="medical-info-tab" id="medical-info-panel">
+                        <div class="info-section-header">
+                            <h3 class="info-section-title">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                                </svg>
+                                医疗诊断信息
+                            </h3>
+                        </div>
+                        <div class="info-section-body">
+                            <!-- Content will be loaded by JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="detail-tab-content" data-tab="admission-history" role="tabpanel" 
+                         aria-labelledby="admission-history-tab" id="admission-history-panel">
+                        <div class="info-section-header">
+                            <h3 class="info-section-title">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                入住历史记录
+                            </h3>
+                        </div>
+                        <div class="info-section-body">
+                            <div class="info-message">
+                                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                                历史入住记录功能开发中...
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="detail-tab-content" data-tab="family-info" role="tabpanel" 
+                         aria-labelledby="family-info-tab" id="family-info-panel">
+                        <div class="info-section-header">
+                            <h3 class="info-section-title">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                                家庭联系信息
+                            </h3>
+                        </div>
+                        <div class="info-section-body">
+                            <!-- Content will be loaded by JavaScript -->
+                        </div>
+                    </div>
+
+                    <div class="detail-tab-content" data-tab="treatment-records" role="tabpanel" 
+                         aria-labelledby="treatment-records-tab" id="treatment-records-panel">
+                        <div class="info-section-header">
+                            <h3 class="info-section-title">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14,2 14,8 20,8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <polyline points="10,9 9,9 8,9"/>
+                                </svg>
+                                治疗记录详情
+                            </h3>
+                        </div>
+                        <div class="info-section-body">
+                            <div class="info-message">
+                                <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="12" y1="16" x2="12" y2="12"/>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"/>
+                                </svg>
+                                详细治疗记录功能开发中...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- Right Main: Timeline Section -->
+            <section class="timeline-section">
+                <div class="timeline-header">
+                    <h2 class="timeline-title">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="12" cy="12" r="10"/>
+                            <polyline points="12,6 12,12 16,14"/>
+                        </svg>
+                        医疗时间轴
+                    </h2>
+                    
+                    <div class="timeline-controls">
+                        <select class="timeline-sort" aria-label="时间轴排序方式">
+                            <option value="desc">最新在前</option>
+                            <option value="asc">最旧在前</option>
+                        </select>
+                        
+                        <input type="search" class="timeline-search" placeholder="搜索医疗记录..." 
+                               aria-label="搜索医疗记录">
+                    </div>
+                </div>
+                
+                <div class="timeline-body" role="log" aria-label="医疗记录时间轴">
+                    <div class="timeline" id="medical-timeline">
+                        <!-- Timeline items will be loaded by JavaScript -->
+                        <div class="timeline-loading">
+                            <svg class="icon-lg animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                            </svg>
+                            加载中...
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Keyboard Shortcuts Help Modal -->
+    <div class="modal-overlay" id="shortcuts-modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>快捷键说明</h3>
+                <button class="modal-close" aria-label="关闭">
+                    <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="18" y1="6" x2="6" y2="18"/>
+                        <line x1="6" y1="6" x2="18" y2="18"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="shortcuts-grid">
+                    <div class="shortcut-item">
+                        <kbd>Ctrl + 1-5</kbd>
+                        <span>切换标签页</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl + E</kbd>
+                        <span>导出数据</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Ctrl + P</kbd>
+                        <span>打印详情</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Alt + S</kbd>
+                        <span>切换时间轴排序</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>Esc</kbd>
+                        <span>关闭弹窗</span>
+                    </div>
+                    <div class="shortcut-item">
+                        <kbd>F1</kbd>
+                        <span>显示帮助</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core JavaScript Libraries -->
+    <script src="js/icon-library.js"></script>
+    <script src="js/responsive-layout.js"></script>
+    <script src="js/enhanced-detail-page.js"></script>
+    
+    <!-- Help System -->
+    <script>
+        // Show shortcuts help with F1
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'F1') {
+                e.preventDefault();
+                document.getElementById('shortcuts-modal').style.display = 'flex';
+            }
+            if (e.key === 'Escape') {
+                document.getElementById('shortcuts-modal').style.display = 'none';
+            }
+        });
+        
+        // Close modal
+        document.querySelector('.modal-close').addEventListener('click', () => {
+            document.getElementById('shortcuts-modal').style.display = 'none';
+        });
+        
+        // Close modal on overlay click
+        document.getElementById('shortcuts-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                e.currentTarget.style.display = 'none';
+            }
+        });
+    </script>
+
+    <!-- Toast Styles -->
+    <style>
+        .toast {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            padding: 1rem 1.5rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+        }
+        
+        .toast-success {
+            border-left: 4px solid var(--medical-success-500);
+            color: var(--medical-success-500);
+        }
+        
+        .toast-error {
+            border-left: 4px solid var(--medical-error-500);
+            color: var(--medical-error-500);
+        }
+        
+        .toast-info {
+            border-left: 4px solid var(--medical-info-500);
+            color: var(--medical-info-500);
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-xl);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 1.5rem 2rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 0.25rem;
+            border-radius: var(--radius-md);
+            transition: all 0.2s ease;
+        }
+        
+        .modal-close:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .modal-body {
+            padding: 2rem;
+        }
+        
+        .shortcuts-grid {
+            display: grid;
+            gap: 1rem;
+        }
+        
+        .shortcut-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+        }
+        
+        .shortcut-item kbd {
+            background: var(--bg-secondary);
+            padding: 0.25rem 0.5rem;
+            border-radius: var(--radius-sm);
+            font-family: ui-monospace, monospace;
+            font-size: 0.75rem;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .timeline-loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .info-message {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1.5rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-lg);
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+    </style>
+</body>
+</html>

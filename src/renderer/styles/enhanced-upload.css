@@ -1,0 +1,601 @@
+/* ===================== 增强数据导入界面 v2.0 ===================== */
+/* 基于UI优化工作流程 - 阶段1：优化数据导入流程界面 */
+
+/* ==================== 拖拽上传区域 ==================== */
+
+.upload-container {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-8);
+  margin-bottom: var(--spacing-6);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-primary);
+}
+
+.drag-drop-area {
+  border: 2px dashed var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-10);
+  text-align: center;
+  background: var(--bg-primary);
+  transition: all var(--duration-normal) var(--ease-out);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.drag-drop-area::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 49%, rgba(30, 136, 229, 0.1) 50%, transparent 51%);
+  background-size: 20px 20px;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+
+.drag-drop-area:hover {
+  border-color: var(--medical-primary-400);
+  background: var(--medical-primary-50);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.drag-drop-area:hover::before {
+  opacity: 1;
+}
+
+.drag-drop-area.dragover {
+  border-color: var(--medical-primary-500);
+  background: var(--medical-primary-100);
+  transform: scale(1.02);
+  box-shadow: var(--shadow-lg);
+}
+
+.drag-drop-area.dragover::before {
+  opacity: 1;
+  animation: drag-pattern 1s linear infinite;
+}
+
+@keyframes drag-pattern {
+  0% { background-position: 0 0; }
+  100% { background-position: 20px 20px; }
+}
+
+/* 上传图标和文字 */
+.upload-icon {
+  margin-bottom: var(--spacing-4);
+  color: var(--medical-primary-500);
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.drag-drop-area:hover .upload-icon {
+  color: var(--medical-primary-600);
+  transform: scale(1.1);
+}
+
+.upload-text {
+  margin-bottom: var(--spacing-2);
+}
+
+.upload-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-2);
+}
+
+.upload-subtitle {
+  font-size: var(--text-base);
+  color: var(--text-secondary);
+  margin-bottom: var(--spacing-4);
+}
+
+.upload-hint {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  margin-top: var(--spacing-2);
+}
+
+/* 文件选择按钮 */
+.file-select-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  padding: var(--spacing-3) var(--spacing-6);
+  background: linear-gradient(135deg, var(--medical-primary-500) 0%, var(--medical-primary-600) 100%);
+  color: var(--brand-text);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-out);
+  box-shadow: var(--shadow-brand);
+}
+
+.file-select-btn:hover {
+  background: linear-gradient(135deg, var(--medical-primary-600) 0%, var(--medical-primary-700) 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.file-select-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 隐藏的文件输入框 */
+.file-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ==================== 文件列表显示 ==================== */
+
+.files-preview {
+  margin-top: var(--spacing-6);
+  display: none;
+}
+
+.files-preview.show {
+  display: block;
+}
+
+.files-preview-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-4);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-4);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--spacing-3);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.file-item:hover {
+  border-color: var(--medical-primary-300);
+  box-shadow: var(--shadow-sm);
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-3);
+  flex: 1;
+}
+
+.file-icon {
+  color: var(--medical-secondary-500);
+}
+
+.file-details {
+  flex: 1;
+}
+
+.file-name {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-1);
+}
+
+.file-meta {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.file-size,
+.file-type {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-1);
+}
+
+.file-actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.file-remove-btn {
+  padding: var(--spacing-1);
+  background: var(--medical-error-100);
+  color: var(--medical-error-600);
+  border: 1px solid var(--medical-error-300);
+  border-radius: var(--radius-base);
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.file-remove-btn:hover {
+  background: var(--medical-error-200);
+  color: var(--medical-error-700);
+}
+
+/* ==================== 上传进度 ==================== */
+
+.upload-progress {
+  margin-top: var(--spacing-4);
+  display: none;
+}
+
+.upload-progress.show {
+  display: block;
+}
+
+.progress-item {
+  margin-bottom: var(--spacing-4);
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-2);
+}
+
+.progress-file-name {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.progress-percentage {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.progress-bar-container {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--medical-primary-500) 0%, var(--medical-secondary-500) 100%);
+  border-radius: var(--radius-full);
+  transition: width var(--duration-fast) var(--ease-out);
+  position: relative;
+}
+
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+  animation: progress-shine 2s linear infinite;
+}
+
+@keyframes progress-shine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+
+.progress-status {
+  margin-top: var(--spacing-2);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* ==================== 验证结果显示 ==================== */
+
+.validation-results {
+  margin-top: var(--spacing-6);
+  display: none;
+}
+
+.validation-results.show {
+  display: block;
+}
+
+.validation-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+}
+
+.validation-card {
+  padding: var(--spacing-4);
+  border-radius: var(--radius-lg);
+  text-align: center;
+  border: 1px solid var(--border-primary);
+}
+
+.validation-card.success {
+  background: linear-gradient(135deg, var(--medical-success-50) 0%, var(--medical-success-100) 100%);
+  border-color: var(--medical-success-300);
+}
+
+.validation-card.warning {
+  background: linear-gradient(135deg, var(--medical-warning-50) 0%, var(--medical-warning-100) 100%);
+  border-color: var(--medical-warning-300);
+}
+
+.validation-card.error {
+  background: linear-gradient(135deg, var(--medical-error-50) 0%, var(--medical-error-100) 100%);
+  border-color: var(--medical-error-300);
+}
+
+.validation-icon {
+  margin-bottom: var(--spacing-2);
+}
+
+.validation-number {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  margin-bottom: var(--spacing-1);
+}
+
+.validation-label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* 错误详情 */
+.validation-errors {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-4);
+  margin-top: var(--spacing-4);
+}
+
+.errors-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-3);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.error-item {
+  padding: var(--spacing-3);
+  background: var(--medical-error-50);
+  border: 1px solid var(--medical-error-200);
+  border-radius: var(--radius-base);
+  margin-bottom: var(--spacing-2);
+}
+
+.error-message {
+  font-size: var(--text-sm);
+  color: var(--medical-error-700);
+  margin-bottom: var(--spacing-1);
+}
+
+.error-location {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+}
+
+/* ==================== 导入操作按钮 ==================== */
+
+.import-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: var(--spacing-6);
+  padding-top: var(--spacing-4);
+  border-top: 1px solid var(--border-secondary);
+}
+
+.import-options {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+}
+
+.import-checkbox {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.import-checkbox input {
+  margin: 0;
+}
+
+.import-buttons {
+  display: flex;
+  gap: var(--spacing-3);
+}
+
+.import-btn {
+  padding: var(--spacing-3) var(--spacing-6);
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-out);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-2);
+}
+
+.import-btn.primary {
+  background: linear-gradient(135deg, var(--medical-primary-500) 0%, var(--medical-primary-600) 100%);
+  color: var(--brand-text);
+  border: none;
+  box-shadow: var(--shadow-brand);
+}
+
+.import-btn.primary:hover {
+  background: linear-gradient(135deg, var(--medical-primary-600) 0%, var(--medical-primary-700) 100%);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-lg);
+}
+
+.import-btn.secondary {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-primary);
+}
+
+.import-btn.secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--medical-primary-300);
+}
+
+.import-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ==================== 响应式设计 ==================== */
+
+/* 移动端适配 */
+@media (max-width: 640px) {
+  .upload-container {
+    padding: var(--spacing-4);
+    margin-bottom: var(--spacing-4);
+  }
+  
+  .drag-drop-area {
+    padding: var(--spacing-6);
+  }
+  
+  .upload-title {
+    font-size: var(--text-lg);
+  }
+  
+  .validation-summary {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-3);
+  }
+  
+  .file-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-3);
+  }
+  
+  .file-actions {
+    justify-content: flex-end;
+  }
+  
+  .import-actions {
+    flex-direction: column;
+    gap: var(--spacing-4);
+    align-items: stretch;
+  }
+  
+  .import-buttons {
+    justify-content: stretch;
+  }
+  
+  .import-btn {
+    flex: 1;
+    justify-content: center;
+  }
+}
+
+/* 平板端适配 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .validation-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* ==================== 动画和过渡效果 ==================== */
+
+.file-item {
+  animation: file-item-enter var(--duration-normal) var(--ease-out);
+}
+
+@keyframes file-item-enter {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.validation-card {
+  animation: validation-card-enter var(--duration-slow) var(--ease-out);
+}
+
+@keyframes validation-card-enter {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ==================== 可访问性支持 ==================== */
+
+.drag-drop-area:focus {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+.file-select-btn:focus,
+.import-btn:focus {
+  outline: 2px solid var(--border-focus);
+  outline-offset: 2px;
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .drag-drop-area {
+    border-width: 3px;
+  }
+  
+  .file-item {
+    border-width: 2px;
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  .drag-drop-area,
+  .file-select-btn,
+  .import-btn,
+  .file-item {
+    transition: none;
+  }
+  
+  .progress-bar::after {
+    animation: none;
+  }
+  
+  .file-item,
+  .validation-card {
+    animation: none;
+  }
+}

@@ -8,9 +8,18 @@
       "Bash(npm run dev:*)",
       "Bash(git push:*)",
       "Bash(npm start:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(rm:*)",
+      "Bash(grep:*)",
+      "Bash(npx electron:*)",
+      "Bash(git commit:*)",
+      "Bash(cp:*)",
+      "Bash(git pull:*)"
     ],
     "deny": [],
-    "ask": []
+    "ask": [],
+    "additionalDirectories": [
+      "C:\\Users\\86152\\AppData\\Roaming\\patient-checkin-manager"
+    ]
   }
 }

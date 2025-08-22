@@ -1,0 +1,63 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Family Service Debug</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h1>家庭服务调试页面</h1>
+    <div id="status">加载中...</div>
+    <div id="data"></div>
+    
+    <script>
+        console.log('Debug script starting...');
+        
+        // 检查 electronAPI 是否可用
+        if (typeof window.electronAPI === 'undefined') {
+            document.getElementById('status').innerHTML = '❌ electronAPI 未定义';
+            console.error('electronAPI not defined');
+        } else {
+            console.log('✅ electronAPI 可用');
+            
+            // 检查 familyService API
+            if (typeof window.electronAPI.familyService === 'undefined') {
+                document.getElementById('status').innerHTML = '❌ familyService API 未定义';
+                console.error('familyService API not defined');
+            } else {
+                console.log('✅ familyService API 可用');
+                
+                // 测试数据加载
+                async function testDataLoading() {
+                    try {
+                        document.getElementById('status').innerHTML = '🔄 正在测试数据加载...';
+                        
+                        console.log('测试 getOverviewStats...');
+                        const stats = await window.electronAPI.familyService.getOverviewStats();
+                        console.log('统计数据:', stats);
+                        
+                        console.log('测试 getRecords...');
+                        const records = await window.electronAPI.familyService.getRecords({}, {});
+                        console.log('记录数据:', records);
+                        
+                        document.getElementById('status').innerHTML = `✅ 数据加载成功! 统计: ${JSON.stringify(stats.overall)}, 记录数: ${records.length}`;
+                        document.getElementById('data').innerHTML = `
+                            <h2>统计数据</h2>
+                            <pre>${JSON.stringify(stats, null, 2)}</pre>
+                            <h2>记录数据 (前3条)</h2>
+                            <pre>${JSON.stringify(records.slice(0, 3), null, 2)}</pre>
+                        `;
+                        
+                    } catch (error) {
+                        console.error('数据加载失败:', error);
+                        document.getElementById('status').innerHTML = `❌ 数据加载失败: ${error.message}`;
+                    }
+                }
+                
+                testDataLoading();
+            }
+        }
+    </script>
+</body>
+</html>
+    

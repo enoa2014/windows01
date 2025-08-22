@@ -1,0 +1,13 @@
+approval_mode: never
+filesystem_sandbox: danger-full-access
+network: enabled
+logging:
+  level: info
+  redact_secrets: true
+notes: |
+  该配置用于 Codex CLI 本地运行：
+  - 自动批准所有命令（approval_mode: never）
+  - 放开文件系统沙盒（danger-full-access）
+  - 启用网络访问（enabled）
+  请仅在受控开发环境使用，生产环境务必谨慎。
+
