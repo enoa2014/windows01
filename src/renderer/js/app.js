@@ -2747,8 +2747,43 @@ class PatientApp {
             }
 
             // 获取统计数据
-            const stats = await window.electronAPI.familyService.getOverviewStats();
-            console.log('🎯 [前端] 收到统计数据:', stats);
+            const rawStats = await window.electronAPI.familyService.getOverviewStats();
+            console.log('🎯 [前端] 收到统计数据:', rawStats);
+            
+            // 数据映射：将API返回的字段映射为前端表格所需的字段
+            const stats = {
+                ...rawStats,
+                // 映射月度统计数据 (monthlyTrend -> monthlyStats)
+                monthlyStats: rawStats.monthlyTrend?.map(item => ({
+                    month: item.month,
+                    family_count: item.families || 0,
+                    service_count: item.services || 0,
+                    record_count: item.records || 0
+                })) || [],
+                
+                // 映射年度统计数据 (yearlyComparison -> yearlyStats)
+                yearlyStats: rawStats.yearlyComparison?.map(item => ({
+                    year: item.year,
+                    total_records: item.records || 0,
+                    unique_families: item.families || 0,
+                    avg_service_count: item.services && item.families ? 
+                        Math.round(item.services / item.families) : 0,
+                    total_services: item.services || 0,
+                    avg_days: parseFloat(item.avgDays?.toFixed(1) || '0')
+                })) || [],
+                
+                // 临时模拟医院统计数据 (实际项目中可能需要新的API)
+                servicesByHospital: [
+                    { hospital: '数据来源待完善', service_count: 1, family_count: 1 }
+                ],
+                
+                // 临时模拟地区统计数据 (实际项目中可能需要新的API)
+                familyLocationStats: [
+                    { location: '数据来源待完善', family_count: 1 }
+                ]
+            };
+            
+            console.log('🔄 [前端] 映射后的统计数据:', stats);
             
             // 更新基础统计卡片
             const overall = stats.overall || {};

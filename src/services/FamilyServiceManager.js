@@ -57,7 +57,7 @@ class FamilyServiceManager {
             }
 
             // 年份筛选 - 修复各种无效年份值问题
-            if (filters.year && filters.year.trim()) {
+            if (filters.year && filters.year.toString().trim()) {
                 const year = filters.year.toString().trim();
                 // 只处理4位数字的有效年份
                 if (/^\d{4}$/.test(year)) {
