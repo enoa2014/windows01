@@ -2626,9 +2626,9 @@ class PatientApp {
             if (modal) {
                 modal.classList.add('hidden');
             }
-            
-            // 导航到患者详情页面
-            await this.showPatientDetail(personId);
+
+            // 导航到新详情页面
+            window.location.href = `patient-detail-enhanced.html?id=${personId}`;
         } catch (error) {
             console.error('导航到患者详情失败:', error);
             this.showError('无法打开患者详情页面');
