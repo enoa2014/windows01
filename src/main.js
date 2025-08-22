@@ -165,28 +165,38 @@ class App {
 
         // 获取家庭服务记录列表
         ipcMain.handle('family-service:get-records', async (event, filters, pagination) => {
+            console.log('🔍 [IPC] family-service:get-records 调用开始');
+            console.log('📊 [IPC] 接收到的参数:', { filters, pagination });
             try {
                 if (!this.isInitialized) {
+                    console.log('❌ [IPC] 应用未完全初始化');
                     throw new Error('应用未完全初始化');
                 }
                 
+                console.log('✅ [IPC] 应用已初始化，调用 familyServiceManager.getRecords');
                 const result = await this.familyServiceManager.getRecords(filters, pagination);
+                console.log('📋 [IPC] familyServiceManager.getRecords 返回结果:', result);
                 return result;
             } catch (error) {
-                console.error('获取家庭服务记录失败:', error);
+                console.error('❌ [IPC] 获取家庭服务记录失败:', error);
                 throw error;
             }
         });
 
         // 获取家庭服务统计概览
         ipcMain.handle('family-service:get-overview-stats', async () => {
+            console.log('🔍 [IPC] family-service:get-overview-stats 调用开始');
             try {
                 if (!this.isInitialized) {
+                    console.log('❌ [IPC] 应用未完全初始化');
                     throw new Error('应用未完全初始化');
                 }
-                return await this.database.getFamilyServiceOverviewStats();
+                console.log('✅ [IPC] 应用已初始化，调用 familyServiceManager.getOverviewStats');
+                const result = await this.familyServiceManager.getOverviewStats();
+                console.log('📊 [IPC] familyServiceManager.getOverviewStats 返回结果:', result);
+                return result;
             } catch (error) {
-                console.error('获取家庭服务统计概览失败:', error);
+                console.error('❌ [IPC] 获取家庭服务统计概览失败:', error);
                 throw error;
             }
         });
@@ -197,7 +207,7 @@ class App {
                 if (!this.isInitialized) {
                     throw new Error('应用未完全初始化');
                 }
-                return await this.database.getFamilyServiceStatistics();
+                return await this.dbManager.getFamilyServiceStatistics();
             } catch (error) {
                 console.error('获取家庭服务统计失败:', error);
                 throw error;
@@ -210,7 +220,7 @@ class App {
                 if (!this.isInitialized) {
                     throw new Error('应用未完全初始化');
                 }
-                return await this.database.getFamilyServiceStatsByDateRange(startDate, endDate);
+                return await this.dbManager.getFamilyServiceStatsByDateRange(startDate, endDate);
             } catch (error) {
                 console.error('获取时间范围家庭服务统计失败:', error);
                 throw error;

@@ -3,12 +3,9 @@
  * 负责页面的所有交互功能和数据管理
  */
 
-console.log('📄 family-service-app.js 文件被加载');
-
 // 应用程序状态管理
 class FamilyServiceApp {
     constructor() {
-        console.log('🚀 FamilyServiceApp 构造函数被调用');
         this.state = {
             records: [],
             filteredRecords: [],
@@ -24,6 +21,7 @@ class FamilyServiceApp {
                 pageSize: 12,
                 totalPages: 0
             },
+            viewMode: 'list', // 'grid' 或 'list' - 默认列表视图
             loading: false,
             error: null
         };
@@ -62,10 +60,18 @@ class FamilyServiceApp {
             nextPageBtn: document.getElementById('nextPageBtn'),
             pageInfo: document.getElementById('pageInfo'),
 
+            // 视图切换按钮
+            gridViewBtn: document.getElementById('gridViewBtn'),
+            listViewBtn: document.getElementById('listViewBtn'),
+
             // 主题相关
             themeToggleBtn: document.getElementById('themeToggleBtn'),
             themeMenu: document.getElementById('themeMenu'),
             backBtn: document.getElementById('backBtn'),
+
+            // 详情视图
+            listView: document.getElementById('listView'),
+            detailView: document.getElementById('detailView'),
 
             // 通知
             toastContainer: document.getElementById('toastContainer'),
@@ -80,8 +86,6 @@ class FamilyServiceApp {
 
     async init() {
         try {
-            console.log('🚀 初始化家庭服务列表应用');
-            
             // 设置基础UI
             this.setupBasicUI();
             
@@ -91,14 +95,16 @@ class FamilyServiceApp {
             // 初始化主题系统
             this.initThemeSystem();
             
+            // 初始化视图模式
+            this.initViewMode();
+            
             // 加载初始数据
             await this.loadInitialData();
             
             this.initialized = true;
-            console.log('✅ 家庭服务列表应用初始化完成');
             
         } catch (error) {
-            console.error('❌ 应用初始化失败:', error);
+            console.error('应用初始化失败:', error);
             this.showError('应用初始化失败：' + error.message);
         }
     }
@@ -160,8 +166,20 @@ class FamilyServiceApp {
         // 返回按钮
         if (this.elements.backBtn) {
             this.elements.backBtn.addEventListener('click', () => {
-                // 根据实际需要实现返回逻辑
-                window.history.back();
+                window.location.href = './index.html';
+            });
+        }
+
+        // 视图切换按钮
+        if (this.elements.gridViewBtn) {
+            this.elements.gridViewBtn.addEventListener('click', () => {
+                this.setViewMode('grid');
+            });
+        }
+
+        if (this.elements.listViewBtn) {
+            this.elements.listViewBtn.addEventListener('click', () => {
+                this.setViewMode('list');
             });
         }
 
@@ -282,7 +300,6 @@ class FamilyServiceApp {
 
     async loadRecords() {
         try {
-            console.log('🎬 [FamilyServiceApp] loadRecords 方法开始执行');
             this.state.loading = true;
             this.updateResultCount('加载中...');
 
@@ -292,21 +309,9 @@ class FamilyServiceApp {
                 offset: (this.state.pagination.currentPage - 1) * this.state.pagination.pageSize
             };
 
-            // 调试日志：记录传递给IPC的参数
-            console.log('🔍 FamilyServiceApp.loadRecords 调用参数:');
-            console.log('  📊 this.state.pagination:', JSON.stringify(this.state.pagination));
-            console.log('  📝 构建的 pagination:', JSON.stringify(pagination));
-            console.log('  📋 filters:', JSON.stringify(filters));
 
             const records = await window.electronAPI.familyService.getRecords(filters, pagination);
             
-            // 调试日志：记录返回结果
-            console.log('  💾 前端接收到的记录数:', records.length);
-            if (records.length === 0) {
-                console.warn('  ⚠️ 前端接收到0条记录！');
-            } else {
-                console.log('  📋 前端接收到的前3条记录ID:', records.slice(0, 3).map(r => r.id));
-            }
             
             this.state.records = records;
             this.state.filteredRecords = records;
@@ -329,21 +334,32 @@ class FamilyServiceApp {
     }
 
     updateOverviewCards(stats) {
-        if (!stats || !stats.overall) {
-            console.warn('统计数据格式错误');
+        if (!stats) {
+            console.warn('统计数据为空');
             return;
         }
 
-        const overall = stats.overall;
+
+        // 支持两种数据格式：新格式(直接)和旧格式(stats.overall)
+        const data = stats.overall || stats;
 
         // 更新概览卡片数据
-        this.animateNumber(this.elements.totalRecords, overall.totalRecords || 0);
-        this.animateNumber(this.elements.totalFamilies, overall.totalFamilies || 0);
-        this.animateNumber(this.elements.totalServices, overall.totalServices || 0);
-        this.animateNumber(this.elements.avgDays, parseFloat(overall.avgDaysPerFamily || 0), 1);
+        // 总记录数：家庭服务记录总条数
+        this.animateNumber(this.elements.totalRecords, data.totalRecords || 0);
+        
+        // 累计服务家庭：所有记录的family_count总和
+        this.animateNumber(this.elements.totalFamilies, data.totalFamilies || 0);
+        
+        // 总服务人次：所有记录的total_service_count总和
+        this.animateNumber(this.elements.totalServices, data.totalServices || 0);
+        
+        // 平均入住天数：使用后端计算的avgDaysPerFamily
+        const avgDays = data.avgDaysPerFamily || 0;
+        this.animateNumber(this.elements.avgDays, parseFloat(avgDays), 1);
 
         // 存储统计数据
         this.state.overviewStats = stats;
+        
     }
 
     updateFilterOptions(options) {
@@ -369,11 +385,8 @@ class FamilyServiceApp {
 
         const container = this.elements.serviceRecordGrid;
         
-        console.log('🎨 renderRecords 开始渲染');
-        console.log('  📊 this.state.filteredRecords.length:', this.state.filteredRecords.length);
         
         if (this.state.filteredRecords.length === 0) {
-            console.log('  📭 显示空状态');
             this.showEmptyState();
             return;
         }
@@ -382,7 +395,6 @@ class FamilyServiceApp {
 
         // 后端已经做了分页，前端直接渲染所有返回的记录
         const recordsToRender = this.state.filteredRecords;
-        console.log('  🎯 准备渲染记录数:', recordsToRender.length);
 
         const cardsHTML = recordsToRender.map(record => this.createRecordCard(record)).join('');
         
@@ -408,9 +420,12 @@ class FamilyServiceApp {
         const serviceEfficiency = record.residents_count > 0 ? 
             (record.total_service_count / record.residents_count).toFixed(1) : '0';
 
+        // 根据当前视图模式添加对应的CSS类
+        const viewModeClass = this.state.viewMode === 'list' ? 'list-mode' : 'grid-mode';
+
         return `
-            <article class="service-record-card" data-id="${record.id}" role="button" tabindex="0" aria-label="查看 ${year}年${month}月 的服务记录详情">
-                <!-- 卡片头部 -->
+            <article class="service-record-card ${viewModeClass}" data-id="${record.id}" role="button" tabindex="0" aria-label="查看 ${year}年${month}月 的服务记录详情">
+                <!-- 卡片头部：日期标识 -->
                 <div class="card-header-bg p-4 text-[var(--brand-text)]">
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-3">
@@ -419,81 +434,48 @@ class FamilyServiceApp {
                                 <div class="text-sm opacity-90">${month}月</div>
                             </div>
                             <div>
-                                <h3 class="text-xl font-semibold">${formatNumber(record.family_count)}户家庭</h3>
-                                <p class="text-sm opacity-90">${formatNumber(record.residents_count)}人入住</p>
+                                <h3 class="text-xl font-semibold">${year}年${month}月</h3>
+                                <p class="text-sm opacity-90">家庭服务记录</p>
                             </div>
                         </div>
                         
                         <div class="text-right">
-                            <div class="text-2xl font-bold">${formatNumber(record.total_service_count)}</div>
-                            <div class="text-xs opacity-90">服务人次</div>
+                            <div class="text-xs opacity-75">点击查看详情</div>
+                            <svg class="w-5 h-5 opacity-75" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 卡片内容 -->
-                <div class="p-4 space-y-3">
-                    <!-- 核心指标 -->
+                <!-- 卡片内容：核心信息 -->
+                <div class="p-4">
                     <div class="grid grid-cols-3 gap-4 text-center">
+                        <!-- 家庭户数 -->
                         <div class="stat-item">
-                            <div class="stat-value">${formatNumber(record.residence_days)}</div>
-                            <div class="stat-label">入住天数</div>
+                            <div class="stat-value">${formatNumber(record.family_count)}</div>
+                            <div class="stat-label">户家庭</div>
                         </div>
+                        
+                        <!-- 入住人数 -->
+                        <div class="stat-item">
+                            <div class="stat-value">${formatNumber(record.residents_count)}</div>
+                            <div class="stat-label">人入住</div>
+                        </div>
+                        
+                        <!-- 住宿人次 -->
                         <div class="stat-item">
                             <div class="stat-value">${formatNumber(record.accommodation_count)}</div>
                             <div class="stat-label">住宿人次</div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-value">${formatNumber(record.care_service_count)}</div>
-                            <div class="stat-label">关怀服务</div>
-                        </div>
                     </div>
-                    
-                    <!-- 次要指标 -->
-                    <div class="grid grid-cols-2 gap-4 text-sm text-[var(--text-secondary)]">
-                        <div class="flex items-center gap-2">
-                            <svg class="size-4 text-[var(--brand-primary)]" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
-                            </svg>
-                            <span>志愿者: ${formatNumber(record.volunteer_service_count)}人次</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <svg class="size-4 text-[var(--brand-primary)]" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8z"/>
-                                <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-                            </svg>
-                            <span>平均: ${avgDaysPerFamily}天/户</span>
-                        </div>
-                    </div>
-                    
-                    ${record.cumulative_residence_days || record.cumulative_service_count ? `
-                    <!-- 累计统计 -->
-                    <div class="border-t pt-3 mt-3 text-xs text-[var(--text-muted)]">
-                        <div class="flex justify-between">
-                            <span>累计入住: ${formatNumber(record.cumulative_residence_days)}天</span>
-                            <span>累计服务: ${formatNumber(record.cumulative_service_count)}人次</span>
-                        </div>
-                    </div>
-                    ` : ''}
-                    
-                    ${record.notes ? `
-                    <!-- 备注信息 -->
-                    <div class="border-t pt-3 mt-3">
-                        <p class="text-sm text-[var(--text-secondary)]">
-                            <span class="font-medium">备注:</span> ${this.escapeHtml(record.notes)}
-                        </p>
-                    </div>
-                    ` : ''}
                 </div>
                 
-                <!-- 卡片底部 -->
-                <div class="p-4 border-t bg-[var(--bg-tertiary)]/30">
-                    <div class="flex items-center justify-between">
+                <!-- 卡片底部：记录编号 -->
+                <div class="px-4 pb-4">
+                    <div class="text-center">
                         <div class="text-xs text-[var(--text-muted)]">
-                            ID: ${record.sequence_number || record.id}
-                        </div>
-                        <div class="text-xs text-[var(--text-muted)]">
-                            效率: ${serviceEfficiency}人次/人
+                            记录编号: ${record.sequence_number || record.id}
                         </div>
                     </div>
                 </div>
@@ -529,9 +511,193 @@ class FamilyServiceApp {
             return;
         }
 
-        console.log('显示记录详情:', record);
-        // TODO: 实现详情页面显示逻辑
-        this.showToast(`查看记录 ${record.sequence_number || recordId} 的详情`, 'info');
+        
+        // 切换到详情视图
+        this.switchToDetailView();
+        
+        // 渲染详情内容
+        this.renderDetailView(record);
+        
+        // 显示成功消息
+        this.showToast(`正在查看 ${record.sequence_number || recordId} 号记录详情`, 'success');
+    }
+
+    switchToDetailView() {
+        // 隐藏列表视图，显示详情视图
+        if (this.elements.listView) {
+            this.elements.listView.classList.remove('active');
+        }
+        if (this.elements.detailView) {
+            this.elements.detailView.classList.add('active');
+        }
+        
+    }
+
+    switchToListView() {
+        // 隐藏详情视图，显示列表视图
+        if (this.elements.detailView) {
+            this.elements.detailView.classList.remove('active');
+        }
+        if (this.elements.listView) {
+            this.elements.listView.classList.add('active');
+        }
+        
+    }
+
+    renderDetailView(record) {
+        if (!this.elements.detailView) return;
+
+        const date = new Date(record.year_month || record.yearMonth);
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        
+        const formatNumber = (num) => {
+            return num ? num.toLocaleString() : '0';
+        };
+
+        const avgDaysPerFamily = record.family_count > 0 ? 
+            (record.residence_days / record.family_count).toFixed(1) : '0';
+
+        const serviceEfficiency = record.residents_count > 0 ? 
+            (record.total_service_count / record.residents_count).toFixed(1) : '0';
+
+        const detailHTML = `
+            <!-- 详情页面头部 -->
+            <div class="mb-6">
+                <div class="flex items-center gap-4 mb-4">
+                    <button id="backToListBtn" class="inline-flex items-center justify-center size-10 rounded-full hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)]" title="返回列表" aria-label="返回列表">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
+                            <path fill-rule="evenodd" d="M9.53 5.47a.75.75 0 010 1.06L4.81 11.25H21a.75.75 0 010 1.5H4.81l4.72 4.72a.75.75 0 11-1.06 1.06l-6-6a.75.75 0 010-1.06l6-6a.75.75 0 011.06 0z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-[var(--brand-primary)]">${year}年${month}月 家庭服务记录</h1>
+                        <p class="text-[var(--text-secondary)] mt-1">记录编号: ${record.sequence_number || record.id}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详情内容 -->
+            <div class="space-y-6">
+                <!-- 主要统计信息 -->
+                <div class="overview-cards">
+                    <div class="overview-card">
+                        <p class="stat-label">服务家庭</p>
+                        <p class="stat-value">${formatNumber(record.family_count)}</p>
+                        <p class="stat-trend">户</p>
+                    </div>
+                    
+                    <div class="overview-card">
+                        <p class="stat-label">入住人数</p>
+                        <p class="stat-value">${formatNumber(record.residents_count)}</p>
+                        <p class="stat-trend">人</p>
+                    </div>
+                    
+                    <div class="overview-card">
+                        <p class="stat-label">入住天数</p>
+                        <p class="stat-value">${formatNumber(record.residence_days)}</p>
+                        <p class="stat-trend">天</p>
+                    </div>
+                    
+                    <div class="overview-card">
+                        <p class="stat-label">住宿人次</p>
+                        <p class="stat-value">${formatNumber(record.accommodation_count)}</p>
+                        <p class="stat-trend">人次</p>
+                    </div>
+                </div>
+
+                <!-- 服务详情 -->
+                <div class="filter-toolbar">
+                    <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">服务详情</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="text-center p-4 rounded-xl bg-[var(--bg-tertiary)]/50">
+                            <div class="text-2xl font-bold text-[var(--brand-primary)]">${formatNumber(record.care_service_count)}</div>
+                            <div class="text-sm text-[var(--text-muted)] mt-1">照护服务次数</div>
+                        </div>
+                        
+                        <div class="text-center p-4 rounded-xl bg-[var(--bg-tertiary)]/50">
+                            <div class="text-2xl font-bold text-[var(--brand-primary)]">${formatNumber(record.volunteer_service_count)}</div>
+                            <div class="text-sm text-[var(--text-muted)] mt-1">志愿服务次数</div>
+                        </div>
+                        
+                        <div class="text-center p-4 rounded-xl bg-[var(--bg-tertiary)]/50">
+                            <div class="text-2xl font-bold text-[var(--brand-primary)]">${formatNumber(record.total_service_count)}</div>
+                            <div class="text-sm text-[var(--text-muted)] mt-1">总服务次数</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 计算指标 -->
+                <div class="filter-toolbar">
+                    <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">计算指标</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-tertiary)]/30">
+                            <span class="text-[var(--text-secondary)]">平均入住天数/户</span>
+                            <span class="text-xl font-bold text-[var(--brand-primary)]">${avgDaysPerFamily} 天</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-tertiary)]/30">
+                            <span class="text-[var(--text-secondary)]">服务效率</span>
+                            <span class="text-xl font-bold text-[var(--brand-primary)]">${serviceEfficiency}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 累计统计 -->
+                ${record.cumulative_residence_days > 0 || record.cumulative_service_count > 0 ? `
+                <div class="filter-toolbar">
+                    <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">累计统计</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-tertiary)]/30">
+                            <span class="text-[var(--text-secondary)]">累计入住天数</span>
+                            <span class="text-xl font-bold text-[var(--brand-primary)]">${formatNumber(record.cumulative_residence_days)} 天</span>
+                        </div>
+                        
+                        <div class="flex items-center justify-between p-4 rounded-xl bg-[var(--bg-tertiary)]/30">
+                            <span class="text-[var(--text-secondary)]">累计服务次数</span>
+                            <span class="text-xl font-bold text-[var(--brand-primary)]">${formatNumber(record.cumulative_service_count)} 次</span>
+                        </div>
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- 备注信息 -->
+                ${record.notes ? `
+                <div class="filter-toolbar">
+                    <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">备注信息</h3>
+                    <div class="p-4 rounded-xl bg-[var(--bg-tertiary)]/30">
+                        <p class="text-[var(--text-primary)]">${record.notes}</p>
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- 记录信息 -->
+                <div class="filter-toolbar">
+                    <h3 class="text-lg font-semibold text-[var(--text-primary)] mb-4">记录信息</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-[var(--text-secondary)]">
+                        <div>
+                            <span class="font-medium">创建时间：</span>
+                            <span>${new Date(record.created_at).toLocaleString('zh-CN')}</span>
+                        </div>
+                        <div>
+                            <span class="font-medium">更新时间：</span>
+                            <span>${new Date(record.updated_at).toLocaleString('zh-CN')}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        this.elements.detailView.innerHTML = detailHTML;
+        
+        // 绑定返回按钮事件
+        const backBtn = this.elements.detailView.querySelector('#backToListBtn');
+        if (backBtn) {
+            backBtn.addEventListener('click', () => {
+                this.switchToListView();
+            });
+        }
+        
     }
 
     debounceSearch(query) {
@@ -860,13 +1026,80 @@ class FamilyServiceApp {
             });
         }
     }
+
+    // 初始化视图模式
+    initViewMode() {
+        
+        // 读取保存的用户偏好，默认为列表视图
+        const savedViewMode = localStorage.getItem('app-view-mode') || 'list';
+        this.state.viewMode = savedViewMode;
+        
+        
+        // 立即更新按钮状态和容器样式
+        this.updateViewToggleButtons();
+        this.updateViewContainerClasses();
+    }
+
+    // 视图模式切换方法
+    setViewMode(mode) {
+        if (this.state.viewMode === mode) {
+            return;
+        }
+        
+        this.state.viewMode = mode;
+        
+        // 更新按钮状态
+        this.updateViewToggleButtons();
+        
+        // 更新容器样式
+        this.updateViewContainerClasses();
+        
+        // 重新渲染记录以应用新的视图样式
+        this.renderRecords();
+        
+        // 保存用户偏好
+        localStorage.setItem('app-view-mode', mode);
+        
+    }
+
+    updateViewToggleButtons() {
+        if (!this.elements.gridViewBtn || !this.elements.listViewBtn) return;
+        
+        // 重置按钮样式
+        this.elements.gridViewBtn.className = 'px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-all';
+        this.elements.listViewBtn.className = 'px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-all';
+        
+        // 设置当前模式的按钮为激活状态
+        if (this.state.viewMode === 'grid') {
+            this.elements.gridViewBtn.className = 'px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-md shadow-sm transition-all';
+        } else {
+            this.elements.listViewBtn.className = 'px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-md shadow-sm transition-all';
+        }
+    }
+
+    updateViewContainerClasses() {
+        if (!this.elements.serviceRecordGrid) return;
+        
+        const container = this.elements.serviceRecordGrid;
+        
+        // 清除旧的视图模式类
+        container.classList.remove('service-grid-view', 'service-list-view');
+        container.classList.remove('grid', 'grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3');
+        container.classList.remove('space-y-4');
+        
+        if (this.state.viewMode === 'grid') {
+            // 网格视图
+            container.classList.add('service-grid-view', 'grid', 'grid-cols-1', 'md:grid-cols-2', 'lg:grid-cols-3', 'gap-6', 'md:gap-8');
+        } else {
+            // 列表视图
+            container.classList.add('service-list-view', 'space-y-4');
+        }
+    }
 }
 
 // 当页面加载完成后初始化应用
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🎭 DOMContentLoaded 事件触发，准备创建 FamilyServiceApp');
     window.familyServiceApp = new FamilyServiceApp();
-    console.log('✅ FamilyServiceApp 实例创建完成');
 });
 
 // 暴露全局方法供调试使用
