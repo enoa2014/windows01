@@ -582,9 +582,9 @@ class DatabaseManager {
                     END
             `);
 
-            // 籍贯分布统计
+            // 籍贯分布统计（按患者去重）
             const locationStats = await this.all(`
-                SELECT pp.hometown, COUNT(*) as count
+                SELECT pp.hometown, COUNT(DISTINCT p.id) as count
                 FROM persons p
                 LEFT JOIN patient_profiles pp ON p.id = pp.person_id
                 WHERE pp.hometown IS NOT NULL AND pp.hometown != ''
@@ -593,12 +593,24 @@ class DatabaseManager {
                 LIMIT 10
             `);
 
-            // 疾病分布统计
+            // 疾病分布统计（按患者首次入住记录）
             const diseaseStats = await this.all(`
-                SELECT mi.diagnosis, COUNT(*) as count
-                FROM medical_info mi
-                WHERE mi.diagnosis IS NOT NULL AND mi.diagnosis != ''
-                GROUP BY mi.diagnosis
+                WITH first_diagnosis AS (
+                    SELECT person_id, diagnosis
+                    FROM (
+                        SELECT person_id, diagnosis,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY person_id
+                                   ORDER BY datetime(record_date)
+                               ) AS rn
+                        FROM medical_info
+                        WHERE diagnosis IS NOT NULL AND diagnosis != ''
+                    )
+                    WHERE rn = 1
+                )
+                SELECT diagnosis, COUNT(*) as count
+                FROM first_diagnosis
+                GROUP BY diagnosis
                 ORDER BY count DESC
                 LIMIT 10
             `);
