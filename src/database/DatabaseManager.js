@@ -982,11 +982,14 @@ class DatabaseManager {
                 
                 this.get(`
                     SELECT SUM(
-                        GREATEST(1, julianday(?) - julianday(cir.check_in_date))
+                        CASE
+                            WHEN (julianday(?) - julianday(cir.check_in_date)) < 1 THEN 1
+                            ELSE (julianday(?) - julianday(cir.check_in_date))
+                        END
                     ) as total_days
                     FROM check_in_records cir
                     WHERE date(cir.check_in_date) BETWEEN date(?) AND date(?)
-                `, [endDate, startDate, endDate])
+                `, [endDate, endDate, startDate, endDate])
             ]);
 
             // 按月统计趋势
