@@ -193,6 +193,26 @@ class PatientApp {
             }
         });
 
+        // 键盘导航和关闭
+        this.elements.themeMenu.addEventListener('keydown', (e) => {
+            const items = Array.from(this.elements.themeMenu.querySelectorAll('button[data-theme-id]'));
+            const currentIndex = items.indexOf(document.activeElement);
+            if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                let newIndex = currentIndex;
+                if (e.key === 'ArrowDown') {
+                    newIndex = (currentIndex + 1) % items.length;
+                } else {
+                    newIndex = (currentIndex - 1 + items.length) % items.length;
+                }
+                items.forEach(btn => btn.tabIndex = -1);
+                items[newIndex].tabIndex = 0;
+                items[newIndex].focus();
+            } else if (e.key === 'Escape') {
+                this.toggleThemeMenu(false);
+            }
+        });
+
         // 恢复保存的主题
         const savedTheme = localStorage.getItem('app-theme') || 'emerald';
         this.applyTheme(savedTheme);
@@ -1672,19 +1692,28 @@ class PatientApp {
         this.elements.themeMenu.classList.toggle('scale-95', !isOpen);
         this.elements.themeMenu.classList.toggle('pointer-events-none', !isOpen);
         this.elements.themeToggleBtn.setAttribute('aria-expanded', String(isOpen));
-        
+
         if (isOpen) {
-            this.elements.themeMenu.focus();
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const activeBtn = this.elements.themeMenu.querySelector(`button[data-theme-id="${currentTheme}"]`) ||
+                this.elements.themeMenu.querySelector('button[data-theme-id]');
+            if (activeBtn) {
+                activeBtn.focus();
+            }
+        } else {
+            this.elements.themeToggleBtn.focus();
         }
     }
 
     applyTheme(themeId) {
         document.documentElement.setAttribute('data-theme', themeId);
         localStorage.setItem('app-theme', themeId);
-        
+
         // 更新选中状态
         this.elements.themeMenu.querySelectorAll('[role="menuitemradio"]').forEach(btn => {
-            btn.setAttribute('aria-checked', String(btn.dataset.themeId === themeId));
+            const isActive = btn.dataset.themeId === themeId;
+            btn.setAttribute('aria-checked', String(isActive));
+            btn.tabIndex = isActive ? 0 : -1;
         });
     }
 
