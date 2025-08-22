@@ -4,7 +4,10 @@
   // 简单的患者卡片渲染
   function renderPatientCard(row) {
     const card = document.createElement('article');
-    card.className = 'card p-4 hover:shadow-md transition-shadow cursor-pointer';
+    card.className = 'card p-4 hover:shadow-md transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400';
+    if (row.person_id != null) card.dataset.personId = row.person_id;
+    card.setAttribute('role', 'button');
+    card.setAttribute('tabindex', '0');
     const latest = row.latest_check_in ? new Date(row.latest_check_in) : null;
     const latestStr = latest && !Number.isNaN(latest.getTime())
       ? `${latest.getFullYear()}-${String(latest.getMonth()+1).padStart(2,'0')}-${String(latest.getDate()).padStart(2,'0')}`
@@ -22,6 +25,25 @@
         <div><span class="text-gray-500">入住次数：</span>${row.check_in_count ?? 0}</div>
       </div>
     `;
+    // 点击/键盘进入详情
+    const openDetail = () => {
+      const id = Number(card.dataset.personId);
+      if (!Number.isFinite(id)) return;
+      if (window.app && typeof window.app.showPatientDetail === 'function') {
+        window.app.showPatientDetail(id);
+      } else {
+        // 兜底：延迟等待 app 初始化
+        setTimeout(() => window.app?.showPatientDetail?.(id), 0);
+      }
+    };
+    card.addEventListener('click', openDetail);
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openDetail();
+      }
+    });
+
     return card;
   }
 
@@ -68,4 +90,3 @@
     await table.init();
   });
 })();
-
