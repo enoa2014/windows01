@@ -52,6 +52,21 @@ pids/
 *.tmp
 *.temp
 
+# Development and testing scripts
+test-*.js
+debug-*.js
+analyze-*.js
+fix-*.js
+diagnose-*.js
+verify-*.js
+validate-*.js
+final-*.js
+
+# Analysis and temporary data files
+*.txt
+*.py
+.cleanup-backup/
+
 # User data
 data/
 userData/

@@ -1,6 +1,5 @@
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
-const os = require('os');
 const DatabaseManager = require('./database/DatabaseManager');
 const ExcelImporter = require('./services/ExcelImporter');
 const FamilyServiceManager = require('./services/FamilyServiceManager');
@@ -201,38 +200,29 @@ class App {
 
         // 获取家庭服务记录列表
         ipcMain.handle('family-service:get-records', async (event, filters, pagination) => {
-            console.log('🔍 [IPC] family-service:get-records 调用开始');
-            console.log('📊 [IPC] 接收到的参数:', { filters, pagination });
             try {
                 if (!this.isInitialized) {
-                    console.log('❌ [IPC] 应用未完全初始化');
                     throw new Error('应用未完全初始化');
                 }
                 
-                console.log('✅ [IPC] 应用已初始化，调用 familyServiceManager.getRecords');
                 const result = await this.familyServiceManager.getRecords(filters, pagination);
-                console.log('📋 [IPC] familyServiceManager.getRecords 返回结果:', result);
                 return result;
             } catch (error) {
-                console.error('❌ [IPC] 获取家庭服务记录失败:', error);
+                console.error('获取家庭服务记录失败:', error);
                 throw error;
             }
         });
 
         // 获取家庭服务统计概览
         ipcMain.handle('family-service:get-overview-stats', async () => {
-            console.log('🔍 [IPC] family-service:get-overview-stats 调用开始');
             try {
                 if (!this.isInitialized) {
-                    console.log('❌ [IPC] 应用未完全初始化');
                     throw new Error('应用未完全初始化');
                 }
-                console.log('✅ [IPC] 应用已初始化，调用 familyServiceManager.getOverviewStats');
                 const result = await this.familyServiceManager.getOverviewStats();
-                console.log('📊 [IPC] familyServiceManager.getOverviewStats 返回结果:', result);
                 return result;
             } catch (error) {
-                console.error('❌ [IPC] 获取家庭服务统计概览失败:', error);
+                console.error('获取家庭服务统计概览失败:', error);
                 throw error;
             }
         });
