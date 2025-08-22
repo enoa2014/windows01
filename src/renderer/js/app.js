@@ -98,7 +98,6 @@ class PatientApp {
             this.initThemeSystem();
             
             // 不再默认加载数据，只在用户点击相关功能时才加载
-            console.log('应用初始化完成（数据将按需加载）');
         } catch (error) {
             console.error('应用初始化失败:', error);
             this.showError('应用初始化失败，请重启应用');
@@ -1014,7 +1013,6 @@ class PatientApp {
     // 新增：导航到家庭服务页面
     async navigateToFamilyService() {
         try {
-            console.log('🔄 导航到家庭服务页面：加载独立页面');
             // 加载独立的家庭服务页面
             window.location.href = './family-service.html';
         } catch (error) {
@@ -1024,13 +1022,10 @@ class PatientApp {
 
     // 导航到家庭服务统计页面
     async navigateToFamilyServiceStatistics() {
-        console.log('🚀 [前端] navigateToFamilyServiceStatistics函数被调用');
         try {
             // 导航到家庭服务统计页面
-            console.log('📍 [前端] 调用navigateTo("familyServiceStatistics")');
             this.navigateTo('familyServiceStatistics');
             // 加载统计数据
-            console.log('📊 [前端] 准备调用loadFamilyServiceStatistics');
             await this.loadFamilyServiceStatistics();
         } catch (error) {
             console.error('导航到家庭服务统计页面失败:', error);
@@ -1731,23 +1726,19 @@ class PatientApp {
     // 统计页面功能
     async loadStatisticsPage() {
         try {
-            console.log('🔍 [DEBUG] 开始加载统计页面...');
             
             // 防止重复加载 - 关键修复！
             if (this.pageStates.statisticsLoading) {
-                console.log('🔍 [DEBUG] 统计页面正在加载中，跳过重复调用');
                 return;
             }
             
             // 如果已经加载过且没有错误，也跳过
             if (this.pageStates.statisticsLoaded) {
-                console.log('🔍 [DEBUG] 统计页面已加载，跳过重复调用');
                 return;
             }
             
             // 设置加载状态
             this.pageStates.statisticsLoading = true;
-            console.log('🔍 [DEBUG] 设置加载状态为true');
             
             // 清理现有的Chart实例，防止重复创建导致的问题
             this.destroyAllCharts();
@@ -1758,19 +1749,11 @@ class PatientApp {
             const errorEl = document.getElementById('statisticsError');
             const loadingEl = document.getElementById('statisticsLoading');
             
-            console.log('🔍 [DEBUG] DOM 元素检查:', {
-                errorEl: !!errorEl,
-                loadingEl: !!loadingEl
-            });
-            
             if (errorEl) errorEl.classList.add('hidden');
             if (loadingEl) loadingEl.classList.remove('hidden');
             
             // 获取扩展统计数据
-            console.log('🔍 [DEBUG] 开始获取统计数据...');
             const stats = await window.electronAPI.getExtendedStatistics();
-            
-            console.log('🔍 [DEBUG] 收到统计数据:', stats);
             
             // 验证数据完整性
             if (!stats || typeof stats !== 'object') {
@@ -1778,29 +1761,22 @@ class PatientApp {
             }
             
             // 分步骤加载，提供更好的用户体验
-            console.log('🔍 [DEBUG] 开始更新统计卡片...');
             this.showLoading('更新统计卡片...');
             this.updateStatCards(stats);
-            
-            console.log('🔍 [DEBUG] 开始生成图表...');
             this.showLoading('生成图表...');
             await new Promise(resolve => setTimeout(resolve, 100)); // 允许UI更新
             this.createCharts(stats);
-            
-            console.log('🔍 [DEBUG] 开始加载分布数据...');
             this.showLoading('加载分布数据...');
             await new Promise(resolve => setTimeout(resolve, 100));
             this.updateDistributionLists(stats);
             
             // 隐藏加载状态
-            console.log('🔍 [DEBUG] 完成加载，隐藏加载状态...');
             if (loadingEl) loadingEl.classList.add('hidden');
             this.hideLoading();
             
             // 标记加载完成
             this.pageStates.statisticsLoading = false;
             this.pageStates.statisticsLoaded = true;
-            console.log('🔍 [DEBUG] 统计页面加载完成');
             
         } catch (error) {
             this.hideLoading();
@@ -1855,14 +1831,6 @@ class PatientApp {
         
         // 更新年龄分布横向图表
         this.updateAgeDistribution(stats.ageDistribution);
-        
-        console.log('统计卡片更新完成:', {
-            patients: stats.totalPatients,
-            records: stats.totalRecords,
-            averageAge: stats.averageAge,
-            multiple: stats.multipleAdmissions,
-            ageSummary: stats.ageSummary
-        });
     }
 
     createCharts(stats) {
@@ -1913,16 +1881,10 @@ class PatientApp {
 
     // 更新年龄分布横向图表
     updateAgeDistribution(ageDistribution) {
-        console.log('🔍 [DEBUG] updateAgeDistribution 被调用:', {
-            ageDistribution: ageDistribution,
-            length: ageDistribution ? ageDistribution.length : 0
-        });
         
         const container = document.getElementById('ageDistributionContainer');
-        console.log('🔍 [DEBUG] ageDistributionContainer 元素:', !!container);
         
         if (!container || !ageDistribution || ageDistribution.length === 0) {
-            console.log('🔍 [DEBUG] 无数据或无容器，显示占位符');
             if (container) {
                 container.innerHTML = `
                     <div class="text-center py-8 text-[var(--text-secondary)]">
@@ -1937,22 +1899,14 @@ class PatientApp {
         }
         
         // 生成年龄段分布HTML
-        console.log('🔍 [DEBUG] 开始生成HTML，年龄分布数据:', ageDistribution);
         
         const maxCount = Math.max(...ageDistribution.map(item => item.count));
-        console.log('🔍 [DEBUG] 最大计数:', maxCount);
         
         const distributionHTML = ageDistribution.map((item, index) => {
             const percentage = item.percentage || 0;
             const widthPercentage = Math.max((item.count / maxCount) * 100, 5); // 最小宽度5%
             
             // 截取患者示例，最多显示4个名字
-            console.log('🔍 [DEBUG] 处理患者示例:', {
-                ageRange: item.age_range,
-                patientExamples: item.patient_examples,
-                count: item.count,
-                percentage: item.percentage
-            });
             
             const examples = item.patient_examples ? 
                 item.patient_examples.split(', ').slice(0, 4).join(', ') : '';
@@ -2028,36 +1982,30 @@ class PatientApp {
             `;
         }).join('');
         
-        console.log('🔍 [DEBUG] HTML生成完成，长度:', distributionHTML.length);
-        console.log('🔍 [DEBUG] 设置容器HTML...');
-        
         try {
             container.innerHTML = distributionHTML;
-            console.log('🔍 [DEBUG] 年龄分布更新完成');
         } catch (error) {
-            console.error('🔍 [DEBUG] 设置HTML时出错:', error);
+            console.error('设置HTML时出错:', error);
         }
     }
 
     createGenderChart(genderStats) {
-        console.log('🔍 [DEBUG] createGenderChart 被调用:', genderStats);
         
         const ctx = document.getElementById('genderChart');
         if (!ctx) {
-            console.warn('🔍 [DEBUG] genderChart Canvas元素不存在');
+            console.warn('genderChart Canvas元素不存在');
             return;
         }
         
         // 销毁现有的Chart实例，防止重复创建导致的问题
         if (this.charts.genderChart) {
-            console.log('🔍 [DEBUG] 销毁现有的性别图表实例');
             this.charts.genderChart.destroy();
             this.charts.genderChart = null;
         }
         
         // 确保有性别数据
         if (!genderStats || Object.keys(genderStats).length === 0) {
-            console.warn('🔍 [DEBUG] 无性别统计数据');
+            console.warn('无性别统计数据');
             ctx.getContext('2d').clearRect(0, 0, ctx.width, ctx.height);
             return;
         }
@@ -2085,8 +2033,6 @@ class PatientApp {
                 colors.push('#8b5cf6'); // 其他性别紫色
             }
         });
-        
-        console.log('🔍 [DEBUG] 图表数据:', { labels, data, colors });
         
         try {
             this.charts.genderChart = new Chart(ctx, {
@@ -2126,10 +2072,8 @@ class PatientApp {
                     }
                 }
             });
-            
-            console.log('🔍 [DEBUG] 性别图表创建成功');
         } catch (error) {
-            console.error('🔍 [DEBUG] 创建性别图表时出错:', error);
+            console.error('创建性别图表时出错:', error);
         }
     }
 
@@ -2470,10 +2414,8 @@ class PatientApp {
 
     // 清理所有Chart实例，防止内存泄漏
     destroyAllCharts() {
-        console.log('🔍 [DEBUG] 清理所有Chart实例');
         Object.keys(this.charts).forEach(chartKey => {
             if (this.charts[chartKey]) {
-                console.log('🔍 [DEBUG] 销毁图表:', chartKey);
                 this.charts[chartKey].destroy();
                 this.charts[chartKey] = null;
             }
@@ -2647,7 +2589,6 @@ class PatientApp {
     }
 
     updateDistributionLists(stats) {
-        console.log('🔍 [DEBUG] updateDistributionLists 被调用:', stats);
         
         // 更新籍贯分布
         this.updateDistributionList('locationList', stats.locationStats, '籍贯');
@@ -2657,27 +2598,14 @@ class PatientApp {
         
         // 更新医生分布
         this.updateDistributionList('doctorList', stats.doctorStats, '医生', 'patient_count');
-        
-        console.log('🔍 [DEBUG] updateDistributionLists 完成');
     }
 
     updateDistributionList(listId, data, label, countField = 'count') {
-        console.log('🔍 [DEBUG] updateDistributionList 被调用:', {
-            listId,
-            hasData: !!data,
-            dataLength: data ? data.length : 0,
-            label,
-            countField
-        });
         
         const listElement = document.getElementById(listId);
-        console.log('🔍 [DEBUG] DOM元素检查:', {
-            listId,
-            elementExists: !!listElement
-        });
         
         if (!listElement) {
-            console.warn('🔍 [DEBUG] DOM元素不存在:', listId);
+            console.warn('DOM元素不存在:', listId);
             return; // 如果元素不存在，直接返回，不要抛出错误
         }
         
@@ -2690,10 +2618,8 @@ class PatientApp {
             `).join('');
             
             listElement.innerHTML = itemsHTML;
-            console.log('🔍 [DEBUG] 成功更新分布列表:', listId);
         } else {
             listElement.innerHTML = `<li class="distribution-item"><span class="distribution-label">暂无数据</span></li>`;
-            console.log('🔍 [DEBUG] 设置为无数据状态:', listId);
         }
     }
 
@@ -2701,7 +2627,6 @@ class PatientApp {
     // 降级显示基本统计信息
     showBasicStatistics() {
         try {
-            console.log('显示降级统计信息');
             
             // 显示基本患者数量
             const basicStats = {
@@ -2734,7 +2659,6 @@ class PatientApp {
 
     // 家庭服务统计相关函数
     async loadFamilyServiceStatistics() {
-        console.log('🎯 [前端] loadFamilyServiceStatistics函数被调用');
         try {
             // 显示加载状态
             document.getElementById('familyServiceStatisticsLoading').classList.remove('hidden');
@@ -2748,7 +2672,6 @@ class PatientApp {
 
             // 获取统计数据
             const rawStats = await window.electronAPI.familyService.getOverviewStats();
-            console.log('🎯 [前端] 收到统计数据:', rawStats);
             
             // 数据映射：将API返回的字段映射为前端表格所需的字段
             const stats = {
@@ -2772,23 +2695,11 @@ class PatientApp {
                     avg_days: parseFloat(item.avgDays?.toFixed(1) || '0')
                 })) || [],
                 
-                // 临时模拟医院统计数据 (实际项目中可能需要新的API)
-                servicesByHospital: [
-                    { hospital: '数据来源待完善', service_count: 1, family_count: 1 }
-                ],
-                
-                // 临时模拟地区统计数据 (实际项目中可能需要新的API)
-                familyLocationStats: [
-                    { location: '数据来源待完善', family_count: 1 }
-                ]
             };
-            
-            console.log('🔄 [前端] 映射后的统计数据:', stats);
             
             // 更新基础统计卡片
             const overall = stats.overall || {};
             const currentYear = stats.currentYear || {};
-            console.log('📊 [前端] overall数据:', overall);
             
             // 检查DOM元素是否存在
             const elements = {
@@ -2797,7 +2708,6 @@ class PatientApp {
                 totalFamilies: document.getElementById('fsStatTotalFamilies'),
                 totalServiceDays: document.getElementById('fsStatTotalServiceDays')
             };
-            console.log('🔍 [前端] DOM元素检查:', elements);
             
             // 计算月平均家庭数
             const monthlyAvg = (overall.totalFamilies && overall.totalRecords) ? 
@@ -2807,10 +2717,6 @@ class PatientApp {
             const totalRecords = overall.totalRecords || 0;
             const totalServices = overall.totalServices || 0;
             const totalServiceDays = overall.totalResidenceDays || 0;
-            
-            console.log('📈 [前端] 计算出的值:', {
-                monthlyAvg, totalRecords, totalServices, totalServiceDays
-            });
             
             // 安全地更新DOM元素
             if (elements.monthlyAvg) {
@@ -2825,8 +2731,6 @@ class PatientApp {
             if (elements.totalServiceDays) {
                 elements.totalServiceDays.textContent = totalServiceDays.toLocaleString();
             }
-            
-            console.log('✅ [前端] DOM更新完成');
 
             // 初始化图表
             await this.initializeFamilyServiceCharts(stats);
@@ -2865,7 +2769,7 @@ class PatientApp {
     async initializeFamilyServiceCharts(stats) {
         try {
             // 销毁已存在的图表实例
-            ['fsMonthlyChart', 'fsYearlyChart', 'fsHospitalChart', 'fsDiagnosisChart'].forEach(chartId => {
+            ['fsMonthlyChart', 'fsYearlyChart'].forEach(chartId => {
                 const chart = Chart.getChart(chartId);
                 if (chart) {
                     chart.destroy();
@@ -2939,81 +2843,6 @@ class PatientApp {
                 }
             });
 
-            // 3. 医院服务分布图
-            const hospitalCtx = document.getElementById('fsHospitalChart').getContext('2d');
-            const hospitalData = stats.servicesByHospital || [{hospital: '暂无数据', service_count: 1}];
-            new Chart(hospitalCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: hospitalData.map(item => item.hospital),
-                    datasets: [{
-                        data: hospitalData.map(item => item.service_count),
-                        backgroundColor: [
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(245, 158, 11, 0.8)',
-                            'rgba(239, 68, 68, 0.8)',
-                            'rgba(139, 92, 246, 0.8)',
-                            'rgba(236, 72, 153, 0.8)',
-                            'rgba(34, 197, 94, 0.8)',
-                            'rgba(251, 146, 60, 0.8)',
-                            'rgba(168, 85, 247, 0.8)',
-                            'rgba(14, 165, 233, 0.8)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: '各医院服务分布'
-                        },
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-
-            // 4. 诊断分类统计图
-            const diagnosisCtx = document.getElementById('fsDiagnosisChart').getContext('2d');
-            const diagnosisData = stats.servicesByDiagnosis || [{diagnosis: '暂无数据', service_count: 1}];
-            new Chart(diagnosisCtx, {
-                type: 'bar',
-                data: {
-                    labels: diagnosisData.map(item => 
-                        item.diagnosis.length > 10 ? item.diagnosis.substring(0, 10) + '...' : item.diagnosis
-                    ),
-                    datasets: [{
-                        label: '服务次数',
-                        data: diagnosisData.map(item => item.service_count),
-                        backgroundColor: 'rgba(168, 85, 247, 0.8)',
-                        borderColor: 'rgb(168, 85, 247)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: '主要诊断分类统计'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        },
-                        x: {
-                            ticks: {
-                                maxRotation: 45
-                            }
-                        }
-                    }
-                }
-            });
-
         } catch (error) {
             console.error('初始化家庭服务图表失败:', error);
         }
@@ -3036,12 +2865,6 @@ class PatientApp {
                 break;
             case 'yearly':
                 tableHTML = this.generateYearlyStatsTable(stats.yearlyStats);
-                break;
-            case 'hospital':
-                tableHTML = this.generateHospitalStatsTable(stats.servicesByHospital);
-                break;
-            case 'location':
-                tableHTML = this.generateLocationStatsTable(stats.familyLocationStats);
                 break;
         }
 
@@ -3117,74 +2940,6 @@ class PatientApp {
         `;
     }
 
-    // 生成医院统计表格
-    generateHospitalStatsTable(hospitalStats) {
-        if (!hospitalStats || hospitalStats.length === 0) {
-            return '<p class="text-center text-[var(--text-secondary)] py-8">暂无医院统计数据</p>';
-        }
-
-        return `
-            <table class="min-w-full bg-white border border-[var(--border-primary)] rounded-lg">
-                <thead class="bg-[var(--bg-secondary)]">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">医院名称</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">服务次数</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">服务家庭数</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">占比</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-[var(--border-primary)]">
-                    ${hospitalStats.map(item => {
-                        const totalServices = hospitalStats.reduce((sum, h) => sum + h.service_count, 0);
-                        const percentage = ((item.service_count / totalServices) * 100).toFixed(1);
-                        
-                        return `
-                            <tr class="hover:bg-[var(--bg-tertiary)]">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-[var(--text-primary)]">${item.hospital}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${item.service_count}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${item.unique_families}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${percentage}%</td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-        `;
-    }
-
-    // 生成地区统计表格
-    generateLocationStatsTable(locationStats) {
-        if (!locationStats || locationStats.length === 0) {
-            return '<p class="text-center text-[var(--text-secondary)] py-8">暂无地区统计数据</p>';
-        }
-
-        return `
-            <table class="min-w-full bg-white border border-[var(--border-primary)] rounded-lg">
-                <thead class="bg-[var(--bg-secondary)]">
-                    <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">地区</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">家庭数量</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-[var(--text-secondary)] uppercase tracking-wider">占比</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-[var(--border-primary)]">
-                    ${locationStats.map(item => {
-                        const totalFamilies = locationStats.reduce((sum, l) => sum + l.family_count, 0);
-                        const percentage = ((item.family_count / totalFamilies) * 100).toFixed(1);
-                        
-                        return `
-                            <tr class="hover:bg-[var(--bg-tertiary)]">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-[var(--text-primary)]">${item.hometown}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${item.family_count}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-[var(--text-primary)]">${percentage}%</td>
-                            </tr>
-                        `;
-                    }).join('')}
-                </tbody>
-            </table>
-        `;
-    }
-
     // 绑定家庭服务统计事件
     bindFamilyServiceEvents(stats) {
         // 时间范围查询
@@ -3212,7 +2967,7 @@ class PatientApp {
         });
 
         // 统计标签页切换
-        const tabs = ['Monthly', 'Yearly', 'Hospital', 'Location'];
+        const tabs = ['Monthly', 'Yearly'];
         tabs.forEach(tab => {
             document.getElementById(`fsTab${tab}`).addEventListener('click', (e) => {
                 // 更新标签页样式
