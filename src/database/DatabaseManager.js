@@ -967,49 +967,33 @@ class DatabaseManager {
     // 获取指定时间范围的家庭服务统计
     async getFamilyServiceStatsByDateRange(startDate, endDate) {
         try {
-            const [recordsInRange, familiesInRange, daysInRange] = await Promise.all([
-                this.get(`
-                    SELECT COUNT(*) as count
-                    FROM check_in_records cir
-                    WHERE date(cir.check_in_date) BETWEEN date(?) AND date(?)
-                `, [startDate, endDate]),
-                
-                this.get(`
-                    SELECT COUNT(DISTINCT cir.person_id) as count
-                    FROM check_in_records cir
-                    WHERE date(cir.check_in_date) BETWEEN date(?) AND date(?)
-                `, [startDate, endDate]),
-                
-                this.get(`
-                    SELECT SUM(
-                        CASE
-                            WHEN (julianday(?) - julianday(cir.check_in_date)) < 1 THEN 1
-                            ELSE (julianday(?) - julianday(cir.check_in_date))
-                        END
-                    ) as total_days
-                    FROM check_in_records cir
-                    WHERE date(cir.check_in_date) BETWEEN date(?) AND date(?)
-                `, [endDate, endDate, startDate, endDate])
-            ]);
+            const stats = await this.get(`
+                SELECT
+                    COUNT(*) as total_records,
+                    SUM(family_count) as total_families,
+                    SUM(residence_days) as total_days
+                FROM family_service_records
+                WHERE date(year_month) BETWEEN date(?) AND date(?)
+            `, [startDate, endDate]);
 
-            // 按月统计趋势
             const monthlyTrend = await this.all(`
-                SELECT 
-                    strftime('%Y-%m', cir.check_in_date) as month,
-                    COUNT(*) as records,
-                    COUNT(DISTINCT cir.person_id) as families
-                FROM check_in_records cir
-                WHERE date(cir.check_in_date) BETWEEN date(?) AND date(?)
+                SELECT
+                    strftime('%Y-%m', year_month) as month,
+                    SUM(family_count) as families,
+                    SUM(residence_days) as service_days,
+                    COUNT(*) as records
+                FROM family_service_records
+                WHERE date(year_month) BETWEEN date(?) AND date(?)
                 GROUP BY month
                 ORDER BY month
             `, [startDate, endDate]);
 
             return {
                 dateRange: { startDate, endDate },
-                totalRecords: recordsInRange?.count || 0,
-                totalFamilies: familiesInRange?.count || 0,
-                totalServiceDays: Math.round(daysInRange?.total_days || 0),
-                monthlyTrend: monthlyTrend
+                totalRecords: stats?.total_records || 0,
+                totalFamilies: stats?.total_families || 0,
+                totalServiceDays: stats?.total_days || 0,
+                monthlyTrend
             };
         } catch (error) {
             console.error('获取时间范围家庭服务统计失败:', error);
