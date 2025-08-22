@@ -54,11 +54,11 @@
     const openDetail = () => {
       const id = Number(card.dataset.personId);
       if (!Number.isFinite(id)) return;
-      if (window.app && typeof window.app.showPatientDetail === 'function') {
-        window.app.showPatientDetail(id);
+      if (window.app && typeof window.app.navigateToPatientDetail === 'function') {
+        window.app.navigateToPatientDetail(id);
       } else {
         // 兜底：延迟等待 app 初始化
-        setTimeout(() => window.app?.showPatientDetail?.(id), 0);
+        setTimeout(() => window.app?.navigateToPatientDetail?.(id), 0);
       }
     };
     // 捕获卡片内部的链接点击，避免 href="#" 导致页面滚动到顶部
@@ -209,7 +209,7 @@
       const id = Number(card.dataset.personId);
       if (!Number.isFinite(id)) return;
       try {
-        window.app?.showPatientDetail?.(id);
+        window.app?.navigateToPatientDetail?.(id);
       } catch (err) {
         // 忽略
       }
