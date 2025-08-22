@@ -157,13 +157,37 @@
         const offset = (this.state.currentPage - 1) * this.state.pageSize;
         const filters = Object.assign({}, this.state.filters);
 
-        const records = await window.electronAPI.invoke(this.adapter.api, filters, { limit, offset });
-        this.state.hasNextPage = Array.isArray(records) && records.length === this.state.pageSize;
-        this._renderList(Array.isArray(records) ? records : []);
-        this._renderPagination();
-        if (this.dom.resultCountEl) {
-          const pageInfo = `显示 ${records.length} 条（第 ${this.state.currentPage} 页${this.state.hasNextPage ? '' : '·末页'}）`;
-          this.dom.resultCountEl.textContent = pageInfo;
+        const resp = await window.electronAPI.invoke(this.adapter.api, filters, { limit, offset });
+        let items = [];
+        let total = null;
+        if (Array.isArray(resp)) {
+          items = resp;
+          total = null; // 兼容旧返回
+        } else if (resp && Array.isArray(resp.items)) {
+          items = resp.items;
+          total = typeof resp.total === 'number' ? resp.total : null;
+        }
+
+        // 计算分页状态
+        if (total != null) {
+          const totalPages = Math.max(1, Math.ceil(total / this.state.pageSize));
+          this.state.hasNextPage = this.state.currentPage < totalPages;
+          this._renderList(items);
+          this._renderPagination(totalPages);
+          if (this.dom.resultCountEl) {
+            const start = total === 0 ? 0 : offset + 1;
+            const end = Math.min(offset + items.length, total);
+            this.dom.resultCountEl.textContent = `共 ${total} 条，当前 ${start}-${end}（第 ${this.state.currentPage}/${totalPages} 页）`;
+          }
+        } else {
+          // 无总数场景：退化处理
+          this.state.hasNextPage = Array.isArray(items) && items.length === this.state.pageSize;
+          this._renderList(items);
+          this._renderPagination();
+          if (this.dom.resultCountEl) {
+            const pageInfo = `显示 ${items.length} 条（第 ${this.state.currentPage} 页${this.state.hasNextPage ? '' : '·末页'}）`;
+            this.dom.resultCountEl.textContent = pageInfo;
+          }
         }
       } catch (e) {
         console.error('加载数据失败:', e);
@@ -209,13 +233,19 @@
       return card;
     }
 
-    _renderPagination() {
+    _renderPagination(totalPages) {
       const p = this.dom.pagination;
       if (!p || !p.section) return;
       p.section.classList.remove('hidden');
       if (p.prevBtn) p.prevBtn.disabled = this.state.currentPage <= 1;
       if (p.nextBtn) p.nextBtn.disabled = !this.state.hasNextPage;
-      if (p.infoEl) p.infoEl.textContent = `第 ${this.state.currentPage} 页${this.state.hasNextPage ? '' : ' · 末页'}`;
+      if (p.infoEl) {
+        if (typeof totalPages === 'number') {
+          p.infoEl.textContent = `第 ${this.state.currentPage} / 共 ${totalPages} 页`;
+        } else {
+          p.infoEl.textContent = `第 ${this.state.currentPage} 页${this.state.hasNextPage ? '' : ' · 末页'}`;
+        }
+      }
     }
 
     _setLoading(loading) {
@@ -234,4 +264,3 @@
 
   window.ResourceTable = ResourceTable;
 })();
-

@@ -44,7 +44,7 @@ class FamilyServiceManager {
         console.log('🔍 [FamilyServiceManager] getRecords 方法开始');
         console.log('📊 [FamilyServiceManager] 接收到的参数:', { filters, pagination });
         try {
-            let sql = `
+            let baseSql = `
                 SELECT 
                     id,
                     sequence_number,
@@ -112,50 +112,61 @@ class FamilyServiceManager {
                 params.push(filters.minServices);
             }
 
-            if (conditions.length > 0) {
-                sql += ' WHERE ' + conditions.join(' AND ');
-            }
+            const whereClause = conditions.length > 0 ? (' WHERE ' + conditions.join(' AND ')) : '';
+
+            // 统计总数（不带排序/分页）
+            const countSql = `SELECT COUNT(*) as total FROM ${this.tableName}${whereClause}`;
+            const countParams = params.slice();
 
             // 排序
             const sortBy = filters.sort || 'date-desc';
+            let orderClause = '';
             switch (sortBy) {
                 case 'date-asc':
-                    sql += ' ORDER BY year_month ASC';
+                    orderClause = ' ORDER BY year_month ASC';
                     break;
                 case 'date-desc':
-                    sql += ' ORDER BY year_month DESC';
+                    orderClause = ' ORDER BY year_month DESC';
                     break;
                 case 'families-desc':
-                    sql += ' ORDER BY family_count DESC, year_month DESC';
+                    orderClause = ' ORDER BY family_count DESC, year_month DESC';
                     break;
                 case 'families-asc':
-                    sql += ' ORDER BY family_count ASC, year_month DESC';
+                    orderClause = ' ORDER BY family_count ASC, year_month DESC';
                     break;
                 case 'services-desc':
-                    sql += ' ORDER BY total_service_count DESC, year_month DESC';
+                    orderClause = ' ORDER BY total_service_count DESC, year_month DESC';
                     break;
                 case 'services-asc':
-                    sql += ' ORDER BY total_service_count ASC, year_month DESC';
+                    orderClause = ' ORDER BY total_service_count ASC, year_month DESC';
                     break;
                 default:
-                    sql += ' ORDER BY year_month DESC';
+                    orderClause = ' ORDER BY year_month DESC';
             }
 
             // 分页
+            let limitOffset = '';
             if (pagination.limit) {
-                sql += ' LIMIT ?';
+                limitOffset += ' LIMIT ?';
                 params.push(pagination.limit);
 
                 if (pagination.offset) {
-                    sql += ' OFFSET ?';
+                    limitOffset += ' OFFSET ?';
                     params.push(pagination.offset);
                 }
             }
 
-            console.log('📝 [FamilyServiceManager] 执行的SQL:', sql);
+            const dataSql = baseSql + whereClause + orderClause + limitOffset;
+
+            console.log('📝 [FamilyServiceManager] 执行的COUNT SQL:', countSql);
+            console.log('🔢 [FamilyServiceManager] COUNT参数:', countParams);
+            console.log('📝 [FamilyServiceManager] 执行的SQL:', dataSql);
             console.log('🔢 [FamilyServiceManager] SQL参数:', params);
             
-            const records = await this.db.all(sql, params);
+            const [countRow, records] = await Promise.all([
+                this.db.get(countSql, countParams),
+                this.db.all(dataSql, params)
+            ]);
             console.log('📋 [FamilyServiceManager] 数据库返回的原始记录数:', records.length);
             console.log('📊 [FamilyServiceManager] 数据库返回的记录样本:', records.slice(0, 2));
 
@@ -171,7 +182,8 @@ class FamilyServiceManager {
             
             console.log('✅ [FamilyServiceManager] 处理后的记录数:', processedRecords.length);
             console.log('📤 [FamilyServiceManager] 返回的记录样本:', processedRecords.slice(0, 2));
-            return processedRecords;
+            const total = Number(countRow?.total || 0);
+            return { items: processedRecords, total };
 
         } catch (error) {
             console.error('❌ [FamilyServiceManager] 获取家庭服务记录失败:', error);
