@@ -58,12 +58,33 @@ class App {
         }
     }
 
+    async waitForInitialization(timeoutMs = 5000) {
+        return new Promise((resolve, reject) => {
+            if (this.isInitialized) {
+                resolve();
+                return;
+            }
+
+            const startTime = Date.now();
+            const checkInterval = setInterval(() => {
+                if (this.isInitialized) {
+                    clearInterval(checkInterval);
+                    resolve();
+                } else if (Date.now() - startTime > timeoutMs) {
+                    clearInterval(checkInterval);
+                    reject(new Error(`初始化超时：超过 ${timeoutMs}ms`));
+                }
+            }, 100);
+        });
+    }
+
     registerIpcHandlers() {
         // 获取患者列表
         ipcMain.handle('get-patients', async () => {
             try {
+                // 等待初始化完成，最多等待5秒
                 if (!this.isInitialized) {
-                    throw new Error('应用未完全初始化');
+                    await this.waitForInitialization(5000);
                 }
                 return await this.dbManager.getPatients();
             } catch (error) {
@@ -75,8 +96,9 @@ class App {
         // 获取患者详细信息
         ipcMain.handle('get-patient-detail', async (event, personId) => {
             try {
+                // 等待初始化完成，最多等待5秒
                 if (!this.isInitialized) {
-                    throw new Error('应用未完全初始化');
+                    await this.waitForInitialization(5000);
                 }
                 return await this.dbManager.getPatientDetail(personId);
             } catch (error) {
@@ -88,8 +110,9 @@ class App {
         // 导入Excel文件
         ipcMain.handle('import-excel', async () => {
             try {
+                // 等待初始化完成，最多等待5秒
                 if (!this.isInitialized) {
-                    throw new Error('应用未完全初始化');
+                    await this.waitForInitialization(5000);
                 }
                 const result = await dialog.showOpenDialog(this.mainWindow, {
                     properties: ['openFile'],
@@ -122,8 +145,9 @@ class App {
         // 搜索患者
         ipcMain.handle('search-patients', async (event, query) => {
             try {
+                // 等待初始化完成，最多等待5秒
                 if (!this.isInitialized) {
-                    throw new Error('应用未完全初始化');
+                    await this.waitForInitialization(5000);
                 }
                 return await this.dbManager.searchPatients(query);
             } catch (error) {
@@ -135,8 +159,9 @@ class App {
         // 获取统计信息
         ipcMain.handle('get-statistics', async () => {
             try {
+                // 等待初始化完成，最多等待5秒
                 if (!this.isInitialized) {
-                    throw new Error('应用未完全初始化');
+                    await this.waitForInitialization(5000);
                 }
                 return await this.dbManager.getStatistics();
             } catch (error) {
@@ -148,8 +173,9 @@ class App {
         // 获取扩展统计信息
         ipcMain.handle('get-extended-statistics', async () => {
             try {
+                // 等待初始化完成，最多等待5秒
                 if (!this.isInitialized) {
-                    throw new Error('应用未完全初始化');
+                    await this.waitForInitialization(5000);
                 }
                 return await this.dbManager.getExtendedStatistics();
             } catch (error) {

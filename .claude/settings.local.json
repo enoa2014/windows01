@@ -14,7 +14,8 @@
       "Bash(npx electron:*)",
       "Bash(git commit:*)",
       "Bash(cp:*)",
-      "Bash(git pull:*)"
+      "Bash(git pull:*)",
+      "Bash(git remote set-url:*)"
     ],
     "deny": [],
     "ask": [],

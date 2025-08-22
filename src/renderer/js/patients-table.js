@@ -17,11 +17,13 @@
     const card = document.createElement('article');
     // 使用 patient-card 基类以兼容样式切换
     card.className = 'patient-card p-4 hover:shadow-md transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400';
-    if (row.person_id != null) {
-      card.dataset.personId = row.person_id;
-      card.dataset.id = row.person_id; // 兼容旧逻辑
-      card.setAttribute('data-person-id', String(row.person_id));
-      card.setAttribute('data-id', String(row.person_id));
+    // 获取患者ID - 兼容两种字段名 (person_id 或 id)
+    const patientId = row.person_id != null ? row.person_id : row.id;
+    if (patientId != null) {
+      card.dataset.personId = patientId;
+      card.dataset.id = patientId; // 兼容旧逻辑
+      card.setAttribute('data-person-id', String(patientId));
+      card.setAttribute('data-id', String(patientId));
     }
     card.setAttribute('role', 'button');
     card.setAttribute('tabindex', '0');
