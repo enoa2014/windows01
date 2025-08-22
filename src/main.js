@@ -31,6 +31,12 @@ class App {
             icon: path.join(__dirname, '../assets/icon.png')
         });
 
+        // 优先注册 IPC 处理器，避免渲染进程早期调用出现 “No handler registered”
+        if (!this.handlersRegistered) {
+            this.registerIpcHandlers();
+            this.handlersRegistered = true;
+        }
+
         // 加载应用页面
         await this.mainWindow.loadFile(path.join(__dirname, 'renderer/index.html'));
 
@@ -44,12 +50,7 @@ class App {
             await this.dbManager.initialize();
             this.isInitialized = true;
             console.log('数据库初始化成功');
-            
-            // 数据库初始化完成后注册IPC处理器
-            if (!this.handlersRegistered) {
-                this.registerIpcHandlers();
-                this.handlersRegistered = true;
-            }
+            // 处理器已注册，后续调用将基于 isInitialized 保障
         } catch (error) {
             console.error('数据库初始化失败:', error);
             dialog.showErrorBox('数据库错误', '无法初始化数据库，应用可能无法正常工作');
@@ -74,6 +75,9 @@ class App {
         // 获取患者详细信息
         ipcMain.handle('get-patient-detail', async (event, personId) => {
             try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
                 return await this.dbManager.getPatientDetail(personId);
             } catch (error) {
                 console.error('获取患者详情失败:', error);
@@ -84,6 +88,9 @@ class App {
         // 导入Excel文件
         ipcMain.handle('import-excel', async () => {
             try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
                 const result = await dialog.showOpenDialog(this.mainWindow, {
                     properties: ['openFile'],
                     filters: [
@@ -115,6 +122,9 @@ class App {
         // 搜索患者
         ipcMain.handle('search-patients', async (event, query) => {
             try {
+                if (!this.isInitialized) {
+                    throw new Error('应用未完全初始化');
+                }
                 return await this.dbManager.searchPatients(query);
             } catch (error) {
                 console.error('搜索患者失败:', error);

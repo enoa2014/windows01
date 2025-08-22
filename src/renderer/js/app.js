@@ -272,32 +272,42 @@ class PatientApp {
     }
 
     async loadData() {
+        const invokeWithRetry = async (fn, attempts = 8, delayMs = 300) => {
+            let lastErr;
+            for (let i = 0; i < attempts; i++) {
+                try {
+                    return await fn();
+                } catch (e) {
+                    lastErr = e;
+                    // 常见：主进程尚未注册IPC或未初始化完成
+                    await new Promise(r => setTimeout(r, delayMs));
+                }
+            }
+            throw lastErr;
+        };
+
         try {
             this.showLoading('加载患者数据...');
-            
-            // 等待一小段时间确保后端初始化完成
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            // 并发获取数据
+
+            // 并发获取数据（带重试）
             const [patients, statistics] = await Promise.all([
-                window.electronAPI.getPatients(),
-                window.electronAPI.getStatistics()
+                invokeWithRetry(() => window.electronAPI.getPatients()),
+                invokeWithRetry(() => window.electronAPI.getStatistics())
             ]);
-            
+
             this.patients = patients || [];
             this.updateStatistics(statistics);
             this.filterAndSort();
-            
-            // 如果当前在主页，更新主页统计
+
             if (this.currentView === 'home') {
                 await this.updateHomeStatistics();
             }
-            
+
             this.hideLoading();
         } catch (error) {
             this.hideLoading();
             console.error('数据加载失败:', error);
-            this.showError('数据加载失败，请检查数据库连接');
+            this.showError('数据加载失败，请稍后再试或检查数据库连接');
         }
     }
 

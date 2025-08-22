@@ -67,22 +67,41 @@
       await this.refresh();
     }
 
-    _bindEvents() {
-      const f = this.dom.filters || {};
-      if (f.searchInput) {
-        f.searchInput.addEventListener('input', this._debounce(() => {
-          this.state.currentPage = 1;
-          this.state.filters.search = f.searchInput.value || '';
-          this.refresh();
-        }, 300));
-      }
-      if (f.yearSelect) {
-        f.yearSelect.addEventListener('change', () => {
-          this.state.currentPage = 1;
-          this.state.filters.year = f.yearSelect.value || '';
-          this.refresh();
-        });
-      }
+  _bindEvents() {
+    const f = this.dom.filters || {};
+    if (f.searchInput) {
+      // 防止外层点击/键盘事件干扰输入
+      ['click','keydown','keyup','keypress'].forEach(evt => {
+        f.searchInput.addEventListener(evt, (e) => e.stopPropagation());
+      });
+      f.searchInput.addEventListener('input', this._debounce(() => {
+        this.state.currentPage = 1;
+        this.state.filters.search = f.searchInput.value || '';
+        this.refresh();
+      }, 300));
+    }
+    // 通用下拉选择器事件绑定（防止外层截获）
+    const bindSelect = (el, key) => {
+      if (!el) return;
+      ['click','keydown','keyup','keypress','change'].forEach(evt => {
+        el.addEventListener(evt, (e) => e.stopPropagation());
+      });
+      el.addEventListener('change', () => {
+        this.state.currentPage = 1;
+        this.state.filters[key] = el.value || '';
+        this.refresh();
+      });
+    };
+    bindSelect(f.sortSelect, 'sort');
+    bindSelect(f.genderSelect, 'gender');
+    bindSelect(f.ageSelect, 'age');
+    if (f.yearSelect) {
+      f.yearSelect.addEventListener('change', () => {
+        this.state.currentPage = 1;
+        this.state.filters.year = f.yearSelect.value || '';
+        this.refresh();
+      });
+    }
       if (f.monthSelect) {
         f.monthSelect.addEventListener('change', () => {
           this.state.currentPage = 1;
@@ -160,17 +179,21 @@
         const resp = await window.electronAPI.invoke(this.adapter.api, filters, { limit, offset });
         let items = [];
         let total = null;
-        if (Array.isArray(resp)) {
-          // 兼容未分页 API：可选本地过滤 + 分页切片
-          const original = resp;
-          const clientFilter = (this.dom && this.dom.clientFilter) || null;
-          let filtered = Array.isArray(original) ? original.slice() : [];
-          if (clientFilter) {
-            try { filtered = original.filter(r => clientFilter(r, filters)); } catch(e) { /* 忽略过滤错误 */ }
-          }
-          total = filtered.length;
-          items = filtered.slice(offset, offset + limit);
-        } else if (resp && Array.isArray(resp.items)) {
+    if (Array.isArray(resp)) {
+      // 兼容未分页 API：可选本地过滤 + 分页切片
+      const original = resp;
+      const clientFilter = (this.dom && this.dom.clientFilter) || null;
+      const clientSort = (this.dom && this.dom.clientSort) || null;
+      let filtered = Array.isArray(original) ? original.slice() : [];
+      if (clientFilter) {
+        try { filtered = original.filter(r => clientFilter(r, filters)); } catch(e) { /* 忽略过滤错误 */ }
+      }
+      if (clientSort) {
+        try { filtered.sort((a,b) => clientSort(a, b, filters)); } catch(e) { /* 忽略排序错误 */ }
+      }
+      total = filtered.length;
+      items = filtered.slice(offset, offset + limit);
+    } else if (resp && Array.isArray(resp.items)) {
           items = resp.items;
           total = typeof resp.total === 'number' ? resp.total : null;
         }
