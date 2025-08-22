@@ -31,6 +31,10 @@ Thumbs.db
 logs/
 *.log
 
+# Local SSH keys (do not commit)
+key
+key.pub
+
 # Runtime data
 pids/
 *.pid
