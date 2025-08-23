@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>患者详情 - 患儿入住信息管理系统</title>
+    
+    <!-- Core Styles - 统一设计系统 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/medical-design-system.css">
+    <link rel="stylesheet" href="styles/icon-system.css">
+    <link rel="stylesheet" href="styles/modern-cards.css">
+    <link rel="stylesheet" href="styles/enhanced-search-filter.css">
+    <link rel="stylesheet" href="styles/enhanced-upload.css">
+    <link rel="stylesheet" href="styles/responsive-layout.css">
+    <link rel="stylesheet" href="styles/enhanced-design-system.css">
+    <link rel="stylesheet" href="styles/patient-card.css">
+    <link rel="stylesheet" href="styles/patient-detail.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    <link rel="stylesheet" href="styles/patient-detail-redesigned.css">
+    
+    <!-- Accessibility -->
+    <meta name="description" content="患者详细信息管理页面 - 重新设计版本">
+    <meta name="theme-color" content="#1E88E5">
+</head>
+<body class="bg-slate-50">
+    <!-- Navigation Header -->
+    <nav class="bg-white shadow-sm border-b">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="index.html" class="flex items-center gap-2 text-slate-600 hover:text-medical-primary-600 transition-colors duration-200">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        <span class="font-medium">返回患者列表</span>
+                    </a>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <button class="btn-secondary" title="编辑患者信息">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                        编辑
+                    </button>
+                    <button class="btn-primary" title="打印详情">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6,9 6,2 18,2 18,9"/>
+                            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                            <rect width="12" height="8" x="6" y="14"/>
+                        </svg>
+                        打印
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="patient-detail-redesigned">
+        <!-- Patient Header Section -->
+        <header class="bg-white shadow-sm border-b mb-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <!-- Patient Info -->
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <div class="flex items-center gap-6">
+                        <div class="w-20 h-20 bg-gradient-to-br from-medical-primary-500 to-medical-secondary-500 rounded-2xl flex items-center justify-center shadow-lg">
+                            <svg class="w-10 h-10 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                <circle cx="12" cy="7" r="4"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-3xl font-bold text-slate-900 mb-2" id="patientName">加载中...</h1>
+                            <div class="flex flex-wrap items-center gap-4 text-slate-600" id="patientMeta">
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <circle cx="12" cy="12" r="3"/>
+                                        <path d="M12 1v6m0 6v6"/>
+                                    </svg>
+                                    年龄：<span id="patientAge" class="font-medium text-slate-900">-</span>
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                        <circle cx="12" cy="7" r="4"/>
+                                    </svg>
+                                    性别：<span id="patientGender" class="font-medium text-slate-900">-</span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+            <div class="grid gap-8">
+                <!-- Basic Information Section -->
+                <section class="modern-card" id="basic-info-section">
+                    <div class="card-header">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-medical-primary-500 to-medical-secondary-500 rounded-xl flex items-center justify-center shadow-lg">
+                                <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="card-title">基本信息</h2>
+                                <p class="card-subtitle">患者的基本资料</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-content" id="basicInfoContent">
+                        <div class="animate-pulse text-center py-8 text-slate-500">加载中...</div>
+                    </div>
+                </section>
+
+                <!-- Family Information Section -->
+                <section class="modern-card" id="family-info-section">
+                    <div class="card-header">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-medical-success-500 to-medical-secondary-500 rounded-xl flex items-center justify-center shadow-lg">
+                                <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+                                    <circle cx="9" cy="7" r="4"/>
+                                    <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="card-title">家庭信息</h2>
+                                <p class="card-subtitle">家庭成员和经济情况</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-content" id="familyInfoContent">
+                        <div class="animate-pulse text-center py-8 text-slate-500">加载中...</div>
+                    </div>
+                </section>
+
+                <!-- Admission Records Section -->
+                <section class="modern-card" id="admission-records-section">
+                    <div class="card-header">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gradient-to-br from-medical-info-500 to-medical-primary-500 rounded-xl flex items-center justify-center shadow-lg">
+                                <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h2 class="card-title">入住记录</h2>
+                                <p class="card-subtitle">小家入住历史记录</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card-content" id="admissionRecordsContent">
+                        <div class="animate-pulse text-center py-8 text-slate-500">加载中...</div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay hidden" id="loadingOverlay">
+        <div class="loading-container">
+            <div class="loading-spinner">
+                <svg class="w-12 h-12 animate-spin text-medical-primary-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                </svg>
+            </div>
+            <p class="mt-4 text-slate-600 font-medium">加载患者信息中...</p>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Core JavaScript -->
+    <script src="js/icon-library.js"></script>
+    <script src="js/responsive-layout.js"></script>
+    <script src="js/patient-detail-redesigned.js"></script>
+</body>
+</html>

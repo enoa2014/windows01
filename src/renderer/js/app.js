@@ -2632,14 +2632,14 @@ class PatientApp {
             }
 
             // 构建目标URL
-            const targetUrl = `patient-detail-enhanced.html?id=${personId}`;
+            const targetUrl = `patient-detail-redesigned.html?id=${personId}`;
             console.log('🌐 [navigateToPatientDetail] 准备导航到:', targetUrl);
             
             // 检查当前页面状态
             console.log('📍 [navigateToPatientDetail] 当前页面:', window.location.href);
             
-            // 导航到新详情页面
-            console.log('🔄 [navigateToPatientDetail] 开始页面重定向...');
+            // 导航到重新设计的详情页面
+            console.log('🔄 [navigateToPatientDetail] 开始页面重定向到重新设计版本...');
             window.location.href = targetUrl;
             console.log('✅ [navigateToPatientDetail] 重定向命令已发送');
             

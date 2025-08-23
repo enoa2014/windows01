@@ -1,0 +1,576 @@
+/* ===================== 重新设计的患者详情页面样式 ===================== */
+/* 专注于基本信息、家庭信息和入住记录三个核心模块的清晰展示 */
+/* 基于统一医疗设计系统，与应用其他页面保持一致 */
+
+/* ==================== 全局样式 ==================== */
+
+.patient-detail-redesigned {
+  min-height: 100vh;
+  background: var(--surface-secondary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* ==================== 按钮样式 ==================== */
+
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: var(--medical-primary-500);
+  color: white;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.btn-primary:hover {
+  background: var(--medical-primary-600);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  background: white;
+  color: var(--text-secondary);
+  border: 1px solid var(--surface-quaternary);
+  border-radius: var(--radius-lg);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background: var(--surface-tertiary);
+  border-color: var(--medical-primary-300);
+  color: var(--medical-primary-600);
+}
+
+/* ==================== 卡片样式 ==================== */
+
+.card-header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--surface-quaternary);
+  background: var(--surface-tertiary);
+}
+
+.card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.card-subtitle {
+  font-size: 0.875rem;
+  color: var(--text-tertiary);
+  margin: 0;
+  margin-top: 0.25rem;
+}
+
+.card-content {
+  padding: 1.5rem;
+}
+
+/* ==================== 加载状态 ==================== */
+
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.loading-container {
+  background: white;
+  padding: 2rem;
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+/* ==================== Toast 通知 ==================== */
+
+.toast-container {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 24rem;
+}
+
+/* ==================== 状态样式 ==================== */
+
+.status-active {
+  color: var(--medical-success-600) !important;
+  font-weight: 600;
+}
+
+.status-discharged {
+  color: var(--medical-info-600) !important;
+  font-weight: 600;
+}
+
+/* 病情等级样式 */
+.severity.mild { color: var(--medical-success-600); }
+.severity.moderate { color: var(--medical-warning-600); }
+.severity.severe { color: var(--medical-error-600); }
+.severity.critical { color: var(--medical-error-700); }
+
+/* ==================== 入住记录模块 ==================== */
+
+.medical-records-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-8);
+}
+
+/* 医疗记录项 */
+.medical-record-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-6);
+  margin-bottom: var(--spacing-6);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.medical-record-item:hover {
+  border-color: var(--medical-primary-300);
+  box-shadow: var(--shadow-sm);
+}
+
+.medical-record-item:last-child {
+  margin-bottom: 0;
+}
+
+/* 记录网格布局 */
+.record-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-5);
+}
+
+/* 字段组 */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.field-label {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+  font-weight: 500;
+  margin-bottom: var(--spacing-1);
+}
+
+.field-content {
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  font-weight: 500;
+  line-height: var(--leading-relaxed);
+}
+
+.field-content.highlight {
+  color: var(--medical-primary-600);
+  font-weight: 600;
+}
+
+.field-content.hospital {
+  color: var(--medical-info-600);
+  font-weight: 600;
+}
+
+.field-content.doctor {
+  color: var(--medical-success-600);
+  font-weight: 600;
+}
+
+.field-content.diagnosis {
+  color: var(--medical-warning-600);
+  font-weight: 600;
+}
+
+/* 全宽字段 */
+.field-full-width {
+  grid-column: 1 / -1;
+}
+
+.field-full-width .field-content {
+  background: var(--bg-secondary);
+  padding: var(--spacing-4);
+  border-radius: var(--radius-md);
+  border-left: 3px solid var(--medical-primary-400);
+  margin-top: var(--spacing-2);
+}
+
+/* 记录状态指示器 */
+.record-status-indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  margin-right: var(--spacing-2);
+}
+
+.record-status-indicator.active {
+  background: var(--medical-success-500);
+  animation: pulse 2s infinite;
+}
+
+.record-status-indicator.completed {
+  background: var(--medical-info-500);
+}
+
+.record-status-indicator.follow-up {
+  background: var(--medical-warning-500);
+}
+
+/* 记录时间戳 */
+.record-timestamp {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: right;
+  margin-top: var(--spacing-3);
+  padding-top: var(--spacing-3);
+  border-top: 1px solid var(--border-tertiary);
+}
+
+/* 记录摘要 */
+.records-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-8);
+}
+
+.summary-card {
+  background: linear-gradient(135deg, var(--medical-primary-500) 0%, var(--medical-primary-600) 100%);
+  color: var(--brand-text);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-5);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-4);
+  box-shadow: var(--shadow-brand);
+  transition: all var(--duration-normal) var(--ease-out);
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.summary-icon {
+  width: 48px;
+  height: 48px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--brand-text);
+}
+
+.summary-info {
+  flex: 1;
+}
+
+.summary-value {
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  margin-bottom: var(--spacing-1);
+}
+
+.summary-label {
+  font-size: var(--text-sm);
+  opacity: 0.9;
+}
+
+/* 记录时间轴 */
+.records-timeline {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-6);
+  box-shadow: var(--shadow-sm);
+}
+
+.timeline-list {
+  position: relative;
+}
+
+.timeline-record {
+  display: flex;
+  gap: var(--spacing-4);
+  margin-bottom: var(--spacing-6);
+  position: relative;
+}
+
+.timeline-record:last-child {
+  margin-bottom: 0;
+}
+
+/* 时间轴标记 */
+.timeline-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.marker-dot {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full);
+  border: 3px solid var(--bg-secondary);
+  background: var(--medical-primary-500);
+  z-index: 1;
+  box-shadow: 0 0 0 3px var(--medical-primary-500);
+}
+
+.marker-dot.active {
+  background: var(--medical-success-500);
+  box-shadow: 0 0 0 3px var(--medical-success-500);
+  animation: pulse 2s infinite;
+}
+
+.marker-dot.completed {
+  background: var(--medical-info-500);
+  box-shadow: 0 0 0 3px var(--medical-info-500);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 3px var(--medical-success-500);
+  }
+  50% {
+    box-shadow: 0 0 0 6px var(--medical-success-300);
+  }
+  100% {
+    box-shadow: 0 0 0 3px var(--medical-success-500);
+  }
+}
+
+.marker-line {
+  width: 2px;
+  height: 60px;
+  background: linear-gradient(180deg, var(--medical-primary-300) 0%, var(--border-secondary) 100%);
+  margin-top: var(--spacing-2);
+}
+
+/* 记录内容 */
+.timeline-content {
+  flex: 1;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-5);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.timeline-content:hover {
+  border-color: var(--medical-primary-300);
+  box-shadow: var(--shadow-sm);
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-4);
+}
+
+.record-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.record-status {
+  padding: var(--spacing-1) var(--spacing-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.record-status.current {
+  background: var(--medical-success-100);
+  color: var(--medical-success-700);
+  border: 1px solid var(--medical-success-300);
+}
+
+.record-status.completed {
+  background: var(--medical-info-100);
+  color: var(--medical-info-700);
+  border: 1px solid var(--medical-info-300);
+}
+
+.record-details {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
+}
+
+.record-dates {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--spacing-3);
+}
+
+.date-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-1);
+}
+
+.date-label {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.date-value {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.date-value.pending {
+  color: var(--medical-success-600);
+  font-weight: 600;
+}
+
+.date-value.duration {
+  color: var(--medical-primary-600);
+  font-weight: 600;
+}
+
+.record-hospital,
+.record-department {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+/* ==================== 空状态 ==================== */
+
+.empty-state {
+  text-align: center;
+  padding: var(--spacing-12) var(--spacing-8);
+  color: var(--text-muted);
+}
+
+.empty-state .icon-lg {
+  width: 64px;
+  height: 64px;
+  margin-bottom: var(--spacing-4);
+  opacity: 0.5;
+}
+
+.empty-state h3 {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  margin: 0 0 var(--spacing-2) 0;
+}
+
+.empty-state p {
+  font-size: var(--text-base);
+  margin: 0;
+}
+
+
+
+/* ==================== 响应式设计 ==================== */
+
+/* 平板端适配 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .record-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 移动端适配 */
+@media (max-width: 640px) {
+  .record-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .medical-record-item {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* ==================== 打印样式 ==================== */
+
+@media print {
+  .btn-primary,
+  .btn-secondary,
+  .loading-overlay,
+  #toast-container {
+    display: none !important;
+  }
+
+  .medical-record-item {
+    page-break-inside: avoid;
+    margin-bottom: 0.75rem !important;
+    box-shadow: none !important;
+    border: 1px solid #ddd !important;
+  }
+}
+
+/* ==================== 无障碍支持 ==================== */
+
+.btn-primary:focus,
+.btn-secondary:focus {
+  outline: 2px solid var(--medical-primary-500);
+  outline-offset: 2px;
+}
+
+/* 高对比度模式 */
+@media (prefers-contrast: high) {
+  .medical-record-item {
+    border-width: 2px;
+  }
+}
+
+/* 减少动画模式 */
+@media (prefers-reduced-motion: reduce) {
+  .medical-record-item,
+  .btn-primary,
+  .btn-secondary {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .record-status-indicator.active {
+    animation: none !important;
+  }
+}
