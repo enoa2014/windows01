@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN" class="scroll-smooth" data-theme="emerald">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>关怀服务详情 · 患儿入住信息管理系统</title>
+  <meta name="color-scheme" content="light dark" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles/medical-design-system.css">
+  <link rel="stylesheet" href="./styles/icon-system.css">
+  <link rel="stylesheet" href="./styles/modern-cards.css">
+  <link rel="stylesheet" href="./styles/enhanced-search-filter.css">
+  <link rel="stylesheet" href="./styles/enhanced-upload.css">
+  <link rel="stylesheet" href="./styles/responsive-layout.css">
+  <link rel="stylesheet" href="./styles/enhanced-design-system.css">
+  <link rel="stylesheet" href="./styles/patient-card.css">
+  <link rel="stylesheet" href="./styles/patient-detail.css">
+  <link rel="stylesheet" href="./styles/animations.css">
+  <link rel="stylesheet" href="./styles/responsive.css">
+  <style>
+    /* ===================== 主题系统（CSS 变量） ===================== */
+    :root {
+      /* 背景色阶 */
+      --bg-primary: #f8fafc;    /* 主背景 - 轻柔灰白 */
+      --bg-secondary: #ffffff;   /* 卡片背景 - 纯白 */
+      --bg-tertiary: #f1f5f9;   /* 次级背景 - 浅灰 */
+      
+      /* 文字色阶 */
+      --text-primary: #334155;   /* 主文字 - 深蓝灰 */
+      --text-secondary: #64748b; /* 次级文字 - 中蓝灰 */
+      --text-muted: #94a3b8;     /* 弱化文字 - 浅蓝灰 */
+      
+      /* 边框色阶 */
+      --border-primary: #e2e8f0; /* 主边框 - 浅灰 */
+      --border-secondary: #f1f5f9; /* 次级边框 - 更浅 */
+      
+      /* 品牌色系 */
+      --brand-primary: #1E88E5;   /* 主品牌色 - 医疗蓝 */
+      --brand-secondary: #26A69A; /* 次品牌色 - 医疗绿 */
+      --brand-text: #ffffff;      /* 品牌文字 - 白色 */
+      --brand-tag-bg: #f0fdfa;    /* 标签背景 - 浅绿 */
+      --brand-tag-text: #14532d;  /* 标签文字 - 深绿 */
+      
+      /* 交互色系 */
+      --ring-color: #34d399;      /* 聚焦环 - 翠绿 */
+      --selection-bg: #a7f3d0;    /* 选择背景 - 浅翠绿 */
+      
+      /* 状态色系 */
+      --success-color: #059669;   /* 成功 - 绿 */
+      --warning-color: #d97706;   /* 警告 - 橙 */
+      --error-color: #dc2626;     /* 错误 - 红 */
+    }
+
+    /* ===================== 详情页面专用样式 ===================== */
+    body { 
+      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; 
+      background-color: var(--bg-primary); 
+      color: var(--text-primary); 
+    }
+    ::selection { background-color: var(--selection-bg); }
+    
+    .detail-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .detail-header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+      box-shadow: 0 1px 2px rgba(0,0,0,.05);
+    }
+
+    .header-content {
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 50%;
+      background-color: transparent;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .back-button:hover {
+      background-color: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    .page-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .page-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    .breadcrumb {
+      display: none;
+      margin-top: 0.5rem;
+    }
+
+    @media (min-width: 1024px) {
+      .breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+      }
+    }
+
+    .breadcrumb-item {
+      color: var(--brand-primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+
+    .breadcrumb-item:hover {
+      color: var(--brand-secondary);
+    }
+
+    .breadcrumb-separator {
+      color: var(--text-muted);
+      width: 1rem;
+      height: 1rem;
+    }
+
+    .breadcrumb-current {
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .action-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 0.75rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      transition: all 0.15s;
+      cursor: pointer;
+      border: none;
+    }
+
+    .action-button-primary {
+      background-color: var(--brand-primary);
+      color: var(--brand-text);
+    }
+
+    .action-button-primary:hover {
+      background-color: var(--brand-secondary);
+    }
+
+    .action-button-secondary {
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-primary);
+    }
+
+    .action-button-secondary:hover {
+      background-color: var(--bg-tertiary);
+    }
+
+    .stats-overview {
+      background-color: var(--bg-secondary);
+      border-radius: 1rem;
+      border: 1px solid var(--border-primary);
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .stats-grid {
+        grid-template-columns: repeat(4, 1fr);
+      }
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      background-color: var(--bg-tertiary);
+      transition: all 0.15s;
+    }
+
+    .stat-item:hover {
+      background-color: color-mix(in srgb, var(--brand-primary) 5%, var(--bg-tertiary));
+      border: 1px solid color-mix(in srgb, var(--brand-primary) 20%, transparent);
+    }
+
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+      color: var(--brand-primary);
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .main-content {
+      flex: 1;
+      max-width: 80rem;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .content-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+
+    @media (min-width: 1024px) {
+      .content-grid {
+        grid-template-columns: 2fr 1fr;
+      }
+    }
+
+    .detail-section {
+      background-color: var(--bg-secondary);
+      border-radius: 1rem;
+      border: 1px solid var(--border-primary);
+      box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+      overflow: hidden;
+    }
+
+    .section-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border-primary);
+      background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+    }
+
+    .section-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--brand-text);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-content {
+      padding: 1.5rem;
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border-primary);
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-button {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: none;
+      background: none;
+      color: var(--text-secondary);
+      font-weight: 500;
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+      cursor: pointer;
+    }
+
+    .tab-button.active {
+      color: var(--brand-primary);
+      border-bottom-color: var(--brand-primary);
+    }
+
+    .tab-button:hover:not(.active) {
+      color: var(--text-primary);
+      background-color: var(--bg-tertiary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (min-width: 768px) {
+      .field-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .field-label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .field-value {
+      font-size: 0.975rem;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .field-value.highlight {
+      color: var(--brand-primary);
+      font-weight: 600;
+    }
+
+    .notes-section {
+      background-color: var(--bg-tertiary);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .notes-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+
+    .notes-content {
+      color: var(--text-primary);
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .loading-content {
+      text-align: center;
+    }
+
+    .loading-spinner {
+      width: 3rem;
+      height: 3rem;
+      border: 2px solid var(--border-primary);
+      border-top-color: var(--brand-primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    .error-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .error-content {
+      text-align: center;
+      max-width: 24rem;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .error-icon {
+      width: 4rem;
+      height: 4rem;
+      color: var(--error-color);
+      margin: 0 auto 1rem;
+    }
+
+    .error-title {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .error-message {
+      color: var(--text-secondary);
+      margin-bottom: 1rem;
+    }
+
+    .retry-button {
+      background-color: var(--brand-primary);
+      color: var(--brand-text);
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      border: none;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+
+    .retry-button:hover {
+      background-color: var(--brand-secondary);
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(1rem);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    /* 响应式优化 */
+    @media (max-width: 768px) {
+      .header-content {
+        padding: 0.75rem 1rem;
+      }
+      
+      .page-title {
+        font-size: 1rem;
+      }
+      
+      .main-content {
+        padding: 1rem;
+        gap: 1rem;
+      }
+      
+      .section-content {
+        padding: 1rem;
+      }
+      
+      .stats-grid {
+        gap: 0.75rem;
+      }
+      
+      .stat-item {
+        padding: 0.5rem;
+      }
+      
+      .stat-value {
+        font-size: 1.25rem;
+      }
+    }
+  </style>
+</head>
+<body class="antialiased">
+  <!-- 无障碍跳转链接 -->
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-[var(--bg-secondary)] focus:px-3 focus:py-1.5 focus:rounded-md focus:shadow">跳到主要内容</a>
+
+  <div class="detail-container">
+    <!-- 顶部导航栏 -->
+    <header class="detail-header" role="banner">
+      <div class="header-content">
+        <div class="header-info">
+          <a href="care-service.html" class="back-button" title="返回列表" aria-label="返回关怀服务列表">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5">
+              <path fill-rule="evenodd" d="M9.53 5.47a.75.75 0 010 1.06L4.81 11.25H21a.75.75 0 010 1.5H4.81l4.72 4.72a.75.75 0 11-1.06 1.06l-6-6a.75.75 0 010-1.06l6-6a.75.75 0 011.06 0z" clip-rule="evenodd"/>
+            </svg>
+          </a>
+          <div>
+            <h1 id="pageTitle" class="page-title">关怀服务详情</h1>
+            <p class="page-subtitle">详细信息和统计数据</p>
+            <!-- 面包屑导航（严格对照首页样式） -->
+            <nav aria-label="面包屑导航" class="hidden lg:flex mt-2">
+              <ol class="flex items-center space-x-2 text-sm">
+                <li>
+                  <a href="index.html" class="text-teal-600 hover:text-teal-700 font-medium transition-colors">主页</a>
+                </li>
+                <li class="text-gray-400" aria-hidden="true">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                </li>
+                <li>
+                  <a href="care-service.html" class="text-teal-600 hover:text-teal-700 font-medium transition-colors">关怀服务列表</a>
+                </li>
+                <li class="text-gray-400" aria-hidden="true">
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                  </svg>
+                </li>
+                <li id="breadcrumbCurrent" class="text-gray-600 font-medium">服务详情</li>
+              </ol>
+            </nav>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <button class="action-button action-button-secondary" onclick="handleEdit()" title="编辑服务信息">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+            </svg>
+            编辑
+          </button>
+          <button class="action-button action-button-secondary" onclick="handleExport()" title="导出数据">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7,10 12,15 17,10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            导出
+          </button>
+          <button class="action-button action-button-primary" onclick="handlePrint()" title="打印详情">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6,9 6,2 18,2 18,9"/>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+              <rect width="12" height="8" x="6" y="14"/>
+            </svg>
+            打印
+          </button>
+        </div>
+      </div>
+
+    </header>
+
+    <!-- 主要内容区域 -->
+    <main id="main" class="main-content" role="main">
+      <!-- 快速统计卡片 -->
+      <section class="stats-overview">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div id="totalBeneficiaries" class="stat-value">-</div>
+            <div class="stat-label">受益人数</div>
+          </div>
+          <div class="stat-item">
+            <div id="totalVolunteers" class="stat-value">-</div>
+            <div class="stat-label">志愿者人数</div>
+          </div>
+          <div class="stat-item">
+            <div id="totalHours" class="stat-value">-</div>
+            <div class="stat-label">服务时长 (小时)</div>
+          </div>
+          <div class="stat-item">
+            <div id="benefitTimes" class="stat-value">-</div>
+            <div class="stat-label">受益次数</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 内容网格布局 -->
+      <div class="content-grid">
+        <!-- 详细信息卡片 -->
+        <section class="detail-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              详细信息
+            </h2>
+          </div>
+          <div class="section-content">
+            <!-- 标签页导航 -->
+            <div class="tabs">
+              <button class="tab-button active" onclick="switchTab('basic')" data-tab="basic">基本信息</button>
+              <button class="tab-button" onclick="switchTab('volunteer')" data-tab="volunteer">志愿者信息</button>
+              <button class="tab-button" onclick="switchTab('beneficiary')" data-tab="beneficiary">受益人信息</button>
+            </div>
+
+            <!-- 基本信息标签页 -->
+            <div id="basicTab" class="tab-content active">
+              <div class="field-grid">
+                <div class="field-group">
+                  <div class="field-label">活动名称</div>
+                  <div id="activityName" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">服务中心</div>
+                  <div id="serviceCenter" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">项目领域</div>
+                  <div id="projectDomain" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">活动类型</div>
+                  <div id="activityType" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">活动日期</div>
+                  <div id="activityDate" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">报告日期</div>
+                  <div id="reportDate" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">受益群体</div>
+                  <div id="beneficiaryGroup" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">报告人</div>
+                  <div id="reporter" class="field-value">-</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 志愿者信息标签页 -->
+            <div id="volunteerTab" class="tab-content">
+              <div class="field-grid">
+                <div class="field-group">
+                  <div class="field-label">儿童志愿者</div>
+                  <div class="field-value"><span id="volunteerChildCount">-</span> 人 / <span id="volunteerChildHours">-</span> 小时</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">家长志愿者</div>
+                  <div class="field-value"><span id="volunteerParentCount">-</span> 人 / <span id="volunteerParentHours">-</span> 小时</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">学生志愿者</div>
+                  <div class="field-value"><span id="volunteerStudentCount">-</span> 人 / <span id="volunteerStudentHours">-</span> 小时</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">教师志愿者</div>
+                  <div class="field-value"><span id="volunteerTeacherCount">-</span> 人 / <span id="volunteerTeacherHours">-</span> 小时</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">社会志愿者</div>
+                  <div class="field-value"><span id="volunteerSocialCount">-</span> 人 / <span id="volunteerSocialHours">-</span> 小时</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">志愿者总计</div>
+                  <div class="field-value highlight"><span id="volunteerTotalCount">-</span> 人 / <span id="volunteerTotalHours">-</span> 小时</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 受益人信息标签页 -->
+            <div id="beneficiaryTab" class="tab-content">
+              <div class="field-grid">
+                <div class="field-group">
+                  <div class="field-label">成人男性</div>
+                  <div id="adultMale" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">成人女性</div>
+                  <div id="adultFemale" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">儿童男性</div>
+                  <div id="childMale" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">儿童女性</div>
+                  <div id="childFemale" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">成人小计</div>
+                  <div id="adultTotal" class="field-value highlight">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">儿童小计</div>
+                  <div id="childTotal" class="field-value highlight">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">成人受益次数</div>
+                  <div id="benefitAdultTimes" class="field-value">-</div>
+                </div>
+                <div class="field-group">
+                  <div class="field-label">儿童受益次数</div>
+                  <div id="benefitChildTimes" class="field-value">-</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 备注信息卡片 -->
+        <aside class="detail-section">
+          <div class="section-header">
+            <h2 class="section-title">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+              活动备注
+            </h2>
+          </div>
+          <div class="section-content">
+            <div id="activityNotes" class="notes-content">
+              暂无备注信息
+            </div>
+          </div>
+        </aside>
+      </div>
+    </main>
+  </div>
+
+  <!-- 加载状态 -->
+  <div id="loadingState" class="loading-overlay">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p class="text-[var(--text-secondary)]">加载中...</p>
+    </div>
+  </div>
+
+  <!-- 错误状态 -->
+  <div id="errorState" class="error-overlay">
+    <div class="error-content">
+      <svg class="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z"/>
+      </svg>
+      <h3 class="error-title">数据加载失败</h3>
+      <p class="error-message">无法加载关怀服务详情信息</p>
+      <button id="retryBtn" class="retry-button">重试</button>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script src="js/care-service-detail.js"></script>
+</body>
+</html>
