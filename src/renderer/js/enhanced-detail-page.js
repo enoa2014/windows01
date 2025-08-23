@@ -291,23 +291,24 @@ class EnhancedDetailPage {
     }
 
     processPatientData(rawData) {
+        // 根据Console数据结构，使用英文字段名
         return {
             basic: {
-                name: rawData.姓名,
-                gender: rawData.性别,
-                age: rawData.年龄,
-                birthDate: rawData.出生日期,
-                idNumber: rawData.身份证号,
-                phone: rawData.联系电话,
-                address: rawData.家庭住址,
-                status: rawData.入住状态
+                name: rawData.name || rawData.姓名,
+                gender: rawData.gender || rawData.性别,
+                age: this.calculateAge(rawData.birth_date) || rawData.年龄,
+                birthDate: rawData.birth_date || rawData.出生日期,
+                idNumber: rawData.id_card || rawData.身份证号,
+                phone: rawData.phone || rawData.联系电话,
+                address: rawData.hometown || rawData.家庭住址,
+                status: rawData.status || '在住'
             },
             medical: {
-                primaryDiagnosis: rawData.主要诊断,
-                hospital: rawData.入住医院,
-                department: rawData.入住科室,
-                doctor: rawData.主治医生,
-                admissionDate: rawData.入住日期,
+                primaryDiagnosis: rawData.diagnosis || rawData.主要诊断,
+                hospital: rawData.hospital || rawData.入住医院,
+                department: rawData.department || rawData.入住科室,
+                doctor: rawData.doctor_name || rawData.主治医生,
+                admissionDate: rawData.latest_check_in || rawData.入住日期,
                 expectedDischarge: rawData.预计出院日期,
                 severity: rawData.病情等级,
                 allergies: rawData.过敏史
@@ -320,6 +321,31 @@ class EnhancedDetailPage {
                 familyHistory: rawData.家族病史
             }
         };
+    }
+    
+    calculateAge(birthDate) {
+        if (!birthDate) return null;
+        try {
+            // 处理 2013.7.1 格式
+            let date = birthDate;
+            if (birthDate.includes('.')) {
+                const parts = birthDate.split('.');
+                if (parts.length === 3) {
+                    date = `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+                }
+            }
+            const birth = new Date(date);
+            const today = new Date();
+            let age = today.getFullYear() - birth.getFullYear();
+            const monthDiff = today.getMonth() - birth.getMonth();
+            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+                age--;
+            }
+            return age;
+        } catch (error) {
+            console.error('Age calculation error:', error);
+            return null;
+        }
     }
 
     updatePageContent() {

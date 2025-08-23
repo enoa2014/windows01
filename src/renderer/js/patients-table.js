@@ -17,11 +17,11 @@
     const card = document.createElement('article');
     // 使用 patient-card 基类以兼容样式切换
     card.className = 'patient-card p-4 hover:shadow-md transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400';
-    // 获取患者ID - 兼容两种字段名 (person_id 或 id)
-    const patientId = row.person_id != null ? row.person_id : row.id;
-    if (patientId != null) {
-      card.dataset.personId = patientId;
-      card.dataset.id = patientId; // 兼容旧逻辑
+    // 获取患者ID - 兼容多种字段名
+    const patientId = row.person_id || row.id || row.personId;
+    if (patientId != null && patientId !== undefined) {
+      card.dataset.personId = String(patientId);
+      card.dataset.id = String(patientId);
       card.setAttribute('data-person-id', String(patientId));
       card.setAttribute('data-id', String(patientId));
     }
@@ -52,49 +52,25 @@
     }
     // 点击/键盘进入详情
     const openDetail = () => {
-      console.log('🔍 [Patient Card] openDetail 函数被调用');
-      console.log('📊 [Patient Card] 卡片数据:', {
-        personId: card.dataset.personId,
-        id: card.dataset.id,
-        patientId: row.person_id || row.id
-      });
-      
       const id = Number(card.dataset.personId);
-      console.log('🔢 [Patient Card] 转换后的ID:', id, '是否有限数字:', Number.isFinite(id));
       
       if (!Number.isFinite(id)) {
-        console.error('❌ [Patient Card] ID无效，无法导航');
         return;
       }
       
-      console.log('🌐 [Patient Card] 检查window.app对象:', {
-        exists: !!window.app,
-        type: typeof window.app,
-        hasNavigateFunction: window.app && typeof window.app.navigateToPatientDetail === 'function'
-      });
-      
       if (window.app && typeof window.app.navigateToPatientDetail === 'function') {
-        console.log('✅ [Patient Card] 调用navigateToPatientDetail，ID:', id);
         try {
           window.app.navigateToPatientDetail(id);
-          console.log('✅ [Patient Card] navigateToPatientDetail调用成功');
         } catch (error) {
-          console.error('❌ [Patient Card] navigateToPatientDetail调用失败:', error);
+          console.error('Navigation failed:', error);
         }
       } else {
-        console.log('⏳ [Patient Card] app对象未就绪，使用兜底机制');
         // 兜底：延迟等待 app 初始化
         setTimeout(() => {
-          console.log('🔄 [Patient Card] 兜底机制：重试调用navigateToPatientDetail');
-          console.log('🌐 [Patient Card] 重试时window.app状态:', {
-            exists: !!window.app,
-            hasFunction: window.app?.navigateToPatientDetail
-          });
           try {
             window.app?.navigateToPatientDetail?.(id);
-            console.log('✅ [Patient Card] 兜底调用成功');
           } catch (error) {
-            console.error('❌ [Patient Card] 兜底调用失败:', error);
+            console.error('Fallback navigation failed:', error);
           }
         }, 100);
       }
@@ -242,33 +218,25 @@
 
     // 兜底：容器委托点击，确保可进入详情
     container.addEventListener('click', (e) => {
-      console.log('🎯 [Container Delegate] 容器点击事件被触发');
       const card = e.target.closest('article.patient-card');
-      if (!card) {
-        console.log('📋 [Container Delegate] 未找到患者卡片元素');
-        return;
-      }
-      console.log('📊 [Container Delegate] 找到卡片，数据:', {
-        personId: card.dataset.personId,
-        id: card.dataset.id
-      });
+      if (!card) return;
       
-      const id = Number(card.dataset.personId);
-      if (!Number.isFinite(id)) {
-        console.error('❌ [Container Delegate] ID无效:', card.dataset.personId);
-        return;
-      }
+      // 尝试多种方式获取ID
+      const id = card.dataset.personId || card.dataset.id || 
+                 card.getAttribute('data-person-id') || 
+                 card.getAttribute('data-id');
+                 
+      if (!id || id === 'undefined' || id === 'null') return;
       
-      console.log('🔄 [Container Delegate] 尝试调用navigateToPatientDetail，ID:', id);
+      const numericId = Number(id);
+      if (!Number.isFinite(numericId)) return;
+      
       try {
         if (window.app?.navigateToPatientDetail) {
-          window.app.navigateToPatientDetail(id);
-          console.log('✅ [Container Delegate] 调用成功');
-        } else {
-          console.error('❌ [Container Delegate] navigateToPatientDetail函数不存在');
+          window.app.navigateToPatientDetail(numericId);
         }
       } catch (err) {
-        console.error('❌ [Container Delegate] 调用失败:', err);
+        console.error('Container delegate navigation failed:', err);
       }
     });
 
