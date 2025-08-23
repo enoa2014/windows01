@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles/medical-design-system.css">
+  <link rel="stylesheet" href="styles/medical-design-system.css">
   <link rel="stylesheet" href="./styles/icon-system.css">
   <link rel="stylesheet" href="./styles/modern-cards.css">
   <link rel="stylesheet" href="./styles/enhanced-search-filter.css">
@@ -23,102 +23,6 @@
   <link rel="stylesheet" href="./styles/responsive.css">
   <link rel="stylesheet" href="./css/statistics.css">
   <style>
-    /* ===================== 主题系统（CSS 变量） ===================== */
-    :root {
-      /* 背景色阶 */
-      --bg-primary: #f8fafc;    /* 主背景 - 轻柔灰白 */
-      --bg-secondary: #ffffff;   /* 卡片背景 - 纯白 */
-      --bg-tertiary: #f1f5f9;   /* 悬停背景 - 浅灰 */
-      --bg-overlay: rgba(0, 0, 0, 0.05); /* 遮罩背景 */
-      
-      /* 文字色阶 */
-      --text-primary: #334155;   /* 主要文字 - 深灰蓝 */
-      --text-secondary: #64748b; /* 次要文字 - 中灰蓝 */
-      --text-muted: #94a3b8;     /* 辅助文字 - 浅灰蓝 */
-      --text-inverse: #ffffff;   /* 反色文字 - 白色 */
-      
-      /* 边框色阶 */
-      --border-primary: #e2e8f0; /* 主要边框 - 浅灰 */
-      --border-secondary: #f1f5f9; /* 次要边框 - 极浅灰 */
-      --border-focus: #1E88E5;   /* 聚焦边框 - 医疗蓝 */
-      
-      /* 品牌色阶 - 医疗专业蓝绿色系 */
-      --brand-primary: #1E88E5;   /* 主品牌色 - 医疗蓝 */
-      --brand-secondary: #26A69A; /* 次品牌色 - 医疗绿 */
-      --brand-text: #ffffff;      /* 品牌文字 - 白色 */
-      --brand-light: #38bdf8;     /* 浅品牌色 */
-      --brand-lighter: #7dd3fc;   /* 更浅品牌色 */
-      
-      /* 标签系统 */
-      --brand-tag-bg: #e0f2fe;    /* 标签背景 - 极浅医疗蓝 */
-      --brand-tag-text: #075985;  /* 标签文字 - 深医疗蓝 */
-      
-      /* 交互色彩 */
-      --ring-color: #38bdf8;      /* 聚焦环 - 亮医疗蓝 */
-      --selection-bg: #bae6fd;    /* 选中背景 - 浅医疗蓝 */
-      
-      /* 状态颜色 */
-      --success: #10b981;         /* 成功 - 绿色 */
-      --warning: #f59e0b;         /* 警告 - 橙色 */
-      --error: #ef4444;           /* 错误 - 红色 */
-      --info: #3b82f6;            /* 信息 - 蓝色 */
-      
-      /* 状态背景 */
-      --success-bg: #ecfdf5;      /* 成功背景 */
-      --warning-bg: #fffbeb;      /* 警告背景 */
-      --error-bg: #fef2f2;        /* 错误背景 */
-      --info-bg: #eff6ff;         /* 信息背景 */
-      
-      /* 阴影系统 */
-      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.05);
-      --shadow-base: 0 4px 12px rgba(0, 0, 0, 0.1);
-      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.15);
-      --shadow-brand: 0 4px 12px rgba(13, 148, 136, 0.25);
-      
-      /* 间距系统 */
-      --spacing-xs: 0.25rem;      /* 4px */
-      --spacing-sm: 0.5rem;       /* 8px */
-      --spacing-base: 1rem;       /* 16px */
-      --spacing-lg: 1.5rem;       /* 24px */
-      --spacing-xl: 2rem;         /* 32px */
-      
-      /* 圆角系统 */
-      --radius-sm: 0.375rem;      /* 6px */
-      --radius-base: 0.75rem;     /* 12px */
-      --radius-lg: 1rem;          /* 16px */
-      --radius-xl: 1.5rem;        /* 24px */
-    }
-    [data-theme="cardiology"] {
-      --brand-primary: #dc2626; --brand-secondary: #991b1b; --brand-text: #ffffff;
-      --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
-      --brand-tag-bg: #fef2f2; --brand-tag-text: #7f1d1d; --ring-color: #f87171;
-    }
-    [data-theme="pediatric"] {
-      --brand-primary: #06b6d4; --brand-secondary: #0891b2; --brand-text: #ffffff;
-      --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
-      --brand-tag-bg: #cffafe; --brand-tag-text: #164e63; --ring-color: #67e8f9;
-    }
-    [data-theme="rehabilitation"] {
-      --brand-primary: #16a34a; --brand-secondary: #15803d; --brand-text: #ffffff;
-      --text-primary: #334155; --bg-primary: #f8fafc; --bg-secondary: #ffffff;
-      --brand-tag-bg: #dcfce7; --brand-tag-text: #14532d; --ring-color: #4ade80;
-    }
-
-    /* ===================== 基础样式 ===================== */
-    body { 
-      font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif; 
-      background-color: var(--bg-primary); 
-      color: var(--text-primary);
-      line-height: 1.5;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    
-    ::selection { 
-      background-color: var(--selection-bg); 
-      color: var(--text-primary);
-    }
-    
     /* 页面切换 */
     .page { 
       display: none; 

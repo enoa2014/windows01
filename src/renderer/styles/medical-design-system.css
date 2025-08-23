@@ -144,6 +144,20 @@
   --border-secondary: var(--neutral-100); /* 次要边框 - 极浅灰 */
   --border-focus: var(--brand-primary);  /* 聚焦边框 - 品牌色 */
 
+  /* 品牌扩展与交互色彩 */
+  --brand-light: var(--medical-primary-400);
+  --brand-lighter: var(--medical-primary-300);
+  --brand-tag-bg: var(--medical-primary-100);
+  --brand-tag-text: var(--medical-primary-800);
+  --ring-color: var(--brand-light);
+  --selection-bg: var(--medical-primary-200);
+
+  /* 状态背景色 */
+  --success-bg: var(--medical-success-100);
+  --warning-bg: var(--medical-warning-100);
+  --error-bg: var(--medical-error-100);
+  --info-bg: var(--medical-info-100);
+
   /* ==================== 阴影系统 ==================== */
   
   /* 更现代的阴影系统 */
@@ -190,6 +204,13 @@
   --spacing-16: 4rem;       /* 64px */
   --spacing-20: 5rem;       /* 80px */
   --spacing-24: 6rem;       /* 96px */
+
+  /* 间距别名，兼容旧版变量命名 */
+  --spacing-xs: var(--spacing-1);
+  --spacing-sm: var(--spacing-2);
+  --spacing-base: var(--spacing-4);
+  --spacing-lg: var(--spacing-6);
+  --spacing-xl: var(--spacing-8);
 
   /* ==================== 字体系统 ==================== */
   
@@ -265,6 +286,9 @@
   --brand-primary: #dc2626;  /* 心脏红 */
   --brand-secondary: #991b1b;
   --medical-primary-500: #dc2626;
+  --brand-tag-bg: #fef2f2;
+  --brand-tag-text: #7f1d1d;
+  --ring-color: #f87171;
 }
 
 /* 儿科主题 */
@@ -273,6 +297,9 @@
   --brand-secondary: #0891b2;
   --medical-primary-500: #06b6d4;
   --medical-accent-500: #f97316; /* 活泼橙色 */
+  --brand-tag-bg: #cffafe;
+  --brand-tag-text: #164e63;
+  --ring-color: #67e8f9;
 }
 
 /* 康复科主题 */
@@ -280,6 +307,24 @@
   --brand-primary: #16a34a;  /* 康复绿 */
   --brand-secondary: #15803d;
   --medical-primary-500: #16a34a;
+  --brand-tag-bg: #dcfce7;
+  --brand-tag-text: #14532d;
+  --ring-color: #4ade80;
+}
+
+/* 基础样式 */
+body {
+  font-family: var(--font-family-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+::selection {
+  background-color: var(--selection-bg);
+  color: var(--text-primary);
 }
 
 /* ==================== 现代化组件样式 ==================== */
