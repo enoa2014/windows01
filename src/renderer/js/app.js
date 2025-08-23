@@ -1058,6 +1058,15 @@ class PatientApp {
         }
     }
 
+    // 新增：导航到关怀服务页面
+    async navigateToCareService() {
+        try {
+            window.location.href = './care-service.html';
+        } catch (error) {
+            console.error('导航到关怀服务页面失败:', error);
+        }
+    }
+
     // 导航到家庭服务统计页面
     async navigateToFamilyServiceStatistics() {
         try {
