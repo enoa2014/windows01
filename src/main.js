@@ -3,6 +3,7 @@ const path = require('path');
 const DatabaseManager = require('./database/DatabaseManager');
 const ExcelImporter = require('./services/ExcelImporter');
 const FamilyServiceManager = require('./services/FamilyServiceManager');
+const CareBeneficiaryManager = require('./services/CareBeneficiaryManager');
 
 class App {
     constructor() {
@@ -10,6 +11,7 @@ class App {
         this.dbManager = new DatabaseManager();
         this.excelImporter = new ExcelImporter(this.dbManager);
         this.familyServiceManager = new FamilyServiceManager(this.dbManager);
+        this.careServiceManager = new CareBeneficiaryManager(this.dbManager);
         this.isInitialized = false;
         this.initPromise = null;
     }
@@ -393,6 +395,19 @@ class App {
                 return await this.familyServiceManager.getFilterOptions();
             } catch (error) {
                 console.error('获取家庭服务筛选选项失败:', error);
+                throw error;
+            }
+        });
+
+        // 获取关怀服务记录
+        ipcMain.handle('care-service:get-records', async (event, filters, pagination) => {
+            try {
+                if (!this.isInitialized) {
+                    await this.waitForInitialization();
+                }
+                return await this.careServiceManager.getRecords(filters, pagination);
+            } catch (error) {
+                console.error('获取关怀服务记录失败:', error);
                 throw error;
             }
         });

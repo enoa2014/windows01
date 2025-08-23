@@ -28,6 +28,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
         exportExcel: (filters) => ipcRenderer.invoke('family-service:export-excel', filters),
         getFilterOptions: () => ipcRenderer.invoke('family-service:get-filter-options')
     },
+
+    // 关怀服务数据相关
+    careService: {
+        getRecords: (filters, pagination) => ipcRenderer.invoke('care-service:get-records', filters, pagination)
+    },
     
     // 通用调用方法（为了兼容性）
     invoke: (channel, ...args) => {
@@ -40,7 +45,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
             'family-service:get-record-by-id', 'family-service:create-record',
             'family-service:update-record', 'family-service:delete-record',
             'family-service:batch-delete-records', 'family-service:import-excel',
-            'family-service:export-excel', 'family-service:get-filter-options'
+            'family-service:export-excel', 'family-service:get-filter-options',
+            'care-service:get-records'
         ];
         
         if (allowedChannels.includes(channel)) {

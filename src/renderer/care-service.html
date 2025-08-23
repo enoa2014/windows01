@@ -18,7 +18,22 @@
 <body class="bg-[var(--bg-primary)] text-[var(--text-primary)]">
   <main class="max-w-7xl mx-auto p-6">
     <h1 class="text-2xl font-bold mb-4">关怀服务列表</h1>
-    <p class="text-[var(--text-secondary)]">功能开发中，敬请期待。</p>
+    <div id="loading" class="text-[var(--text-secondary)]">加载中...</div>
+    <table id="careServiceTable" class="min-w-full divide-y divide-gray-200 hidden">
+      <thead class="bg-gray-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">序号</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">年月</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">服务中心</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">活动名称</th>
+          <th class="px-4 py-2 text-right text-sm font-medium text-gray-700">受益人次</th>
+          <th class="px-4 py-2 text-left text-sm font-medium text-gray-700">备注</th>
+        </tr>
+      </thead>
+      <tbody id="careServiceTbody" class="divide-y divide-gray-100"></tbody>
+    </table>
+    <div id="emptyState" class="text-[var(--text-secondary)] hidden">暂无记录</div>
   </main>
+  <script src="js/care-service-table.js"></script>
 </body>
 </html>
