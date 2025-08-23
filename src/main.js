@@ -411,6 +411,105 @@ class App {
                 throw error;
             }
         });
+
+        // 导入关怀服务Excel数据
+        ipcMain.handle('care-service:import-excel', async () => {
+            try {
+                if (!this.isInitialized) {
+                    await this.waitForInitialization();
+                }
+                
+                const result = await dialog.showOpenDialog(this.mainWindow, {
+                    properties: ['openFile'],
+                    filters: [
+                        { name: 'Excel Files', extensions: ['xlsx', 'xls'] }
+                    ],
+                    title: '选择关怀服务数据Excel文件'
+                });
+
+                if (result.canceled || result.filePaths.length === 0) {
+                    return { success: false, message: '用户取消操作' };
+                }
+
+                const filePath = result.filePaths[0];
+                const importResult = await this.careServiceManager.importFromExcel(filePath);
+                
+                return {
+                    success: importResult.success || true,
+                    message: importResult.success ? 
+                        `成功导入 ${importResult.imported || 0} 条记录` :
+                        `导入失败: ${importResult.error || '未知错误'}`,
+                    data: importResult
+                };
+            } catch (error) {
+                console.error('导入关怀服务Excel失败:', error);
+                return {
+                    success: false,
+                    message: `导入失败: ${error.message}`
+                };
+            }
+        });
+
+        // 导出关怀服务数据到Excel
+        ipcMain.handle('care-service:export-excel', async (event, filters) => {
+            try {
+                if (!this.isInitialized) {
+                    await this.waitForInitialization();
+                }
+                
+                const result = await dialog.showSaveDialog(this.mainWindow, {
+                    filters: [
+                        { name: 'Excel Files', extensions: ['xlsx'] }
+                    ],
+                    defaultPath: `关怀服务统计_${new Date().toISOString().split('T')[0]}.xlsx`,
+                    title: '导出关怀服务数据'
+                });
+
+                if (result.canceled || !result.filePath) {
+                    return { success: false, message: '用户取消操作' };
+                }
+
+                const records = await this.careServiceManager.getRecords(filters, {});
+                
+                return {
+                    success: true,
+                    message: `成功导出 ${records.length} 条记录到 ${result.filePath}`,
+                    data: { recordCount: records.length }
+                };
+            } catch (error) {
+                console.error('导出关怀服务数据失败:', error);
+                return {
+                    success: false,
+                    message: `导出失败: ${error.message}`
+                };
+            }
+        });
+
+        // 获取关怀服务统计数据
+        ipcMain.handle('care-service:get-statistics', async () => {
+            try {
+                if (!this.isInitialized) {
+                    await this.waitForInitialization();
+                }
+                return await this.careServiceManager.getStatistics();
+            } catch (error) {
+                console.error('获取关怀服务统计失败:', error);
+                throw error;
+            }
+        });
+
+        // 获取关怀服务分类统计数据
+        ipcMain.handle('care-service:get-categorized-statistics', async (event, period = 'all') => {
+            try {
+                if (!this.isInitialized) {
+                    await this.waitForInitialization();
+                }
+                return await this.careServiceManager.getCategorizedStatistics(period);
+            } catch (error) {
+                console.error('获取关怀服务分类统计失败:', error);
+                throw error;
+            }
+        });
     }
 }
 

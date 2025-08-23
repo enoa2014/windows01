@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关怀服务统计分析 - 患儿入住信息管理系统</title>
+    
+    <!-- Core Styles - 统一设计系统 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles/medical-design-system.css">
+    <link rel="stylesheet" href="styles/icon-system.css">
+    <link rel="stylesheet" href="styles/modern-cards.css">
+    <link rel="stylesheet" href="styles/enhanced-search-filter.css">
+    <link rel="stylesheet" href="styles/enhanced-upload.css">
+    <link rel="stylesheet" href="styles/responsive-layout.css">
+    <link rel="stylesheet" href="styles/enhanced-design-system.css">
+    <link rel="stylesheet" href="styles/animations.css">
+    <link rel="stylesheet" href="styles/responsive.css">
+    
+    <!-- Accessibility -->
+    <meta name="description" content="关怀服务统计分析页面 - 分类展示主题关怀活动、日常关怀陪伴、协助就医、个案关怀等统计数据">
+    <meta name="theme-color" content="#1E88E5">
+    
+    <style>
+        :root {
+            --medical-primary: #1E88E5;
+            --medical-secondary: #26A69A;
+            --medical-success: #4CAF50;
+            --medical-warning: #FF9800;
+            --medical-error: #F44336;
+            --medical-info: #2196F3;
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #334155;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border-primary: #e2e8f0;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .stats-card {
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, #f8fafc 100%);
+            border: 1px solid var(--border-primary);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .stats-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .category-header {
+            background: linear-gradient(135deg, var(--medical-primary) 0%, var(--medical-secondary) 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 16px 16px 0 0;
+        }
+        
+        .sub-category {
+            border-left: 4px solid var(--medical-primary);
+            background: var(--bg-tertiary);
+            margin: 0.5rem 0;
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--medical-primary);
+        }
+        
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+        
+        .trend-indicator {
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+        }
+        
+        .trend-up {
+            background-color: #ecfdf5;
+            color: #059669;
+        }
+        
+        .trend-down {
+            background-color: #fef2f2;
+            color: #dc2626;
+        }
+        
+        .period-selector {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-primary);
+            border-radius: 8px;
+            padding: 0.5rem;
+            display: inline-flex;
+            gap: 0.25rem;
+        }
+        
+        .period-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: transparent;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        
+        .period-btn.active {
+            background: var(--medical-primary);
+            color: white;
+        }
+        
+        .period-btn:hover:not(.active) {
+            background: var(--bg-tertiary);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 font-inter">
+    <!-- Navigation Header (与主页一致：sticky + 半透明 + 模糊) -->
+    <nav class="sticky top-0 z-30 backdrop-blur-md bg-white/80 border-b border-gray-200/50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <a href="care-service.html" class="flex items-center gap-2 text-slate-600 hover:text-medical-primary transition-colors duration-200">
+                        <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M19 12H5M12 19l-7-7 7-7"/>
+                        </svg>
+                        <span class="font-medium">返回关怀服务</span>
+                    </a>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <div class="period-selector">
+                        <button class="period-btn active" data-period="all">全部</button>
+                        <button class="period-btn" data-period="year">本年</button>
+                        <button class="period-btn" data-period="quarter">本季度</button>
+                        <button class="period-btn" data-period="month">本月</button>
+                    </div>
+                    
+                    <button id="exportBtn" class="btn-secondary" title="导出统计报告">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7,10 12,15 17,10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                        导出报告
+                    </button>
+                    
+                    <button id="refreshBtn" class="btn-primary" title="刷新数据">
+                        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 2v6h-6"/>
+                            <path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+                            <path d="M3 22v-6h6"/>
+                            <path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+                        </svg>
+                        刷新
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 面包屑导航 -->
+        <div class="border-t">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+                <nav aria-label="面包屑导航" class="hidden lg:flex">
+                    <ol class="flex items-center space-x-2 text-sm">
+                        <li>
+                            <a href="index.html" class="text-teal-600 hover:text-teal-700 font-medium transition-colors">主页</a>
+                        </li>
+                        <li class="text-gray-400" aria-hidden="true">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </li>
+                        <li>
+                            <a href="care-service.html" class="text-teal-600 hover:text-teal-700 font-medium transition-colors">关怀服务</a>
+                        </li>
+                        <li class="text-gray-400" aria-hidden="true">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </li>
+                        <li class="text-gray-600 font-medium truncate max-w-[50vw]">统计分析</li>
+                    </ol>
+                </nav>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="care-statistics-container">
+        <!-- Page Header -->
+        <header class="bg-white shadow-sm border-b mb-8">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+                    <div>
+                        <h1 class="text-3xl font-bold text-slate-900 mb-2">关怀服务统计分析</h1>
+                        <p class="text-slate-600">全面分析关怀服务数据，按类别展示统计指标</p>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <div class="text-sm text-slate-500">统计周期</div>
+                            <div id="currentPeriod" class="font-semibold text-slate-900">全部数据</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-sm text-slate-500">最后更新</div>
+                            <div id="lastUpdate" class="font-semibold text-slate-900">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+            <!-- Loading State -->
+            <div id="loadingState" class="flex items-center justify-center py-12">
+                <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-medical-primary"></div>
+                <span class="ml-3 text-slate-600">加载统计数据中...</span>
+            </div>
+
+            <!-- Statistics Content -->
+            <div id="statisticsContent" class="hidden">
+                <!-- Overview Stats -->
+                <section class="mb-8">
+                    <h2 class="text-xl font-semibold text-slate-900 mb-4">总体统计概览</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="stats-card p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="metric-value" id="totalActivities">0</div>
+                                    <div class="metric-label">总活动数</div>
+                                </div>
+                                <div class="p-3 bg-blue-100 rounded-full">
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-card p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="metric-value" id="totalBeneficiaries">0</div>
+                                    <div class="metric-label">总受益人次</div>
+                                </div>
+                                <div class="p-3 bg-green-100 rounded-full">
+                                    <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-card p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="metric-value" id="totalVolunteers">0</div>
+                                    <div class="metric-label">总志愿者人次</div>
+                                </div>
+                                <div class="p-3 bg-purple-100 rounded-full">
+                                    <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m0 0V9a3 3 0 013-3m-3 12a3 3 0 01-3-3"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="stats-card p-6">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="metric-value" id="totalHours">0</div>
+                                    <div class="metric-label">总服务时长(小时)</div>
+                                </div>
+                                <div class="p-3 bg-orange-100 rounded-full">
+                                    <svg class="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 四大类统计 -->
+                <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                    <!-- 1. 主题关怀活动 -->
+                    <div class="stats-card">
+                        <div class="category-header">
+                            <h3 class="text-xl font-semibold flex items-center gap-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                主题关怀活动
+                            </h3>
+                            <p class="text-sm text-white/80 mt-1">专门策划的主题性关怀活动统计</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-3 gap-4 mb-4">
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="themeActivities">0</div>
+                                    <div class="metric-label">活动数量</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="themeBeneficiaries">0</div>
+                                    <div class="metric-label">受益人次</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="themeVolunteers">0</div>
+                                    <div class="metric-label">志愿者人次</div>
+                                </div>
+                            </div>
+                            <div id="themeActivitiesList" class="space-y-2">
+                                <!-- 活动列表将通过 JavaScript 填充 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 2. 日常关怀陪伴 -->
+                    <div class="stats-card">
+                        <div class="category-header" style="background: linear-gradient(135deg, var(--medical-secondary) 0%, var(--medical-success) 100%);">
+                            <h3 class="text-xl font-semibold flex items-center gap-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path>
+                                </svg>
+                                日常关怀陪伴
+                            </h3>
+                            <p class="text-sm text-white/80 mt-1">日常陪伴和关怀服务统计</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-3 gap-4 mb-4">
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="dailyCareActivities">0</div>
+                                    <div class="metric-label">服务次数</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="dailyCareBeneficiaries">0</div>
+                                    <div class="metric-label">受益人次</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="dailyCareHours">0</div>
+                                    <div class="metric-label">服务时长</div>
+                                </div>
+                            </div>
+                            <div id="dailyCareList" class="space-y-2">
+                                <!-- 服务列表将通过 JavaScript 填充 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 3. 协助就医 -->
+                    <div class="stats-card">
+                        <div class="category-header" style="background: linear-gradient(135deg, var(--medical-info) 0%, var(--medical-primary) 100%);">
+                            <h3 class="text-xl font-semibold flex items-center gap-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                                </svg>
+                                协助就医
+                            </h3>
+                            <p class="text-sm text-white/80 mt-1">医疗协助和就医服务统计</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-3 gap-4 mb-4">
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="medicalAssistActivities">0</div>
+                                    <div class="metric-label">协助次数</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="medicalAssistBeneficiaries">0</div>
+                                    <div class="metric-label">受益人次</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="medicalAssistVolunteers">0</div>
+                                    <div class="metric-label">志愿者人次</div>
+                                </div>
+                            </div>
+                            <div id="medicalAssistList" class="space-y-2">
+                                <!-- 协助列表将通过 JavaScript 填充 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 4. 个案关怀 -->
+                    <div class="stats-card">
+                        <div class="category-header" style="background: linear-gradient(135deg, var(--medical-warning) 0%, var(--medical-error) 100%);">
+                            <h3 class="text-xl font-semibold flex items-center gap-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                </svg>
+                                个案关怀
+                            </h3>
+                            <p class="text-sm text-white/80 mt-1">针对特殊情况的个案关怀统计</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-3 gap-4 mb-4">
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="individualCareActivities">0</div>
+                                    <div class="metric-label">个案数量</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="individualCareBeneficiaries">0</div>
+                                    <div class="metric-label">受益人次</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="metric-value text-lg" id="individualCareHours">0</div>
+                                    <div class="metric-label">关怀时长</div>
+                                </div>
+                            </div>
+                            <div id="individualCareList" class="space-y-2">
+                                <!-- 个案列表将通过 JavaScript 填充 -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Charts Section -->
+                <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- 活动类型分布图 -->
+                    <div class="stats-card p-6">
+                        <h3 class="text-lg font-semibold text-slate-900 mb-4">活动类型分布</h3>
+                        <div class="chart-container">
+                            <canvas id="activityTypeChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 月度趋势图 -->
+                    <div class="stats-card p-6">
+                        <h3 class="text-lg font-semibold text-slate-900 mb-4">月度服务趋势</h3>
+                        <div class="chart-container">
+                            <canvas id="monthlyTrendChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 受益人群分布 -->
+                    <div class="stats-card p-6">
+                        <h3 class="text-lg font-semibold text-slate-900 mb-4">受益人群分布</h3>
+                        <div class="chart-container">
+                            <canvas id="beneficiaryChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 志愿者服务分布 -->
+                    <div class="stats-card p-6">
+                        <h3 class="text-lg font-semibold text-slate-900 mb-4">志愿者服务分布</h3>
+                        <div class="chart-container">
+                            <canvas id="volunteerChart"></canvas>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="hidden text-center py-12">
+                <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <h3 class="text-lg font-medium text-red-600 mb-2">加载失败</h3>
+                <p class="text-slate-500 mb-4">无法加载统计数据</p>
+                <button id="retryBtn" class="btn-primary">重试</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- Core JavaScript -->
+    <script src="js/icon-library.js"></script>
+    <script src="js/responsive-layout.js"></script>
+    <script src="js/care-service-statistics.js"></script>
+</body>
+</html>

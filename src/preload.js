@@ -31,7 +31,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
     // 关怀服务数据相关
     careService: {
-        getRecords: (filters, pagination) => ipcRenderer.invoke('care-service:get-records', filters, pagination)
+        getRecords: (filters, pagination) => ipcRenderer.invoke('care-service:get-records', filters, pagination),
+        importExcel: () => ipcRenderer.invoke('care-service:import-excel'),
+        exportExcel: (filters) => ipcRenderer.invoke('care-service:export-excel', filters),
+        getStatistics: () => ipcRenderer.invoke('care-service:get-statistics'),
+        getCategorizedStatistics: (period) => ipcRenderer.invoke('care-service:get-categorized-statistics', period)
     },
     
     // 通用调用方法（为了兼容性）
