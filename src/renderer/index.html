@@ -580,8 +580,8 @@
           </div>
           
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- 关怀服务管理 -->
-            <div class="card group cursor-pointer opacity-75" onclick="app.showComingSoon('关怀服务管理')">
+            <!-- 关怀服务列表 -->
+            <div class="card group cursor-pointer" onclick="app.navigateToCareService()">
               <div class="p-6 border-b border-[var(--border-primary)]">
                 <div class="flex items-center gap-4">
                   <div class="w-12 h-12 bg-[var(--success-bg)] rounded-xl flex items-center justify-center">
@@ -590,7 +590,7 @@
                     </svg>
                   </div>
                   <div>
-                    <h4 class="text-lg font-semibold text-[var(--text-primary)]">关怀服务管理</h4>
+                    <h4 class="text-lg font-semibold text-[var(--text-primary)]">关怀服务列表</h4>
                     <p class="text-[var(--text-secondary)] text-sm">服务记录 · 关怀统计</p>
                   </div>
                 </div>
@@ -598,8 +598,10 @@
               <div class="p-6">
                 <p class="text-[var(--text-secondary)] mb-4">记录和管理患儿关怀服务、心理支持和家庭援助</p>
                 <div class="flex items-center justify-between">
-                  <span class="text-sm text-[var(--success)] font-medium">即将推出</span>
-                  <span class="px-2 py-1 bg-[var(--success-bg)] text-[var(--success)] text-xs rounded-full">开发中</span>
+                  <span class="text-sm text-[var(--brand-primary)] font-medium">立即访问</span>
+                  <svg class="w-4 h-4 text-[var(--brand-primary)] transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                  </svg>
                 </div>
               </div>
             </div>
