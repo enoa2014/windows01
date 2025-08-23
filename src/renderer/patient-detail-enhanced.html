@@ -15,6 +15,19 @@
     <!-- Accessibility -->
     <meta name="description" content="患者详细信息管理页面">
     <meta name="theme-color" content="#1E88E5">
+    <style>
+      /* 使头部与主页一致：固定 + 半透明 + 模糊 + 细边框阴影 */
+      .detail-header {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid rgba(226, 232, 240, 0.7); /* gray-200/70 */
+        box-shadow: 0 1px 2px rgba(0,0,0,.05);
+      }
+    </style>
 </head>
 <body>
     <!-- Main Container -->
@@ -23,15 +36,37 @@
         <header class="detail-header">
             <div class="detail-header-content">
                 <div class="detail-header-info">
-                    <a href="index.html" class="back-button">
+                    <a id="backLink" href="index.html" class="back-button">
                         <svg class="icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M19 12H5M12 19l-7-7 7-7"/>
                         </svg>
-                        返回列表
+                        <span id="backLinkLabel">返回列表</span>
                     </a>
                     <div>
                         <h1 class="patient-title">加载中...</h1>
                         <p class="patient-subtitle">患者详细信息</p>
+                        <!-- 面包屑导航（严格对照首页样式） -->
+                        <nav aria-label="面包屑导航" class="hidden lg:flex mt-2">
+                          <ol class="flex items-center space-x-2 text-sm">
+                            <li>
+                              <a href="index.html" class="text-teal-600 hover:text-teal-700 font-medium transition-colors">主页</a>
+                            </li>
+                            <li class="text-gray-400" aria-hidden="true">
+                              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                              </svg>
+                            </li>
+                            <li>
+                              <a href="index.html" class="text-teal-600 hover:text-teal-700 font-medium transition-colors">患者列表</a>
+                            </li>
+                            <li class="text-gray-400" aria-hidden="true">
+                              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                              </svg>
+                            </li>
+                            <li class="text-gray-600 font-medium" id="patientNameBreadcrumb">患者详情</li>
+                          </ol>
+                        </nav>
                     </div>
                 </div>
                 
@@ -496,5 +531,29 @@
             font-style: italic;
         }
     </style>
+    
+<!-- Back-link routing logic for returning to statistics age group -->
+<script>
+  (function() {
+    try {
+      const params = new URLSearchParams(window.location.search || '');
+      const from = params.get('from');
+      const ageRange = params.get('ageRange');
+      const backLink = document.getElementById('backLink');
+      const backLabel = document.getElementById('backLinkLabel');
+
+      if (from === 'stats-age') {
+        const target = 'index.html?view=statistics' + (ageRange ? ('&ageRange=' + encodeURIComponent(ageRange)) : '');
+        if (backLink) backLink.href = target;
+        if (backLabel) backLabel.textContent = '返回统计分析';
+      } else {
+        if (backLink) backLink.href = 'index.html';
+        if (backLabel) backLabel.textContent = '返回列表';
+      }
+    } catch (e) {
+      console.warn('Back-link init failed:', e);
+    }
+  })();
+</script>
 </body>
 </html>

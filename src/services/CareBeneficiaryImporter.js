@@ -26,6 +26,25 @@ class CareBeneficiaryImporter {
         return isNaN(timestamp) ? null : new Date(timestamp);
     }
 
+    // 验证记录是否有效（非空且有意义）
+    isValidRecord(record) {
+        // 跳过汇总行
+        if (record.sequenceNumber === '总合计') {
+            return false;
+        }
+        
+        // 必须有以下条件之一才算有效记录：
+        // 1. 有活动名称或服务中心
+        // 2. 有受益人数据
+        // 3. 有志愿者服务数据
+        const hasActivityInfo = record.activityName || record.serviceCenter;
+        const hasBeneficiaryData = record.totalBeneficiaries > 0 || 
+                                   (record.adultMale + record.adultFemale + record.childMale + record.childFemale) > 0;
+        const hasVolunteerData = record.volunteerTotalCount > 0 || record.volunteerTotalHours > 0;
+        
+        return hasActivityInfo || hasBeneficiaryData || hasVolunteerData;
+    }
+
     async importFromExcel(filePath) {
         const workbook = XLSX.readFile(filePath);
         const worksheet = workbook.Sheets[this.sheetName];
@@ -40,6 +59,11 @@ class CareBeneficiaryImporter {
         }
 
         let imported = 0;
+        let skipped = 0;
+        const errors = [];
+        
+        console.log(`📊 开始处理 ${raw.length - 4} 行数据...`);
+        
         for (let i = 4; i < raw.length; i++) {
             const row = raw[i] || [];
             if (row.every(cell => cell === null || cell === undefined || cell === '')) {
@@ -82,6 +106,13 @@ class CareBeneficiaryImporter {
                 benefitTotalTimes: this.parseNumber(row[32]),
                 notes: (row[33] || '').toString().trim()
             };
+
+            // 验证记录有效性，跳过无效记录
+            if (!this.isValidRecord(record)) {
+                skipped++;
+                console.log(`⏭️ 跳过无效记录 ${i}: ${record.sequenceNumber || '空序号'} - 无活动信息且无服务数据`);
+                continue;
+            }
 
             const cols = [
                 'sequence_number','year','month','service_center','project_domain','activity_type','activity_date','activity_name','beneficiary_group','reporter','report_date','adult_male','adult_female','adult_total','child_male','child_female','child_total','total_beneficiaries','volunteer_child_count','volunteer_child_hours','volunteer_parent_count','volunteer_parent_hours','volunteer_student_count','volunteer_student_hours','volunteer_teacher_count','volunteer_teacher_hours','volunteer_social_count','volunteer_social_hours','volunteer_total_count','volunteer_total_hours','benefit_adult_times','benefit_child_times','benefit_total_times','notes'];

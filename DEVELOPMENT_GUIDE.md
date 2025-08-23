@@ -442,3 +442,48 @@ npm run build-win
 
 **最后更新**: 2025-08-23
 **维护者**: 开发团队
+
+---
+
+## 🧭 架构与数据流（精要）
+
+- 主进程（`src/main.js`）
+  - 初始化数据库（读取 `database-schema.sql` 创建表/索引，启用外键）
+  - 注册 IPC：患者、统计、年龄段、家庭服务（列表/统计/导入导出）
+- 预加载（`src/preload.js`）
+  - 通过 `contextBridge` 暴露安全 API 到 `window.electronAPI`
+- 渲染层（`src/renderer/*`）
+  - 纯前端 HTML/CSS/JS，调用 `window.electronAPI` 获取数据，Tailwind + Chart.js 绘图
+- 服务层（`src/services/*`）
+  - Excel 导入导出、家庭服务统计、数据校验
+- 数据层（`src/database/DatabaseManager.js`）
+  - 统一 `run/get/all` 封装、聚合统计、去重插入
+
+数据流：Renderer → Preload(window.electronAPI) → Main(IPC handler) → DatabaseManager(SQLite)
+
+## 🗃️ 核心表（节选）
+
+- `persons`：人员去重主表（name、id_card）
+- `patient_profiles`：患者档案（gender、birth_date、hometown、ethnicity）
+- `check_in_records`：入住记录（check_in_date、attendees、details、treatment_plan）
+- `medical_info`：医疗信息（hospital、diagnosis、doctor_name、record_date）
+- `family_info`：家庭信息（父母与经济情况）
+- `family_service_records`：家庭/关怀服务月度聚合（families、services、days 等指标）
+
+表定义详见 `database-schema.sql` 与 `docs/DATABASE_SCHEMA.md`。
+
+## 🔌 IPC 通道速查
+
+- 患者/统计：
+  - `get-patients`，`get-patient-detail`，`get-statistics`，`get-extended-statistics`，`get-age-group-patients`
+  - `import-excel`
+- 家庭服务：
+  - `family-service:get-records`，`family-service:get-overview-stats`
+  - `family-service:get-statistics`，`family-service:get-stats-by-date-range`
+  - `family-service:get-record-by-id`，`family-service:create/update/delete/batch-delete`
+
+## 📥 Excel 导入（要点）
+
+- `ExcelImporter.js`：表头诊断（`utils/ExcelDiagnostics`）→ 列映射 → 记录解析 → 调用 `DatabaseManager.insertPatientRecord`
+- 优先级避免误匹配（如“母亲姓名”不会映射为患者姓名）
+- 日期格式兼容：`YYYY.M.D`、`YYYY-M-D`、`YYYY年M月D日`

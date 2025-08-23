@@ -28,8 +28,8 @@
     <meta name="theme-color" content="#1E88E5">
 </head>
 <body class="bg-slate-50">
-    <!-- Navigation Header -->
-    <nav class="bg-white shadow-sm border-b">
+    <!-- Navigation Header (与主页一致：sticky + 半透明 + 模糊) -->
+    <nav class="sticky top-0 z-30 backdrop-blur-md bg-white/80 border-b border-gray-200/50 shadow-sm">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
@@ -61,28 +61,28 @@
             </div>
         </div>
 
-        <!-- Breadcrumbs: align with other pages -->
+        <!-- 面包屑导航（严格对照首页样式） -->
         <div class="border-t">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
-                <nav aria-label="面包屑导航">
-                    <ol class="flex items-center text-sm text-slate-500">
+                <nav aria-label="面包屑导航" class="hidden lg:flex">
+                    <ol class="flex items-center space-x-2 text-sm">
                         <li>
-                            <a href="index.html" class="text-teal-600 hover:text-teal-700 font-medium">主页</a>
+                            <a href="index.html" class="text-teal-600 hover:text-teal-700 font-medium transition-colors">主页</a>
                         </li>
-                        <li class="mx-2 text-slate-400" aria-hidden="true">
+                        <li class="text-gray-400" aria-hidden="true">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
                             </svg>
                         </li>
                         <li>
-                            <a id="breadcrumbSecond" href="index.html" class="hover:text-slate-700">患者列表</a>
+                            <a id="breadcrumbSecond" href="index.html" class="text-teal-600 hover:text-teal-700 font-medium transition-colors">患者列表</a>
                         </li>
-                        <li class="mx-2 text-slate-400" aria-hidden="true">
+                        <li class="text-gray-400" aria-hidden="true">
                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                                 <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
                             </svg>
                         </li>
-                        <li id="breadcrumbCurrent" class="text-slate-700 font-medium truncate max-w-[50vw]">患者详情</li>
+                        <li id="breadcrumbCurrent" class="text-gray-600 font-medium truncate max-w-[50vw]">患者详情</li>
                     </ol>
                 </nav>
             </div>

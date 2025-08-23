@@ -15,7 +15,13 @@
       "Bash(git commit:*)",
       "Bash(cp:*)",
       "Bash(git pull:*)",
-      "Bash(git remote set-url:*)"
+      "Bash(git remote set-url:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run:*)",
+      "Bash(sqlite3:*)",
+      "Bash(npm --version)",
+      "Bash(where sqlite3)",
+      "Bash(choco:*)"
     ],
     "deny": [],
     "ask": [],

@@ -126,9 +126,83 @@
 3. 按优先级顺序匹配字段模式
 4. 创建列索引到字段名的映射表
 5. 根据映射表解析每行数据
-
+ 
 ### 数据处理流程
 1. Excel文件读取 → 原始数据数组
 2. 表头分析 → 字段映射表
 3. 数据行解析 → 结构化记录
 4. 数据库写入 → 自动去重和关联
+
+---
+
+## 关怀服务（受益人）导入
+
+该模块将“关怀/志愿活动”的受益人与志愿服务数据导入到表 `care_beneficiary_records`，供关怀服务列表、详情与统计使用。
+
+### 工作表与起始行
+- 默认工作表：`Sheet1`
+- 行约定：前 4 行可用于标题/说明，数据从第 5 行开始读取（即 Excel 第 5 行）。
+- 汇总行：若“序号”列为“总合计”，该行会被忽略。
+
+### 数据有效性（导入判定）
+满足任一条件即视为有效记录，才会写入数据库：
+- 有活动信息（活动名称或服务中心）
+- 有受益人数据（成人/儿童人数之和 > 0）
+- 有志愿者数据（志愿者人次或服务时长 > 0）
+
+### 字段与建议表头
+下表给出字段含义与建议的表头。若表头不同也可导入（按列位置读取），建议尽量遵循命名，便于后续维护。
+
+- 基础信息
+  - 序号：`sequence_number`
+  - 年份：`year`
+  - 月份：`month`
+  - 服务中心：`service_center`
+  - 项目领域：`project_domain`（如“主题活动/医疗协助/日常陪伴/个案关怀”）
+  - 活动类型：`activity_type`
+  - 活动日期：`activity_date`（支持 Excel 序列号与标准日期字符串，入库格式为 `YYYY-MM-DD`）
+  - 活动名称：`activity_name`
+  - 受益群体：`beneficiary_group`
+  - 报告人：`reporter`
+  - 报告日期：`report_date`（入库格式 `YYYY-MM-DD`）
+
+- 受益人数据
+  - 成人男：`adult_male`
+  - 成人女：`adult_female`
+  - 成人合计：`adult_total`
+  - 儿童男：`child_male`
+  - 儿童女：`child_female`
+  - 儿童合计：`child_total`
+  - 受益人次合计：`total_beneficiaries`
+
+- 志愿服务数据（人次/小时）
+  - 儿童志愿者：`volunteer_child_count` / `volunteer_child_hours`
+  - 家长志愿者：`volunteer_parent_count` / `volunteer_parent_hours`
+  - 学生志愿者：`volunteer_student_count` / `volunteer_student_hours`
+  - 教师志愿者：`volunteer_teacher_count` / `volunteer_teacher_hours`
+  - 社会志愿者：`volunteer_social_count` / `volunteer_social_hours`
+  - 志愿者总计：`volunteer_total_count` / `volunteer_total_hours`
+
+- 受益次数（去重口径可按业务定义）
+  - 成人：`benefit_adult_times`
+  - 儿童：`benefit_child_times`
+  - 合计：`benefit_total_times`
+
+- 备注
+  - `notes`
+
+### 数值与日期解析规则
+- 空值、空字符串 → 记为 0（数值字段）或 NULL（日期）
+- 数值：按 `parseFloat` 解析；无法解析记为 0
+- 日期：支持 Excel 序列号与常见日期字符串；入库格式统一为 `YYYY-MM-DD`
+
+### 示例表头（推荐）
+```
+序号 | 年 | 月 | 服务中心 | 项目领域 | 活动类型 | 活动日期 | 活动名称 | 受益群体 | 报告人 | 报告日期 | 成人男 | 成人女 | 成人合计 | 儿童男 | 儿童女 | 儿童合计 | 受益人次 | 儿童志愿者(人次) | 儿童志愿者(小时) | 家长志愿者(人次) | 家长志愿者(小时) | 学生志愿者(人次) | 学生志愿者(小时) | 教师志愿者(人次) | 教师志愿者(小时) | 社会志愿者(人次) | 社会志愿者(小时) | 志愿者总计(人次) | 志愿者总计(小时) | 受益次数(成人) | 受益次数(儿童) | 受益次数(合计) | 备注
+```
+
+### 入库表
+- `care_beneficiary_records`（详见 `docs/DATABASE.md`）
+
+### 导入入口
+- 在“关怀服务列表”页面点击“导入Excel”，由前端调用 `electronAPI.careService.importExcel()` 触发。

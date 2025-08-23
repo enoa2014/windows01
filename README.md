@@ -98,9 +98,9 @@ app02/
 │           ├── animations.css             # 动画系统
 │           └── responsive.css             # 响应式设计
 ├── docs/                      # 项目文档
-│   ├── ui-optimization-implementation.md  # UI优化实施文档
+│   ├── README.md                         # 文档索引（推荐入口）
 │   └── view-mode-api.md                  # 视图模式API文档
-├── ui_optimization_plan.md    # UI优化方案
+├── UI_OPTIMIZATION_WORKFLOW.md # UI优化工作流
 ├── database-schema.sql        # 数据库架构
 ├── package.json              # 项目配置
 └── README.md                 # 项目说明

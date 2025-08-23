@@ -4,6 +4,15 @@
 
 本系统使用SQLite数据库存储患儿入住信息，采用规范化设计确保数据一致性和查询性能。
 
+## 数据库配置
+
+- 引擎与驱动：SQLite3（sqlite3@^5.1.6）
+- 字符编码：UTF-8（随 SQLite）
+- 外键约束：启用（PRAGMA foreign_keys = ON）
+- 存储位置：
+  - 开发：`./data/patients.db`
+  - 生产：`%USERPROFILE%\\AppData\\Roaming\\patient-checkin-manager\\patients.db`
+
 ## 数据库位置
 
 - **开发环境**: `./data/patients.db`
@@ -122,6 +131,30 @@ CREATE TABLE family_info (
 );
 ```
 
+### 6. family_service_records（家庭/关怀服务月度聚合）
+
+按月记录家庭服务指标，用于列表与统计分析。
+
+```sql
+CREATE TABLE IF NOT EXISTS family_service_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sequence_number TEXT,
+    year_month TEXT NOT NULL,             -- 年月（建议存储为YYYY-MM-01）
+    family_count INTEGER DEFAULT 0,
+    residents_count INTEGER DEFAULT 0,
+    residence_days INTEGER DEFAULT 0,
+    accommodation_count INTEGER DEFAULT 0,
+    care_service_count INTEGER DEFAULT 0,
+    volunteer_service_count INTEGER DEFAULT 0,
+    total_service_count INTEGER DEFAULT 0,
+    notes TEXT,
+    cumulative_residence_days INTEGER DEFAULT 0,
+    cumulative_service_count INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+```
+
 ## 索引优化
 
 ### 查询性能索引
@@ -130,6 +163,59 @@ CREATE INDEX idx_persons_name ON persons(name);
 CREATE INDEX idx_persons_id_card ON persons(id_card);
 CREATE INDEX idx_check_in_person_date ON check_in_records(person_id, check_in_date);
 CREATE INDEX idx_medical_person_date ON medical_info(person_id, record_date);
+-- 家庭服务索引
+CREATE INDEX IF NOT EXISTS idx_fsr_year_month ON family_service_records(year_month);
+CREATE INDEX IF NOT EXISTS idx_fsr_year ON family_service_records(strftime('%Y', year_month));
+```
+
+### 7. care_beneficiary_records（关怀服务受益记录）
+
+记录关怀/志愿等活动的受益人与志愿服务统计，供关怀服务列表与详情、统计使用。
+
+```sql
+CREATE TABLE IF NOT EXISTS care_beneficiary_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sequence_number TEXT,
+    year INTEGER,
+    month INTEGER,
+    service_center TEXT,
+    project_domain TEXT,
+    activity_type TEXT,
+    activity_date TEXT,
+    activity_name TEXT,
+    beneficiary_group TEXT,
+    reporter TEXT,
+    report_date TEXT,
+    adult_male INTEGER DEFAULT 0,
+    adult_female INTEGER DEFAULT 0,
+    adult_total INTEGER DEFAULT 0,
+    child_male INTEGER DEFAULT 0,
+    child_female INTEGER DEFAULT 0,
+    child_total INTEGER DEFAULT 0,
+    total_beneficiaries INTEGER DEFAULT 0,
+    volunteer_child_count INTEGER DEFAULT 0,
+    volunteer_child_hours REAL DEFAULT 0,
+    volunteer_parent_count INTEGER DEFAULT 0,
+    volunteer_parent_hours REAL DEFAULT 0,
+    volunteer_student_count INTEGER DEFAULT 0,
+    volunteer_student_hours REAL DEFAULT 0,
+    volunteer_teacher_count INTEGER DEFAULT 0,
+    volunteer_teacher_hours REAL DEFAULT 0,
+    volunteer_social_count INTEGER DEFAULT 0,
+    volunteer_social_hours REAL DEFAULT 0,
+    volunteer_total_count INTEGER DEFAULT 0,
+    volunteer_total_hours REAL DEFAULT 0,
+    benefit_adult_times INTEGER DEFAULT 0,
+    benefit_child_times INTEGER DEFAULT 0,
+    benefit_total_times INTEGER DEFAULT 0,
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 关怀服务索引
+CREATE INDEX IF NOT EXISTS idx_cbr_year_month ON care_beneficiary_records(year, month);
+CREATE INDEX IF NOT EXISTS idx_cbr_service_center ON care_beneficiary_records(service_center);
 ```
 
 ### 唯一性约束

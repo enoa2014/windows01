@@ -379,8 +379,8 @@
   <!-- 无障碍跳转链接 -->
   <a href="#main" class="no-print sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:bg-[var(--bg-secondary)] focus:px-3 focus:py-1.5 focus:rounded-md focus:shadow">跳到主要内容</a>
 
-  <!-- 顶部导航栏 -->
-  <header class="sticky top-0 z-30 backdrop-blur bg-[var(--bg-secondary)]/75 border-b border-[var(--border-primary)]/70 no-print" role="banner">
+  <!-- 顶部导航栏（与主页一致：半透明 + 固定） -->
+  <header class="sticky top-0 z-30 backdrop-blur-md bg-white/80 border-b border-gray-200/50 shadow-sm no-print" role="banner">
     <div class="max-w-7xl mx-auto px-4 md:px-6 py-2.5 flex items-center gap-3">
       <button id="backBtn" class="inline-flex items-center justify-center size-9 rounded-full hover:bg-[var(--bg-tertiary)] text-[var(--text-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--ring-color)]" title="返回主页" aria-label="返回主页">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="size-5">
@@ -408,6 +408,23 @@
           <div id="themeMenu" class="absolute right-0 top-full mt-2 w-44 rounded-xl border border-[var(--border-primary)] bg-[var(--bg-secondary)] shadow-lg p-2 origin-top-right transition-transform duration-150 ease-out scale-95 opacity-0 pointer-events-none" role="menu" aria-label="主题选择" tabindex="-1"></div>
         </div>
       </div>
+    </div>
+
+    <!-- 面包屑导航（与主页风格一致） -->
+    <div class="hidden lg:flex max-w-7xl mx-auto px-4 md:px-6 py-2">
+      <nav aria-label="面包屑导航">
+        <ol class="flex items-center space-x-2 text-sm">
+          <li>
+            <a href="index.html" class="text-teal-600 hover:text-teal-700 font-medium transition-colors">主页</a>
+          </li>
+          <li class="text-gray-400">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+            </svg>
+          </li>
+          <li class="text-gray-600 font-medium">家庭服务列表</li>
+        </ol>
+      </nav>
     </div>
   </header>
 
