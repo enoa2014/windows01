@@ -2618,8 +2618,9 @@ class PatientApp {
         }
     }
 
-    // 从模态框导航到患者详情页面
-    async navigateToPatientDetail(personId) {
+    // 从任意来源导航到患者详情页面
+    // 可选参数 from：用于在详情页展示来源面包屑（如 'stats-age'）
+    async navigateToPatientDetail(personId, from) {
         console.log('🚀 [navigateToPatientDetail] 函数被调用，患者ID:', personId);
         console.log('📊 [navigateToPatientDetail] 参数类型:', typeof personId, '是否为数字:', !isNaN(personId));
         
@@ -2631,8 +2632,13 @@ class PatientApp {
                 modal.classList.add('hidden');
             }
 
-            // 构建目标URL
-            const targetUrl = `patient-detail-redesigned.html?id=${personId}`;
+            // 依据上下文/参数决定来源标记与携带的返回状态（年龄段）
+            const source = from || (this.modalContext && this.modalContext.type === 'ageGroup' ? 'stats-age' : null);
+            const ageParam = (this.modalContext && this.modalContext.type === 'ageGroup' && this.modalContext.ageRange)
+                ? `&ageRange=${encodeURIComponent(this.modalContext.ageRange)}`
+                : '';
+            const targetUrl = `patient-detail-redesigned.html?id=${personId}` +
+                (source ? `&from=${encodeURIComponent(source)}` : '') + ageParam;
             console.log('🌐 [navigateToPatientDetail] 准备导航到:', targetUrl);
             
             // 检查当前页面状态
@@ -3095,4 +3101,33 @@ class PatientApp {
 document.addEventListener('DOMContentLoaded', () => {
     window.app = new PatientApp();
     window.patientApp = window.app; // 保持向后兼容
+
+    // 处理通过URL参数的深链路跳转（例如从详情页返回统计页并恢复年龄段模态框）
+    try {
+        const params = new URLSearchParams(window.location.search || '');
+        const view = params.get('view');
+        const ageRange = params.get('ageRange');
+
+        if (view === 'statistics') {
+            (async () => {
+                try {
+                    if (!window.app.pageStates.dataLoaded) {
+                        await window.app.loadData();
+                        window.app.pageStates.dataLoaded = true;
+                    }
+                    // 切换到统计页并加载统计
+                    window.app.navigateTo('statistics');
+                    await window.app.loadStatisticsPage();
+                    // 如携带年龄段信息，自动打开对应模态框
+                    if (ageRange) {
+                        window.app.showAgeGroupModal(ageRange);
+                    }
+                } catch (e) {
+                    console.error('深链路到统计页失败:', e);
+                }
+            })();
+        }
+    } catch (e) {
+        console.warn('解析初始URL参数失败:', e);
+    }
 });
