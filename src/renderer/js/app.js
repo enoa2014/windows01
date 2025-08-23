@@ -39,9 +39,7 @@ class PatientApp {
             
             // 导航相关
             pageTitle: document.getElementById('pageTitle'),
-            breadcrumbHome: document.getElementById('breadcrumbHome'),
-            breadcrumbSeparator: document.getElementById('breadcrumbSeparator'),
-            breadcrumbCurrent: document.getElementById('breadcrumbCurrent'),
+            breadcrumbNav: document.getElementById('breadcrumbNav'),
             
             // 主页统计
             homePatientCount: document.getElementById('homePatientCount'),
@@ -82,6 +80,9 @@ class PatientApp {
             appVersion: document.getElementById('appVersion'),
             printTime: document.getElementById('printTime')
         };
+        this.breadcrumb = new Breadcrumb(this.elements.breadcrumbNav, [
+            { text: '主页', onClick: () => this.navigateTo('home') }
+        ]);
 
         this.init();
     }
@@ -1500,36 +1501,20 @@ class PatientApp {
     }
 
     updateBreadcrumb(pageName) {
-        const separator = this.elements.breadcrumbSeparator;
-        const current = this.elements.breadcrumbCurrent;
-        
-        if (pageName === 'home') {
-            separator.classList.add('hidden');
-            current.classList.add('hidden');
-        } else {
-            separator.classList.remove('hidden');
-            current.classList.remove('hidden');
-            
-            switch (pageName) {
-                case 'list':
-                    current.textContent = '患儿列表';
-                    break;
-                case 'detail':
-                    current.textContent = '患儿详情';
-                    break;
-                case 'statistics':
-                    current.textContent = '数据统计分析';
-                    break;
-                case 'familyService':
-                    current.textContent = '家庭服务列表';
-                    break;
-                case 'familyServiceStatistics':
-                    current.textContent = '家庭服务统计';
-                    break;
-                default:
-                    current.textContent = pageName;
-            }
+        if (!this.breadcrumb) return;
+        const items = [{ text: '主页', onClick: () => this.navigateTo('home') }];
+        if (pageName !== 'home') {
+            const labels = {
+                list: '患儿列表',
+                detail: '患儿详情',
+                statistics: '数据统计分析',
+                familyService: '家庭服务列表',
+                familyServiceDetail: '家庭服务详情',
+                familyServiceStatistics: '家庭服务统计'
+            };
+            items.push({ text: labels[pageName] || pageName });
         }
+        this.breadcrumb.setItems(items);
     }
 
     updatePageTitle(pageName) {

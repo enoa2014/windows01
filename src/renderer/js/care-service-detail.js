@@ -15,9 +15,8 @@ class CareServiceDetail {
       errorState: document.getElementById('errorState'),
       retryBtn: document.getElementById('retryBtn'),
       
-      // 页面标题和面包屑
+      // 页面标题
       pageTitle: document.getElementById('pageTitle'),
-      breadcrumbCurrent: document.getElementById('breadcrumbCurrent'),
       
       // 快速统计
       totalBeneficiaries: document.getElementById('totalBeneficiaries'),
@@ -208,7 +207,9 @@ class CareServiceDetail {
     // 更新页面标题和面包屑
     const activityName = record.activity_name || '未命名活动';
     this.elements.pageTitle.textContent = activityName;
-    this.elements.breadcrumbCurrent.textContent = activityName;
+    if (window.breadcrumb) {
+      window.breadcrumb.setCurrent(activityName);
+    }
     
     // 更新页面标题
     document.title = `${activityName} - 关怀服务详情 · 患儿入住信息管理系统`;
@@ -444,6 +445,11 @@ window.handlePrint = function() {
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', () => {
+  window.breadcrumb = new Breadcrumb(document.getElementById('breadcrumbNav'), [
+    { text: '主页', href: 'index.html' },
+    { text: '关怀服务列表', href: 'care-service.html' },
+    { text: '服务详情' }
+  ]);
   window.careServiceDetail = new CareServiceDetail();
 });
 

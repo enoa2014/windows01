@@ -132,42 +132,6 @@
       margin: 0;
     }
 
-    .breadcrumb {
-      display: none;
-      margin-top: 0.5rem;
-    }
-
-    @media (min-width: 1024px) {
-      .breadcrumb {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 0.875rem;
-      }
-    }
-
-    .breadcrumb-item {
-      color: var(--brand-primary);
-      text-decoration: none;
-      font-weight: 500;
-      transition: color 0.15s;
-    }
-
-    .breadcrumb-item:hover {
-      color: var(--brand-secondary);
-    }
-
-    .breadcrumb-separator {
-      color: var(--text-muted);
-      width: 1rem;
-      height: 1rem;
-    }
-
-    .breadcrumb-current {
-      color: var(--text-secondary);
-      font-weight: 500;
-    }
-
     .header-actions {
       display: flex;
       align-items: center;
@@ -540,28 +504,8 @@
           <div>
             <h1 id="pageTitle" class="page-title">关怀服务详情</h1>
             <p class="page-subtitle">详细信息和统计数据</p>
-            <!-- 面包屑导航（严格对照首页样式） -->
-            <nav aria-label="面包屑导航" class="hidden lg:flex mt-2">
-              <ol class="flex items-center space-x-2 text-sm">
-                <li>
-                  <a href="index.html" class="text-teal-600 hover:text-teal-700 font-medium transition-colors">主页</a>
-                </li>
-                <li class="text-gray-400" aria-hidden="true">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                  </svg>
-                </li>
-                <li>
-                  <a href="care-service.html" class="text-teal-600 hover:text-teal-700 font-medium transition-colors">关怀服务列表</a>
-                </li>
-                <li class="text-gray-400" aria-hidden="true">
-                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
-                  </svg>
-                </li>
-                <li id="breadcrumbCurrent" class="text-gray-600 font-medium">服务详情</li>
-              </ol>
-            </nav>
+            <!-- 面包屑导航（公共组件） -->
+            <nav id="breadcrumbNav" aria-label="面包屑导航" class="hidden lg:flex mt-2"></nav>
           </div>
         </div>
 
@@ -787,6 +731,7 @@
   </div>
 
   <!-- JavaScript -->
+  <script src="js/components/breadcrumb.js"></script>
   <script src="js/care-service-detail.js"></script>
 </body>
 </html>
