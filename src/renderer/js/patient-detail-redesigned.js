@@ -168,6 +168,9 @@ class PatientDetailRedesigned {
         const nameEl = document.getElementById('patientName');
         if (nameEl) nameEl.textContent = basic.name || '未知姓名';
 
+        // 更新面包屑（根据来源动态渲染）
+        this.updateBreadcrumbForContext(basic.name);
+
         // 更新患者元数据
         const ageEl = document.getElementById('patientAge');
         const genderEl = document.getElementById('patientGender');
@@ -180,6 +183,53 @@ class PatientDetailRedesigned {
         
         if (genderEl) {
             genderEl.textContent = (basic.gender && basic.gender !== '未填写') ? basic.gender : '未知';
+        }
+    }
+
+    updateBreadcrumbForContext(patientName) {
+        const params = new URLSearchParams(window.location.search);
+        const from = params.get('from');
+
+        // 默认更新当前项
+        const defaultCurrent = document.getElementById('breadcrumbCurrent');
+        if (defaultCurrent) {
+            defaultCurrent.textContent = patientName || '患者详情';
+            defaultCurrent.title = patientName || '';
+        }
+
+        if (from === 'stats-age') {
+            const nav = document.querySelector('nav[aria-label="面包屑导航"]');
+            const ol = nav ? nav.querySelector('ol') : null;
+            if (!ol) return;
+
+            const arrow = `
+                <li class=\"mx-2 text-slate-400\" aria-hidden=\"true\">
+                    <svg class=\"w-4 h-4\" fill=\"currentColor\" viewBox=\"0 0 20 20\">
+                        <path fill-rule=\"evenodd\" d=\"M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z\" clip-rule=\"evenodd\"/>
+                    </svg>
+                </li>`;
+
+            ol.innerHTML = `
+                <li>
+                    <a href=\"index.html\" class=\"text-teal-600 hover:text-teal-700 font-medium\">主页</a>
+                </li>
+                ${arrow}
+                <li>
+                    <a href=\"index.html#stats\" class=\"hover:text-slate-700\">统计分析</a>
+                </li>
+                ${arrow}
+                <li>
+                    <a href=\"index.html#age-stats\" class=\"hover:text-slate-700\">年龄段统计</a>
+                </li>
+                ${arrow}
+                <li id=\"breadcrumbCurrent\" class=\"text-slate-700 font-medium truncate max-w-[50vw]\">${patientName || '患者详情'}</li>
+            `;
+
+            // 更新左上角返回链接与文案
+            const backLink = document.getElementById('backLink');
+            const backLabel = document.getElementById('backLinkLabel');
+            if (backLink) backLink.href = 'index.html#age-stats';
+            if (backLabel) backLabel.textContent = '返回统计分析';
         }
     }
 

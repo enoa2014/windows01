@@ -33,11 +33,11 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <a href="index.html" class="flex items-center gap-2 text-slate-600 hover:text-medical-primary-600 transition-colors duration-200">
+                    <a id="backLink" href="index.html" class="flex items-center gap-2 text-slate-600 hover:text-medical-primary-600 transition-colors duration-200">
                         <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <path d="M19 12H5M12 19l-7-7 7-7"/>
                         </svg>
-                        <span class="font-medium">返回患者列表</span>
+                        <span id="backLinkLabel" class="font-medium">返回患者列表</span>
                     </a>
                 </div>
                 
@@ -58,6 +58,33 @@
                         打印
                     </button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Breadcrumbs: align with other pages -->
+        <div class="border-t">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
+                <nav aria-label="面包屑导航">
+                    <ol class="flex items-center text-sm text-slate-500">
+                        <li>
+                            <a href="index.html" class="text-teal-600 hover:text-teal-700 font-medium">主页</a>
+                        </li>
+                        <li class="mx-2 text-slate-400" aria-hidden="true">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </li>
+                        <li>
+                            <a id="breadcrumbSecond" href="index.html" class="hover:text-slate-700">患者列表</a>
+                        </li>
+                        <li class="mx-2 text-slate-400" aria-hidden="true">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </li>
+                        <li id="breadcrumbCurrent" class="text-slate-700 font-medium truncate max-w-[50vw]">患者详情</li>
+                    </ol>
+                </nav>
             </div>
         </div>
     </nav>
@@ -195,4 +222,36 @@
     <script src="js/responsive-layout.js"></script>
     <script src="js/patient-detail-redesigned.js"></script>
 </body>
+    <script>
+      (function() {
+        try {
+          const params = new URLSearchParams(window.location.search || '');
+          const from = params.get('from');
+          const ageRange = params.get('ageRange');
+          const backLink = document.getElementById('backLink');
+          const backLabel = document.getElementById('backLinkLabel');
+          const breadcrumbSecond = document.getElementById('breadcrumbSecond');
+
+          if (from === 'stats-age') {
+            const target = 'index.html?view=statistics' + (ageRange ? ('&ageRange=' + encodeURIComponent(ageRange)) : '');
+            if (backLink) backLink.href = target;
+            if (backLabel) backLabel.textContent = '返回统计分析';
+            if (breadcrumbSecond) {
+              breadcrumbSecond.href = target;
+              breadcrumbSecond.textContent = '数据统计分析';
+            }
+          } else {
+            // 默认返回列表
+            if (backLink) backLink.href = 'index.html';
+            if (backLabel) backLabel.textContent = '返回患者列表';
+            if (breadcrumbSecond) {
+              breadcrumbSecond.href = 'index.html';
+              breadcrumbSecond.textContent = '患者列表';
+            }
+          }
+        } catch (e) {
+          console.warn('Back-link initialization failed:', e);
+        }
+      })();
+    </script>
 </html>
