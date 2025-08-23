@@ -291,34 +291,46 @@ class EnhancedDetailPage {
     }
 
     processPatientData(rawData) {
-        // 根据Console数据结构，使用英文字段名
+        const profile = rawData.profile || {};
+        const family = rawData.family || {};
+        const medical = Array.isArray(rawData.medicalInfo) && rawData.medicalInfo.length
+            ? rawData.medicalInfo[0]
+            : {};
+        const latestCheckIn = Array.isArray(rawData.checkIns) && rawData.checkIns.length
+            ? rawData.checkIns[0]
+            : {};
+
         return {
             basic: {
-                name: rawData.name || rawData.姓名,
-                gender: rawData.gender || rawData.性别,
-                age: this.calculateAge(rawData.birth_date) || rawData.年龄,
-                birthDate: rawData.birth_date || rawData.出生日期,
-                idNumber: rawData.id_card || rawData.身份证号,
-                phone: rawData.phone || rawData.联系电话,
-                address: rawData.hometown || rawData.家庭住址,
-                status: rawData.status || '在住'
+                name: profile.name || '未填写',
+                gender: profile.gender || '未填写',
+                age: this.calculateAge(profile.birth_date) || '未填写',
+                birthDate: profile.birth_date || '未填写',
+                idNumber: profile.id_card || '未填写',
+                phone: profile.phone || '未填写',
+                address: profile.hometown || '未填写',
+                status: '在住'
             },
             medical: {
-                primaryDiagnosis: rawData.diagnosis || rawData.主要诊断,
-                hospital: rawData.hospital || rawData.入住医院,
-                department: rawData.department || rawData.入住科室,
-                doctor: rawData.doctor_name || rawData.主治医生,
-                admissionDate: rawData.latest_check_in || rawData.入住日期,
-                expectedDischarge: rawData.预计出院日期,
-                severity: rawData.病情等级,
-                allergies: rawData.过敏史
+                primaryDiagnosis: medical.diagnosis || '未填写',
+                hospital: medical.hospital || '未填写',
+                department: medical.department || '未填写',
+                doctor: medical.doctor_name || '未填写',
+                admissionDate: latestCheckIn.check_in_date || '未填写',
+                expectedDischarge: medical.expected_discharge || '未填写',
+                severity: medical.severity || '未评估',
+                allergies: medical.allergies || '无过敏史'
             },
             family: {
-                guardian: rawData.监护人,
-                relationship: rawData.监护关系,
-                guardianPhone: rawData.监护人电话,
-                emergencyContact: rawData.紧急联系人,
-                familyHistory: rawData.家族病史
+                guardian: family.father_name || family.mother_name || family.other_guardian || '未填写',
+                relationship: family.father_name ? '父亲'
+                    : family.mother_name ? '母亲'
+                    : family.other_guardian ? '其他'
+                    : '未知',
+                guardianPhone: family.father_phone || family.mother_phone || '未填写',
+                emergencyContact: family.other_guardian || '未填写',
+                emergencyPhone: family.other_phone || '未填写',
+                address: family.home_address || '未填写'
             }
         };
     }
@@ -358,9 +370,12 @@ class EnhancedDetailPage {
         if (titleElement) {
             titleElement.textContent = this.patientData.basic.name;
         }
-        
+
         if (subtitleElement) {
-            subtitleElement.textContent = `${this.patientData.basic.age}岁 · ${this.patientData.basic.gender} · ${this.patientData.medical.hospital}`;
+            const age = this.patientData.basic.age || '-';
+            const gender = this.patientData.basic.gender || '-';
+            const hospital = this.patientData.medical.hospital || '-';
+            subtitleElement.textContent = `${age}岁 · ${gender} · ${hospital}`;
         }
 
         // Update quick stats
