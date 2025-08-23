@@ -515,16 +515,16 @@ class PatientDetailRedesigned {
         const recordsHTML = this.medicalRecords.map((record, index) => {
             // 创建字段数组，只包含有数据的字段
             const fields = [];
-            
+
             // 入住小家相关信息
-            if (record.check_in_date || record.admission_date) {
+            if (record.check_in_date || record.admission_date || record.record_date || record.recordDate) {
                 fields.push({
-                    label: '入住日期',
-                    content: this.formatDate(record.check_in_date || record.admission_date),
+                    label: '记录日期',
+                    content: this.formatDate(record.check_in_date || record.admission_date || record.record_date || record.recordDate),
                     class: 'text-blue-600 font-medium'
                 });
             }
-            
+
             if (record.check_out_date || record.discharge_date) {
                 fields.push({
                     label: '离开日期',
