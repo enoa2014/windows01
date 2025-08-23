@@ -38,6 +38,8 @@ class DatabaseManager {
 
             // 迁移/补全：确保家庭服务相关表与索引存在
             await this.ensureFamilyServiceSchema();
+            // 迁移/补全：确保关怀服务受益相关表与索引存在
+            await this.ensureCareBeneficiarySchema();
             
             console.log('✅ 数据库初始化完成:', this.dbPath);
         } catch (error) {
@@ -147,6 +149,63 @@ class DatabaseManager {
             await this.run(`CREATE INDEX IF NOT EXISTS idx_fsr_year ON family_service_records(strftime('%Y', year_month))`);
         } catch (error) {
             console.warn('ensureFamilyServiceSchema 警告:', error.message);
+        }
+    }
+
+    async ensureCareBeneficiarySchema() {
+        try {
+            const table = await this.get(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='care_beneficiary_records'"
+            );
+
+            if (!table) {
+                await this.run(`
+                    CREATE TABLE IF NOT EXISTS care_beneficiary_records (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        sequence_number TEXT,
+                        year INTEGER,
+                        month INTEGER,
+                        service_center TEXT,
+                        project_domain TEXT,
+                        activity_type TEXT,
+                        activity_date TEXT,
+                        activity_name TEXT,
+                        beneficiary_group TEXT,
+                        reporter TEXT,
+                        report_date TEXT,
+                        adult_male INTEGER DEFAULT 0,
+                        adult_female INTEGER DEFAULT 0,
+                        adult_total INTEGER DEFAULT 0,
+                        child_male INTEGER DEFAULT 0,
+                        child_female INTEGER DEFAULT 0,
+                        child_total INTEGER DEFAULT 0,
+                        total_beneficiaries INTEGER DEFAULT 0,
+                        volunteer_child_count INTEGER DEFAULT 0,
+                        volunteer_child_hours REAL DEFAULT 0,
+                        volunteer_parent_count INTEGER DEFAULT 0,
+                        volunteer_parent_hours REAL DEFAULT 0,
+                        volunteer_student_count INTEGER DEFAULT 0,
+                        volunteer_student_hours REAL DEFAULT 0,
+                        volunteer_teacher_count INTEGER DEFAULT 0,
+                        volunteer_teacher_hours REAL DEFAULT 0,
+                        volunteer_social_count INTEGER DEFAULT 0,
+                        volunteer_social_hours REAL DEFAULT 0,
+                        volunteer_total_count INTEGER DEFAULT 0,
+                        volunteer_total_hours REAL DEFAULT 0,
+                        benefit_adult_times INTEGER DEFAULT 0,
+                        benefit_child_times INTEGER DEFAULT 0,
+                        benefit_total_times INTEGER DEFAULT 0,
+                        notes TEXT,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                `);
+            }
+
+            await this.run(`CREATE INDEX IF NOT EXISTS idx_cbr_year_month ON care_beneficiary_records(year, month)`);
+            await this.run(`CREATE INDEX IF NOT EXISTS idx_cbr_service_center ON care_beneficiary_records(service_center)`);
+        } catch (error) {
+            console.warn('ensureCareBeneficiarySchema 警告:', error.message);
         }
     }
 
