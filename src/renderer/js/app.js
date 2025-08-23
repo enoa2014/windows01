@@ -2620,17 +2620,36 @@ class PatientApp {
 
     // 从模态框导航到患者详情页面
     async navigateToPatientDetail(personId) {
+        console.log('🚀 [navigateToPatientDetail] 函数被调用，患者ID:', personId);
+        console.log('📊 [navigateToPatientDetail] 参数类型:', typeof personId, '是否为数字:', !isNaN(personId));
+        
         try {
             // 关闭年龄段模态框
             const modal = document.getElementById('ageDetailModal');
             if (modal) {
+                console.log('🔒 [navigateToPatientDetail] 关闭年龄段模态框');
                 modal.classList.add('hidden');
             }
 
+            // 构建目标URL
+            const targetUrl = `patient-detail-enhanced.html?id=${personId}`;
+            console.log('🌐 [navigateToPatientDetail] 准备导航到:', targetUrl);
+            
+            // 检查当前页面状态
+            console.log('📍 [navigateToPatientDetail] 当前页面:', window.location.href);
+            
             // 导航到新详情页面
-            window.location.href = `patient-detail-enhanced.html?id=${personId}`;
+            console.log('🔄 [navigateToPatientDetail] 开始页面重定向...');
+            window.location.href = targetUrl;
+            console.log('✅ [navigateToPatientDetail] 重定向命令已发送');
+            
         } catch (error) {
-            console.error('导航到患者详情失败:', error);
+            console.error('❌ [navigateToPatientDetail] 导航失败:', error);
+            console.error('📊 [navigateToPatientDetail] 错误详情:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
             this.showError('无法打开患者详情页面');
         }
     }

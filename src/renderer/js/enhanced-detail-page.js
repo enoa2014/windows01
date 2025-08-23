@@ -247,27 +247,44 @@ class EnhancedDetailPage {
 
     loadPatientData() {
         // Get patient ID from URL or passed parameter
+        console.log('🔗 [Detail Page] 当前页面URL:', window.location.href);
+        console.log('🔗 [Detail Page] URL搜索参数:', window.location.search);
+        
         const urlParams = new URLSearchParams(window.location.search);
         const patientId = urlParams.get('id');
         
+        console.log('🆔 [Detail Page] 解析出的患者ID:', patientId);
+        console.log('🆔 [Detail Page] ID类型:', typeof patientId);
+        
         if (!patientId) {
-            console.error('No patient ID provided');
+            console.error('❌ [Detail Page] 未提供患者ID参数');
+            this.showError('未找到患者ID参数');
             return;
         }
 
         // Load patient data (this would typically be an API call)
-        if (window.electronAPI && window.electronAPI.getPatientDetails) {
-            window.electronAPI.getPatientDetails(patientId)
+        console.log('🔍 [Detail Page] 开始加载患者数据，ID:', patientId);
+        console.log('🌐 [Detail Page] 检查electronAPI:', {
+            exists: !!window.electronAPI,
+            hasGetPatientDetail: !!window.electronAPI?.getPatientDetail,
+            hasGetPatientDetails: !!window.electronAPI?.getPatientDetails
+        });
+        
+        if (window.electronAPI && window.electronAPI.getPatientDetail) {
+            console.log('✅ [Detail Page] 使用electronAPI.getPatientDetail加载数据');
+            window.electronAPI.getPatientDetail(patientId)
                 .then(data => {
+                    console.log('✅ [Detail Page] 患者数据加载成功:', data);
                     this.patientData = this.processPatientData(data);
                     this.updatePageContent();
                     this.loadTimelineData(patientId);
                 })
                 .catch(err => {
-                    console.error('Failed to load patient data:', err);
+                    console.error('❌ [Detail Page] 加载患者数据失败:', err);
                     this.showError('加载患者信息失败');
                 });
         } else {
+            console.log('⚠️ [Detail Page] electronAPI不可用，使用模拟数据');
             // Fallback for development/testing
             this.loadMockData(patientId);
         }

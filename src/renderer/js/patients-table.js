@@ -52,13 +52,51 @@
     }
     // 点击/键盘进入详情
     const openDetail = () => {
+      console.log('🔍 [Patient Card] openDetail 函数被调用');
+      console.log('📊 [Patient Card] 卡片数据:', {
+        personId: card.dataset.personId,
+        id: card.dataset.id,
+        patientId: row.person_id || row.id
+      });
+      
       const id = Number(card.dataset.personId);
-      if (!Number.isFinite(id)) return;
+      console.log('🔢 [Patient Card] 转换后的ID:', id, '是否有限数字:', Number.isFinite(id));
+      
+      if (!Number.isFinite(id)) {
+        console.error('❌ [Patient Card] ID无效，无法导航');
+        return;
+      }
+      
+      console.log('🌐 [Patient Card] 检查window.app对象:', {
+        exists: !!window.app,
+        type: typeof window.app,
+        hasNavigateFunction: window.app && typeof window.app.navigateToPatientDetail === 'function'
+      });
+      
       if (window.app && typeof window.app.navigateToPatientDetail === 'function') {
-        window.app.navigateToPatientDetail(id);
+        console.log('✅ [Patient Card] 调用navigateToPatientDetail，ID:', id);
+        try {
+          window.app.navigateToPatientDetail(id);
+          console.log('✅ [Patient Card] navigateToPatientDetail调用成功');
+        } catch (error) {
+          console.error('❌ [Patient Card] navigateToPatientDetail调用失败:', error);
+        }
       } else {
+        console.log('⏳ [Patient Card] app对象未就绪，使用兜底机制');
         // 兜底：延迟等待 app 初始化
-        setTimeout(() => window.app?.navigateToPatientDetail?.(id), 0);
+        setTimeout(() => {
+          console.log('🔄 [Patient Card] 兜底机制：重试调用navigateToPatientDetail');
+          console.log('🌐 [Patient Card] 重试时window.app状态:', {
+            exists: !!window.app,
+            hasFunction: window.app?.navigateToPatientDetail
+          });
+          try {
+            window.app?.navigateToPatientDetail?.(id);
+            console.log('✅ [Patient Card] 兜底调用成功');
+          } catch (error) {
+            console.error('❌ [Patient Card] 兜底调用失败:', error);
+          }
+        }, 100);
       }
     };
     // 捕获卡片内部的链接点击，避免 href="#" 导致页面滚动到顶部
@@ -204,14 +242,33 @@
 
     // 兜底：容器委托点击，确保可进入详情
     container.addEventListener('click', (e) => {
+      console.log('🎯 [Container Delegate] 容器点击事件被触发');
       const card = e.target.closest('article.patient-card');
-      if (!card) return;
+      if (!card) {
+        console.log('📋 [Container Delegate] 未找到患者卡片元素');
+        return;
+      }
+      console.log('📊 [Container Delegate] 找到卡片，数据:', {
+        personId: card.dataset.personId,
+        id: card.dataset.id
+      });
+      
       const id = Number(card.dataset.personId);
-      if (!Number.isFinite(id)) return;
+      if (!Number.isFinite(id)) {
+        console.error('❌ [Container Delegate] ID无效:', card.dataset.personId);
+        return;
+      }
+      
+      console.log('🔄 [Container Delegate] 尝试调用navigateToPatientDetail，ID:', id);
       try {
-        window.app?.navigateToPatientDetail?.(id);
+        if (window.app?.navigateToPatientDetail) {
+          window.app.navigateToPatientDetail(id);
+          console.log('✅ [Container Delegate] 调用成功');
+        } else {
+          console.error('❌ [Container Delegate] navigateToPatientDetail函数不存在');
+        }
       } catch (err) {
-        // 忽略
+        console.error('❌ [Container Delegate] 调用失败:', err);
       }
     });
 
