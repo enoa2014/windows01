@@ -733,3 +733,30 @@
     transition: none !important;
   }
 }
+
+/* 入住历史列表样式 */
+.admission-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.admission-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.admission-dates {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.admission-hospital {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}

@@ -192,6 +192,70 @@ class EnhancedDetailPage {
         `;
     }
 
+    renderAdmissionHistory(container) {
+        if (!this.patientData) return;
+
+        const admissions = this.patientData.admissions || [];
+        const titleEl = container.querySelector('.info-section-title');
+        const body = container.querySelector('.info-section-body');
+        if (titleEl) {
+            titleEl.textContent = `入住历史记录 (${admissions.length}次)`;
+        }
+        if (!body) return;
+
+        if (!admissions.length) {
+            body.innerHTML = `<div class="info-message">暂无入住记录</div>`;
+            return;
+        }
+
+        body.innerHTML = `
+            <div class="admission-list">
+                ${admissions.map(item => `
+                    <div class="admission-item">
+                        <div class="admission-dates">
+                            ${item.checkInDate}${item.checkOutDate ? ` - ${item.checkOutDate}` : ''}
+                        </div>
+                        <div class="admission-hospital">${item.hospital || ''}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    renderFamilyInfo(container) {
+        if (!this.patientData) return;
+
+        const { family } = this.patientData;
+        container.querySelector('.info-section-body').innerHTML = `
+            <div class="info-grid">
+                <div class="info-field">
+                    <div class="info-field-label">监护人</div>
+                    <div class="info-field-value">${family.guardian || '未填写'}</div>
+                </div>
+                <div class="info-field">
+                    <div class="info-field-label">关系</div>
+                    <div class="info-field-value">${family.relationship || '未填写'}</div>
+                </div>
+                <div class="info-field">
+                    <div class="info-field-label">联系电话</div>
+                    <div class="info-field-value">${family.guardianPhone || '未填写'}</div>
+                </div>
+                <div class="info-field">
+                    <div class="info-field-label">紧急联系人</div>
+                    <div class="info-field-value">${family.emergencyContact || '未填写'}</div>
+                </div>
+                <div class="info-field">
+                    <div class="info-field-label">紧急联系电话</div>
+                    <div class="info-field-value">${family.emergencyPhone || '未填写'}</div>
+                </div>
+                <div class="info-field">
+                    <div class="info-field-label">家庭住址</div>
+                    <div class="info-field-value">${family.address || '未填写'}</div>
+                </div>
+            </div>
+        `;
+    }
+
     renderTimeline() {
         const timelineContainer = document.querySelector('.timeline');
         if (!timelineContainer || !this.timelineData.length) return;
@@ -296,9 +360,8 @@ class EnhancedDetailPage {
         const medical = Array.isArray(rawData.medicalInfo) && rawData.medicalInfo.length
             ? rawData.medicalInfo[0]
             : {};
-        const latestCheckIn = Array.isArray(rawData.checkIns) && rawData.checkIns.length
-            ? rawData.checkIns[0]
-            : {};
+        const checkIns = Array.isArray(rawData.checkIns) ? rawData.checkIns : [];
+        const latestCheckIn = checkIns.length ? checkIns[0] : {};
 
         return {
             basic: {
@@ -331,7 +394,12 @@ class EnhancedDetailPage {
                 emergencyContact: family.other_guardian || '未填写',
                 emergencyPhone: family.other_phone || '未填写',
                 address: family.home_address || '未填写'
-            }
+            },
+            admissions: checkIns.map(item => ({
+                checkInDate: item.check_in_date || '未知',
+                checkOutDate: item.check_out_date || '',
+                hospital: item.hospital || ''
+            }))
         };
     }
     
@@ -742,9 +810,14 @@ class EnhancedDetailPage {
                 guardian: '张父',
                 relationship: '父亲',
                 guardianPhone: '13800138001',
-                emergencyContact: '张母 13800138002',
-                familyHistory: '无重大疾病史'
-            }
+                emergencyContact: '张母',
+                emergencyPhone: '13800138002',
+                address: '北京市朝阳区某某街道123号'
+            },
+            admissions: [
+                { checkInDate: '2024-01-15', checkOutDate: '2024-01-20', hospital: '北京儿童医院' },
+                { checkInDate: '2023-09-10', checkOutDate: '2023-09-15', hospital: '北京儿童医院' }
+            ]
         };
         
         this.updatePageContent();
