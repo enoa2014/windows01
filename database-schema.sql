@@ -108,3 +108,48 @@ CREATE TABLE IF NOT EXISTS family_service_records (
 -- 家庭服务索引
 CREATE INDEX IF NOT EXISTS idx_fsr_year_month ON family_service_records(year_month);
 CREATE INDEX IF NOT EXISTS idx_fsr_year ON family_service_records(strftime('%Y', year_month));
+
+-- 关怀服务受益记录表
+CREATE TABLE IF NOT EXISTS care_beneficiary_records (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sequence_number TEXT,
+    year INTEGER,
+    month INTEGER,
+    service_center TEXT,
+    project_domain TEXT,
+    activity_type TEXT,
+    activity_date TEXT,
+    activity_name TEXT,
+    beneficiary_group TEXT,
+    reporter TEXT,
+    report_date TEXT,
+    adult_male INTEGER DEFAULT 0,
+    adult_female INTEGER DEFAULT 0,
+    adult_total INTEGER DEFAULT 0,
+    child_male INTEGER DEFAULT 0,
+    child_female INTEGER DEFAULT 0,
+    child_total INTEGER DEFAULT 0,
+    total_beneficiaries INTEGER DEFAULT 0,
+    volunteer_child_count INTEGER DEFAULT 0,
+    volunteer_child_hours REAL DEFAULT 0,
+    volunteer_parent_count INTEGER DEFAULT 0,
+    volunteer_parent_hours REAL DEFAULT 0,
+    volunteer_student_count INTEGER DEFAULT 0,
+    volunteer_student_hours REAL DEFAULT 0,
+    volunteer_teacher_count INTEGER DEFAULT 0,
+    volunteer_teacher_hours REAL DEFAULT 0,
+    volunteer_social_count INTEGER DEFAULT 0,
+    volunteer_social_hours REAL DEFAULT 0,
+    volunteer_total_count INTEGER DEFAULT 0,
+    volunteer_total_hours REAL DEFAULT 0,
+    benefit_adult_times INTEGER DEFAULT 0,
+    benefit_child_times INTEGER DEFAULT 0,
+    benefit_total_times INTEGER DEFAULT 0,
+    notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 关怀服务索引
+CREATE INDEX IF NOT EXISTS idx_cbr_year_month ON care_beneficiary_records(year, month);
+CREATE INDEX IF NOT EXISTS idx_cbr_service_center ON care_beneficiary_records(service_center);
