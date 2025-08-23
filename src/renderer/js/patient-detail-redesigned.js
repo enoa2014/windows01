@@ -187,49 +187,31 @@ class PatientDetailRedesigned {
     }
 
     updateBreadcrumbForContext(patientName) {
+        const breadcrumb = window.breadcrumb;
+        if (!breadcrumb) return;
         const params = new URLSearchParams(window.location.search);
         const from = params.get('from');
-
-        // 默认更新当前项
-        const defaultCurrent = document.getElementById('breadcrumbCurrent');
-        if (defaultCurrent) {
-            defaultCurrent.textContent = patientName || '患者详情';
-            defaultCurrent.title = patientName || '';
-        }
+        const ageRange = params.get('ageRange');
+        const backLink = document.getElementById('backLink');
+        const backLabel = document.getElementById('backLinkLabel');
 
         if (from === 'stats-age') {
-            const nav = document.querySelector('nav[aria-label="面包屑导航"]');
-            const ol = nav ? nav.querySelector('ol') : null;
-            if (!ol) return;
-
-            const arrow = `
-                <li class=\"mx-2 text-slate-400\" aria-hidden=\"true\">
-                    <svg class=\"w-4 h-4\" fill=\"currentColor\" viewBox=\"0 0 20 20\">
-                        <path fill-rule=\"evenodd\" d=\"M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z\" clip-rule=\"evenodd\"/>
-                    </svg>
-                </li>`;
-
-            ol.innerHTML = `
-                <li>
-                    <a href=\"index.html\" class=\"text-teal-600 hover:text-teal-700 font-medium\">主页</a>
-                </li>
-                ${arrow}
-                <li>
-                    <a href=\"index.html#stats\" class=\"hover:text-slate-700\">统计分析</a>
-                </li>
-                ${arrow}
-                <li>
-                    <a href=\"index.html#age-stats\" class=\"hover:text-slate-700\">年龄段统计</a>
-                </li>
-                ${arrow}
-                <li id=\"breadcrumbCurrent\" class=\"text-slate-700 font-medium truncate max-w-[50vw]\">${patientName || '患者详情'}</li>
-            `;
-
-            // 更新左上角返回链接与文案
-            const backLink = document.getElementById('backLink');
-            const backLabel = document.getElementById('backLinkLabel');
-            if (backLink) backLink.href = 'index.html#age-stats';
+            const target = 'index.html?view=statistics' + (ageRange ? ('&ageRange=' + encodeURIComponent(ageRange)) : '');
+            if (backLink) backLink.href = target;
             if (backLabel) backLabel.textContent = '返回统计分析';
+            breadcrumb.setItems([
+                { text: '主页', href: 'index.html' },
+                { text: '数据统计分析', href: target },
+                { text: patientName || '患者详情' }
+            ]);
+        } else {
+            if (backLink) backLink.href = 'index.html';
+            if (backLabel) backLabel.textContent = '返回患者列表';
+            breadcrumb.setItems([
+                { text: '主页', href: 'index.html' },
+                { text: '患者列表', href: 'index.html' },
+                { text: patientName || '患者详情' }
+            ]);
         }
     }
 
@@ -999,6 +981,7 @@ class PatientDetailRedesigned {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    window.breadcrumb = new Breadcrumb(document.getElementById('breadcrumbNav'));
     if (document.querySelector('.patient-detail-redesigned')) {
         window.patientDetailRedesigned = new PatientDetailRedesigned();
     }
