@@ -133,7 +133,8 @@ class FamilyServiceImporter extends ExcelImporter {
                 // 处理数据行（从第3行开始，索引2）
                 for (let i = 2; i < rawData.length; i++) {
                     const row = rawData[i];
-                    
+                    result.totalRows++;
+
                     try {
                         if (!row || row.length === 0) continue;
                         
@@ -168,6 +169,7 @@ class FamilyServiceImporter extends ExcelImporter {
 
                         if (existingRecord && !options.allowDuplicates) {
                             result.duplicateCount++;
+                            result.errorCount++;
                             continue;
                         }
 
