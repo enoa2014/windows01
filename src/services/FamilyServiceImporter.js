@@ -35,12 +35,17 @@ class FamilyServiceImporter extends ExcelImporter {
             
             if (typeof serialNumber === 'string' && serialNumber.trim()) {
                 const dateStr = serialNumber.toString().trim();
-                if (dateStr.match(/^\d{4}[-\/\.]\d{1,2}[-\/\.]\d{1,2}$/)) {
-                    return new Date(dateStr.replace(/[\.\/]/g, '-'));
+                if (/^\d{4}[-\/\.]\d{1,2}[-\/\.]\d{1,2}$/.test(dateStr)) {
+                    const [year, month] = dateStr.split(/[-\/\.]/);
+                    return new Date(parseInt(year), parseInt(month) - 1, 1);
                 }
-                if (dateStr.match(/^\d{4}\.\d{1,2}$/)) {
+                if (/^\d{4}\.\d{1,2}$/.test(dateStr)) {
                     const [year, month] = dateStr.split('.');
                     return new Date(parseInt(year), parseInt(month) - 1, 1);
+                }
+                const cnMatch = dateStr.match(/^(\d{4})年(\d{1,2})月/);
+                if (cnMatch) {
+                    return new Date(parseInt(cnMatch[1]), parseInt(cnMatch[2]) - 1, 1);
                 }
             }
             
