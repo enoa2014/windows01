@@ -29,6 +29,7 @@ class PatientApp {
             // 视图切换
             homeView: document.getElementById('homeView'),
             listView: document.getElementById('listView'),
+            modernCardsView: document.getElementById('modernCardsView'),
             detailView: document.getElementById('detailView'),
             statisticsView: document.getElementById('statisticsView'),
             familyServiceView: document.getElementById('familyServiceView'),
@@ -929,6 +930,9 @@ class PatientApp {
             case 'patientList':
                 this.setPage('list');
                 break;
+            case 'modernCards':
+                this.setPage('modernCards');
+                break;
             case 'statistics':
                 this.setPage('statistics');
                 // 重置统计页面状态，允许重新加载（但仍然防止连续调用）
@@ -950,7 +954,7 @@ class PatientApp {
     }
 
     async setPage(pageName, addToHistory = true) {
-        const pages = ['home', 'list', 'detail', 'statistics', 'familyService', 'familyServiceDetail', 'familyServiceStatistics'];
+        const pages = ['home', 'list', 'modernCards', 'detail', 'statistics', 'familyService', 'familyServiceDetail', 'familyServiceStatistics'];
         pages.forEach(page => {
             const element = this.elements[`${page}View`];
             if (element) {
@@ -1045,6 +1049,53 @@ class PatientApp {
         } catch (error) {
             console.error('导航到统计页面失败:', error);
             this.showError('加载统计数据失败，请重试');
+        }
+    }
+
+    // 新增：导航到现代化卡片视图（带数据加载）
+    async navigateToModernCards() {
+        try {
+            // 如果数据尚未加载，先加载数据
+            if (!this.pageStates.dataLoaded) {
+                await this.loadData();
+                this.pageStates.dataLoaded = true;
+            }
+            
+            // 导航到现代化卡片视图
+            this.navigateTo('modernCards');
+            
+            // 初始化现代化卡片展示
+            this.initModernCardsPage();
+        } catch (error) {
+            console.error('导航到现代化卡片视图失败:', error);
+            this.showError('加载数据失败，请重试');
+        }
+    }
+
+    // 初始化现代化卡片页面
+    async initModernCardsPage() {
+        try {
+            // 更新统计数据
+            const stats = await window.electronAPI.getExtendedStatistics();
+            if (stats) {
+                const modernTotalPatients = document.getElementById('modernTotalPatients');
+                const modernTotalRecords = document.getElementById('modernTotalRecords');
+                if (modernTotalPatients) modernTotalPatients.textContent = stats.totalPatients ?? 0;
+                if (modernTotalRecords) modernTotalRecords.textContent = stats.totalRecords ?? 0;
+            }
+            
+            // 如果现代化卡片系统已经初始化，则刷新数据
+            if (window.USE_MODERN_PATIENT_CARDS) {
+                // 刷新现代化卡片数据显示
+                const modernCardsContainer = document.getElementById('modernPatientGrid');
+                if (modernCardsContainer && modernCardsContainer.innerHTML.trim() === '') {
+                    // 如果容器为空，触发初始化
+                    const event = new CustomEvent('modernCardsInit');
+                    document.dispatchEvent(event);
+                }
+            }
+        } catch (error) {
+            console.error('初始化现代化卡片页面失败:', error);
         }
     }
 
@@ -1514,6 +1565,9 @@ class PatientApp {
                 case 'list':
                     current.textContent = '患儿列表';
                     break;
+                case 'modernCards':
+                    current.textContent = '现代化卡片视图';
+                    break;
                 case 'detail':
                     current.textContent = '患儿详情';
                     break;
@@ -1536,6 +1590,7 @@ class PatientApp {
         const titles = {
             home: '患儿入住信息管理系统',
             list: '患儿列表 - 患儿入住信息管理系统',
+            modernCards: '现代化卡片视图 - 患儿入住信息管理系统',
             detail: '患儿详情 - 患儿入住信息管理系统',
             statistics: '数据统计分析 - 患儿入住信息管理系统',
             familyService: '家庭服务列表 - 患儿入住信息管理系统',

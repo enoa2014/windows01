@@ -1,0 +1,1016 @@
+/* ===================== 现代化患者卡片样式 ===================== */
+/* 基于 children-activity-cards.tsx 的设计理念重新设计 */
+
+/* ==================== 全局背景和动画效果 ==================== */
+
+.patient-cards-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, 
+    rgb(240, 253, 250) 0%, 
+    rgb(254, 249, 195) 25%, 
+    rgb(240, 249, 255) 50%, 
+    rgb(245, 251, 255) 75%, 
+    rgb(247, 254, 231) 100%
+  );
+  position: relative;
+  overflow: hidden;
+}
+
+/* 背景动画粒子 */
+@keyframes float {
+  0%, 100% { 
+    transform: translateY(0px) scale(1); 
+    opacity: 0.6; 
+  }
+  50% { 
+    transform: translateY(-20px) scale(1.1); 
+    opacity: 1; 
+  }
+}
+
+.bg-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: float 6s ease-in-out infinite;
+  background: linear-gradient(45deg, 
+    rgba(20, 184, 166, 0.1), 
+    rgba(16, 185, 129, 0.1), 
+    rgba(6, 182, 212, 0.1)
+  );
+}
+
+/* ==================== 现代化患者卡片核心样式 ==================== */
+
+.patient-card-modern {
+  /* 基础样式 - 基于 children-activity-cards 设计 */
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 1.5rem;
+  box-shadow: 
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  
+  /* 动画和过渡 */
+  transition: all 0.7s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transform: translateZ(0);
+  will-change: transform, box-shadow, border-color;
+  
+  /* 定位和层级 */
+  position: relative;
+  z-index: 1;
+  
+  /* 无障碍 */
+  cursor: pointer;
+  outline: none;
+}
+
+/* 卡片顶部渐变条 */
+.patient-card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, 
+    #14b8a6, 
+    #10b981, 
+    #06b6d4
+  );
+  border-radius: 1.5rem 1.5rem 0 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+/* 悬停效果 */
+.patient-card-modern:hover {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 
+    0 25px 50px -12px rgba(20, 184, 166, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.patient-card-modern:hover::before {
+  opacity: 1;
+}
+
+/* 焦点状态 */
+.patient-card-modern:focus-visible {
+  outline: 2px solid #14b8a6;
+  outline-offset: 4px;
+}
+
+/* ==================== 卡片内容区域 ==================== */
+
+.patient-card-content {
+  position: relative;
+  z-index: 20;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* 头部信息区 */
+.patient-header-modern {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.patient-info-modern {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+/* 患者头像/初始字母 */
+.patient-avatar-modern {
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #14b8a6, #10b981);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.3);
+  
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 头像光泽效果 */
+.patient-avatar-modern::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(45deg, 
+    transparent 30%, 
+    rgba(255, 255, 255, 0.3) 50%, 
+    transparent 70%
+  );
+  transform: rotate(-45deg) translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.patient-card-modern:hover .patient-avatar-modern {
+  transform: scale(1.1) rotate(6deg);
+  box-shadow: 0 8px 16px -4px rgba(20, 184, 166, 0.4);
+}
+
+.patient-card-modern:hover .patient-avatar-modern::before {
+  transform: rotate(-45deg) translateX(100%);
+}
+
+/* 患者基本信息 */
+.patient-details-modern {
+  flex: 1;
+  min-width: 0;
+}
+
+.patient-name-modern {
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.4;
+  margin: 0 0 0.25rem 0;
+  color: #111827;
+  transition: color 0.3s ease;
+}
+
+.patient-card-modern:hover .patient-name-modern {
+  color: #0f766e;
+}
+
+.patient-meta-modern {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-bottom: 0.75rem;
+}
+
+/* 年龄组标签 */
+.age-group-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+  transition: all 0.3s ease;
+}
+
+.age-group-badge:hover {
+  transform: scale(1.05);
+}
+
+/* 不同年龄组的颜色 */
+.age-group-baby { background: #fef3f2; color: #dc2626; }
+.age-group-child { background: #eff6ff; color: #2563eb; }
+.age-group-teen { background: #f0fdf4; color: #16a34a; }
+.age-group-adult { background: #faf5ff; color: #7c3aed; }
+
+/* 状态徽章 */
+.patient-status-modern {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.patient-status-modern:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 不同状态的颜色 */
+.status-emergency { background: linear-gradient(135deg, #ef4444, #f87171); color: white; }
+.status-new { background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; }
+.status-vip { background: linear-gradient(135deg, #8b5cf6, #a78bfa); color: white; }
+.status-active { background: linear-gradient(135deg, #10b981, #34d399); color: white; }
+
+/* ==================== 诊断信息区域 ==================== */
+
+.patient-diagnosis-modern {
+  flex: 1;
+  margin-bottom: 1rem;
+}
+
+.diagnosis-text {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #374151;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.3s ease;
+}
+
+.patient-card-modern:hover .diagnosis-text {
+  color: #111827;
+}
+
+.diagnosis-label {
+  font-weight: 600;
+  color: #0d9488;
+  margin-right: 0.25rem;
+}
+
+/* ==================== 标签区域 ==================== */
+
+.patient-tags-modern {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.patient-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(8px);
+  color: #374151;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.patient-tag:hover {
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+/* ==================== 底部操作区域 ==================== */
+
+.patient-footer-modern {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.patient-info-chips {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+}
+
+.info-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border-radius: 0.5rem;
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(4px);
+  color: #6b7280;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.chip-icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+/* 操作按钮 */
+.patient-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border-radius: 1rem;
+  background: linear-gradient(135deg, #14b8a6, #10b981);
+  color: white;
+  border: none;
+  box-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.3);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 按钮光泽效果 */
+.patient-action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, 
+    transparent, 
+    rgba(255, 255, 255, 0.2), 
+    transparent
+  );
+  transition: left 0.5s ease;
+}
+
+.patient-action-btn:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 
+    0 10px 20px -5px rgba(20, 184, 166, 0.4),
+    0 0 0 3px rgba(20, 184, 166, 0.1);
+}
+
+.patient-action-btn:hover::before {
+  left: 100%;
+}
+
+.patient-action-btn:active {
+  transform: scale(0.95);
+}
+
+.patient-action-btn:focus-visible {
+  outline: 2px solid #14b8a6;
+  outline-offset: 2px;
+}
+
+/* ==================== 卡片变体样式 ==================== */
+
+/* 紧急状态卡片 */
+.patient-card-modern.emergency {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1), 
+    rgba(254, 242, 242, 0.1)
+  );
+}
+
+.patient-card-modern.emergency::before {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+  opacity: 1;
+}
+
+/* VIP患者卡片 */
+.patient-card-modern.vip {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1), 
+    rgba(250, 245, 255, 0.1)
+  );
+}
+
+.patient-card-modern.vip::before {
+  background: linear-gradient(90deg, #8b5cf6, #a78bfa);
+}
+
+/* 新入住患者卡片 */
+.patient-card-modern.new-admission {
+  border-color: rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, 
+    rgba(255, 255, 255, 0.1), 
+    rgba(239, 246, 255, 0.1)
+  );
+}
+
+.patient-card-modern.new-admission::before {
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+}
+
+/* ==================== 列表视图样式 ==================== */
+
+.patient-list-view {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* 列表模式卡片基础样式 - 更强的选择器覆盖网格模式样式 */
+.patient-list-view .patient-card-modern,
+.patient-list-view .patient-card-modern.patient-card-list,
+.patient-cards-container.patient-list-view .patient-card-modern {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 5rem !important;
+  max-height: 6rem !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  padding: 1rem 1.5rem !important;
+  border-radius: 1rem !important;
+  gap: 1rem !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+  transition: all 0.3s ease !important;
+  transform: none !important;
+}
+
+/* 强制覆盖所有可能的网格样式 */
+.patient-list-view .patient-card-modern::before,
+.patient-list-view .patient-card-modern.patient-card-list::before {
+  display: none !important;
+}
+
+/* 隐藏网格模式的所有复杂元素 */
+.patient-list-view .patient-card-modern .absolute,
+.patient-list-view .patient-card-modern.patient-card-list .absolute {
+  display: none !important;
+}
+
+/* 列表模式专用类 */
+.patient-card-list {
+  /* 覆盖所有网格模式的样式 */
+}
+
+/* 患者头像 - 列表模式 */
+.patient-avatar-list {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  background: linear-gradient(135deg, #14b8a6, #10b981);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
+}
+
+.patient-avatar-text {
+  color: white;
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* 患者信息 - 列表模式 */
+.patient-info-list {
+  flex: 0 0 auto;
+  width: 8rem;
+  margin-right: 1rem;
+}
+
+.patient-name-list {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.patient-meta-list {
+  font-size: 0.75rem;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.patient-meta-list span {
+  white-space: nowrap;
+}
+
+/* 年龄组标签 - 列表模式 */
+.age-group-pink { background: #fef3f2; color: #dc2626; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; }
+.age-group-blue { background: #eff6ff; color: #2563eb; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; }
+.age-group-green { background: #f0fdf4; color: #16a34a; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; }
+.age-group-purple { background: #faf5ff; color: #7c3aed; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; }
+.age-group-gray { background: #f9fafb; color: #6b7280; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; }
+
+/* 诊断信息 - 列表模式 */
+.patient-diagnosis-list {
+  flex: 1;
+  min-width: 0;
+  margin-right: 1rem;
+}
+
+.diagnosis-text-list {
+  font-size: 0.75rem;
+  color: #374151;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.25rem;
+}
+
+.patient-tags-list {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.tag-hometown, .tag-visits {
+  font-size: 0.625rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 0.25rem;
+  background: #f3f4f6;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+/* 状态 - 列表模式 */
+.patient-status-list {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: white;
+  margin-right: 1rem;
+}
+
+.status-red { background: linear-gradient(135deg, #ef4444, #f87171); }
+.status-blue { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
+.status-purple { background: linear-gradient(135deg, #8b5cf6, #a78bfa); }
+.status-green { background: linear-gradient(135deg, #10b981, #34d399); }
+
+/* 时间 - 列表模式 */
+.patient-time-list {
+  flex: 0 0 auto;
+  width: 4rem;
+  text-align: center;
+  margin-right: 1rem;
+}
+
+.time-label {
+  font-size: 0.625rem;
+  color: #6b7280;
+  margin-bottom: 0.125rem;
+}
+
+.time-value {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* 操作按钮 - 列表模式 */
+.patient-action-btn-list {
+  flex: 0 0 auto;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #14b8a6, #10b981);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(20, 184, 166, 0.2);
+}
+
+.patient-action-btn-list:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 8px rgba(20, 184, 166, 0.3);
+}
+
+.patient-list-view .patient-card-modern:hover {
+  transform: translateY(-2px) scale(1.005); /* 更微妙的悬停效果 */
+  box-shadow: 
+    0 8px 25px -8px rgba(20, 184, 166, 0.2),
+    0 0 0 1px rgba(255, 255, 255, 0.3);
+}
+
+/* 列表模式下的特殊样式 */
+.patient-list-view .patient-card-modern::before {
+  height: 2px; /* 更细的顶部条纹 */
+}
+
+/* 列表模式下的头像样式 */
+.patient-list-view .patient-avatar-modern {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+}
+
+/* 列表模式下的按钮样式 */
+.patient-list-view .patient-action-btn {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  border-radius: 0.5rem;
+  min-width: 4rem;
+}
+
+/* 列表模式下的状态徽章 */
+.patient-list-view .patient-status-modern {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  border-radius: 0.5rem;
+  min-width: 2.5rem;
+  text-align: center;
+}
+
+/* 列表模式下的标签 */
+.patient-list-view .patient-tag {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.625rem;
+  border-radius: 0.375rem;
+}
+
+/* 列表模式下的诊断信息 */
+.patient-list-view .diagnosis-text {
+  font-size: 0.8125rem;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 列表模式下的光晕效果 */
+.patient-list-view .patient-card-modern .absolute {
+  opacity: 0.5;
+}
+
+.patient-list-view .patient-card-modern:hover .absolute {
+  opacity: 0.8;
+}
+
+/* 列表模式下的增强交互效果 */
+.patient-list-view .patient-card-modern {
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+}
+
+.patient-list-view .patient-card-modern:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.patient-list-view .patient-card-modern:active {
+  transform: translateY(-1px) scale(1.002);
+}
+
+/* 列表模式下的焦点状态 */
+.patient-list-view .patient-card-modern:focus-visible {
+  outline: 2px solid #14b8a6;
+  outline-offset: 3px;
+}
+
+/* 列表模式下的动画效果 */
+.patient-list-view .patient-card-modern {
+  animation: listFadeInUp 0.5s ease-out;
+}
+
+@keyframes listFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 列表模式下的加载状态 */
+.patient-list-view .patient-card-modern.loading::after {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin: -0.75rem 0 0 -0.75rem;
+}
+
+/* 列表模式下的选中状态 */
+.patient-list-view .patient-card-modern.selected {
+  border-color: #14b8a6;
+  background: rgba(20, 184, 166, 0.08);
+  box-shadow: 0 0 0 3px rgb(20 184 166 / 0.1);
+}
+
+/* 列表模式下的深色模式优化 */
+@media (prefers-color-scheme: dark) {
+  .patient-list-view .patient-card-modern {
+    background: rgba(31, 41, 55, 0.8);
+    border-color: rgba(75, 85, 99, 0.4);
+  }
+  
+  .patient-list-view .patient-card-modern:hover {
+    background: rgba(31, 41, 55, 0.95);
+    border-color: rgba(20, 184, 166, 0.5);
+  }
+}
+
+/* ==================== 响应式设计 ==================== */
+
+/* 平板和手机优化 */
+@media (max-width: 768px) {
+  .patient-card-modern {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .patient-avatar-modern {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1rem;
+  }
+  
+  .patient-name-modern {
+    font-size: 1.125rem;
+  }
+  
+  .patient-action-btn {
+    padding: 0.5rem 1rem;
+    font-size: 0.8rem;
+  }
+
+  /* 列表视图移动端优化 */
+  .patient-list-view .patient-card-modern {
+    min-height: 5rem;
+    padding: 0.75rem 1rem;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  .patient-list-view .patient-card-modern > div:first-child {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+  
+  /* 移动端列表模式布局 */
+  .patient-list-view .patient-card-modern .flex.items-center.w-full {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+  
+  /* 患者信息区域 */
+  .patient-list-view .patient-card-modern .flex.items-center.gap-3.flex-shrink-0 {
+    flex-shrink: 1;
+    justify-content: flex-start;
+  }
+  
+  /* 诊断信息区域 */
+  .patient-list-view .patient-card-modern .flex-1.min-w-0.px-4 {
+    padding: 0;
+  }
+  
+  /* 状态和操作区域 */
+  .patient-list-view .patient-card-modern .flex.items-center.gap-3.flex-shrink-0:last-child {
+    flex-direction: row;
+    justify-content: space-between;
+    flex-shrink: 0;
+  }
+}
+
+/* 小屏幕手机优化 */
+@media (max-width: 480px) {
+  .patient-list-view {
+    gap: 0.375rem;
+  }
+  
+  .patient-list-view .patient-card-modern {
+    padding: 0.625rem 0.75rem;
+    min-height: 4.5rem;
+    border-radius: 0.75rem;
+  }
+  
+  .patient-list-view .patient-avatar-modern {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 0.875rem;
+    border-radius: 0.5rem;
+  }
+  
+  .patient-list-view .patient-action-btn {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.6875rem;
+    min-width: 3.5rem;
+  }
+  
+  .patient-list-view .diagnosis-text {
+    font-size: 0.75rem;
+  }
+  
+  .patient-list-view .patient-tag {
+    padding: 0.125rem 0.375rem;
+    font-size: 0.5625rem;
+  }
+}
+
+/* 超宽屏幕优化 */
+@media (min-width: 1440px) {
+  .patient-list-view .patient-card-modern {
+    padding: 1.25rem 2rem;
+  }
+  
+  .patient-list-view .patient-avatar-modern {
+    width: 3.5rem;
+    height: 3.5rem;
+    font-size: 1.125rem;
+  }
+  
+  .patient-list-view .patient-action-btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.8125rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .patient-card-modern {
+    max-width: 24rem;
+  }
+}
+
+/* ==================== 动画关键帧 ==================== */
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+@keyframes bounce {
+  0%, 100% { 
+    transform: translateY(0);
+    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  }
+  50% { 
+    transform: translateY(-25%);
+    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================== 加载状态 ==================== */
+
+.patient-card-modern.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.patient-card-modern.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 2rem;
+  height: 2rem;
+  margin: -1rem 0 0 -1rem;
+  border: 2px solid rgba(20, 184, 166, 0.2);
+  border-radius: 50%;
+  border-top-color: #14b8a6;
+  animation: spin 1s linear infinite;
+  z-index: 100;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== 深色模式支持 ==================== */
+
+@media (prefers-color-scheme: dark) {
+  .patient-card-modern {
+    background: rgba(31, 41, 55, 0.7);
+    border-color: rgba(75, 85, 99, 0.3);
+    color: #f9fafb;
+  }
+  
+  .patient-card-modern:hover {
+    background: rgba(31, 41, 55, 0.9);
+    border-color: rgba(20, 184, 166, 0.4);
+  }
+  
+  .patient-name-modern {
+    color: #f9fafb;
+  }
+  
+  .patient-card-modern:hover .patient-name-modern {
+    color: #5eead4;
+  }
+  
+  .diagnosis-text {
+    color: #d1d5db;
+  }
+  
+  .patient-card-modern:hover .diagnosis-text {
+    color: #f9fafb;
+  }
+  
+  .patient-tag {
+    background: rgba(75, 85, 99, 0.8);
+    color: #e5e7eb;
+    border-color: rgba(107, 114, 128, 0.3);
+  }
+  
+  .info-chip {
+    background: rgba(75, 85, 99, 0.6);
+    color: #9ca3af;
+    border-color: rgba(107, 114, 128, 0.2);
+  }
+}
+
+/* ==================== 打印样式 ==================== */
+
+@media print {
+  .patient-card-modern {
+    background: white !important;
+    box-shadow: none !important;
+    border: 1px solid #e5e7eb !important;
+    transform: none !important;
+    break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+  
+  .patient-card-modern::before {
+    display: none;
+  }
+  
+  .patient-action-btn {
+    display: none;
+  }
+}

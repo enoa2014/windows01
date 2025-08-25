@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="./styles/responsive-layout.css">
   <link rel="stylesheet" href="./styles/enhanced-design-system.css">
   <link rel="stylesheet" href="./styles/patient-card.css">
+  <link rel="stylesheet" href="./styles/patient-cards-modern.css">
   <link rel="stylesheet" href="./styles/patient-detail.css">
   <link rel="stylesheet" href="./styles/animations.css">
   <link rel="stylesheet" href="./styles/responsive.css">
@@ -403,7 +404,26 @@
                   </svg>
                 </div>
                 <!-- 入住信息子功能 -->
-                <div class="border-t border-[var(--border-primary)] pt-4">
+                <div class="border-t border-[var(--border-primary)] pt-4 space-y-2">
+                  <button onclick="app.navigateToModernCards(); event.stopPropagation();" class="w-full text-left p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors group/sub">
+                    <div class="flex items-center gap-3">
+                      <div class="w-8 h-8 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-lg flex items-center justify-center">
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 00-2 2v2m0 0V9a2 2 0 012-2h14a2 2 0 012 2v2M7 7V5a2 2 0 012-2h6a2 2 0 012 2v2"/>
+                        </svg>
+                      </div>
+                      <div class="flex-1">
+                        <div class="text-sm font-medium text-[var(--text-primary)] flex items-center gap-1">
+                          现代化卡片视图 
+                          <span class="bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold">新</span>
+                        </div>
+                        <div class="text-xs text-[var(--text-secondary)]">🎨 全新设计 · 互动式体验</div>
+                      </div>
+                      <svg class="w-3 h-3 text-[var(--text-muted)] group-hover/sub:text-[var(--brand-primary)] transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                      </svg>
+                    </div>
+                  </button>
                   <button onclick="app.navigateToStatistics(); event.stopPropagation();" class="w-full text-left p-2 rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors group/sub">
                     <div class="flex items-center gap-3">
                       <div class="w-8 h-8 bg-[var(--brand-bg)] rounded-lg flex items-center justify-center">
@@ -549,12 +569,21 @@
       <!-- 快速操作区域 -->
       <div class="card p-6 md:p-8">
         <h3 class="text-xl font-semibold text-[var(--text-primary)] mb-6">快速操作</h3>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
           <button class="btn btn-primary w-full" onclick="app.importData()">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
             </svg>
             导入患儿数据
+          </button>
+          <button class="btn btn-secondary w-full" onclick="app.navigateToModernCards()">
+            <div class="flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 9a2 2 0 00-2 2v2m0 0V9a2 2 0 012-2h14a2 2 0 012 2v2M7 7V5a2 2 0 012-2h6a2 2 0 012 2v2"/>
+              </svg>
+              <span>现代化视图</span>
+              <span class="bg-gradient-to-r from-teal-500 to-emerald-500 text-white text-xs px-1.5 py-0.5 rounded-full font-bold ml-1">新</span>
+            </div>
           </button>
           <button class="btn btn-secondary w-full" onclick="app.navigateToPatientList()">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -569,6 +598,157 @@
             系统信息
           </button>
         </div>
+      </div>
+    </section>
+
+    <section id="modernCardsView" class="page" aria-labelledby="modernCardsTitle">
+      <h2 id="modernCardsTitle" class="sr-only">现代化卡片视图</h2>
+
+      <!-- 页面标题 -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center gap-3 mb-6">
+          <div class="relative">
+            <div class="size-12 bg-gradient-to-br from-teal-500 to-emerald-500 rounded-xl flex items-center justify-center shadow-md text-white text-2xl animate-pulse">
+              🏥
+            </div>
+            <div class="absolute inset-0 rounded-xl bg-teal-400 blur-xl opacity-30 animate-pulse"></div>
+          </div>
+          <h1 class="text-5xl sm:text-6xl font-black bg-gradient-to-r from-teal-600 via-emerald-600 to-cyan-600 bg-clip-text text-transparent">
+            患儿入住信息管理
+          </h1>
+          <div class="relative">
+            <div class="size-12 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-md text-white text-2xl animate-bounce">
+              ✨
+            </div>
+            <div class="absolute inset-0 rounded-xl bg-emerald-400 blur-xl opacity-30 animate-bounce"></div>
+          </div>
+        </div>
+        
+        <p class="text-lg sm:text-xl text-gray-700 dark:text-gray-300 max-w-3xl mx-auto leading-relaxed font-medium">
+          为每一个小天使精心设计的成长乐园 ✨
+          <br />
+          <span class="text-base text-gray-600 dark:text-gray-400">
+            在这里，孩子们将收获知识、友谊和无尽的快乐回忆
+          </span>
+        </p>
+
+        <!-- 统计栏 -->
+        <div class="flex items-center justify-center gap-8 mt-8 p-4 rounded-2xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-lg shadow-lg max-w-2xl mx-auto">
+          <div class="text-center">
+            <div class="text-2xl font-bold text-teal-600 dark:text-teal-400" id="modernTotalPatients">0</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 font-medium">患儿数量</div>
+          </div>
+          <div class="w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="modernTotalRecords">0</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 font-medium">入住记录</div>
+          </div>
+          <div class="w-px h-8 bg-gray-300 dark:bg-gray-600"></div>
+          <div class="text-center">
+            <div class="text-2xl font-bold text-green-600 dark:text-green-400">4.8★</div>
+            <div class="text-xs text-gray-600 dark:text-gray-400 font-medium">平均评分</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 增强的搜索和筛选区域 -->
+      <section class="bg-white/80 backdrop-blur-xl rounded-2xl border border-white/20 shadow-lg p-6 mb-8 no-print" aria-labelledby="modernToolsTitle">
+        <h3 id="modernToolsTitle" class="sr-only">搜索与排序</h3>
+        
+        <!-- 搜索区域标题 -->
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-semibold text-gray-900">查找患儿档案</h3>
+          <div class="flex items-center space-x-2 text-sm text-gray-500">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>支持姓名、身份证号、诊断信息搜索</span>
+          </div>
+        </div>
+        
+        <!-- 主搜索和筛选区域 -->
+        <div class="flex flex-wrap items-center gap-4 mb-4">
+          <!-- 主搜索框 -->
+          <div class="flex-1 min-w-64">
+            <div class="relative">
+              <input id="modernSearchInput" 
+                     type="search" 
+                     inputmode="search" 
+                     placeholder="搜索姓名、身份证号、诊断信息..." 
+                     aria-label="搜索患儿信息" 
+                     class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl bg-gray-50/80 backdrop-blur-sm focus:bg-white focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all duration-200 placeholder-gray-400 text-gray-900" />
+              <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="7"/>
+                <path d="m21 21-3.5-3.5"/>
+              </svg>
+            </div>
+          </div>
+          
+          <!-- 快速筛选器 -->
+          <div class="flex items-center space-x-3">
+            <select id="modernGenderFilter" class="border border-gray-200 rounded-lg px-3 py-2.5 bg-white/80 backdrop-blur-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm">
+              <option value="">全部性别</option>
+              <option value="男">男</option>
+              <option value="女">女</option>
+            </select>
+            
+            <select id="modernAgeFilter" class="border border-gray-200 rounded-lg px-3 py-2.5 bg-white/80 backdrop-blur-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm">
+              <option value="">全部年龄段</option>
+              <option value="0-3">0-3岁</option>
+              <option value="4-12">4-12岁</option>
+              <option value="13-18">13-18岁</option>
+            </select>
+            
+            <select id="modernSortSelect" class="border border-gray-200 rounded-lg px-3 py-2.5 bg-white/80 backdrop-blur-sm focus:border-teal-500 focus:ring-2 focus:ring-teal-200 transition-all text-sm min-w-32">
+              <option value="recent">按最近入住</option>
+              <option value="name">按姓名</option>
+              <option value="age">按年龄</option>
+              <option value="visits">按入住次数</option>
+            </select>
+            
+            <button id="modernResetBtn" class="inline-flex items-center px-3 py-2 border border-gray-200 bg-white/80 backdrop-blur-sm text-gray-700 rounded-lg hover:bg-gray-50 hover:border-gray-300 transition-all text-sm">
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+              </svg>
+              重置
+            </button>
+          </div>
+        </div>
+        
+        <!-- 搜索结果状态和操作 -->
+        <div class="flex items-center justify-between pt-4 border-t border-gray-100">
+          <div class="text-sm text-gray-600" aria-live="polite">
+            <span id="modernResultCount">—</span>
+          </div>
+          
+          <!-- 视图切换选项 -->
+          <div class="flex items-center space-x-2">
+            <span class="text-sm text-gray-500">视图:</span>
+            <div class="flex bg-gray-100/80 backdrop-blur-sm rounded-lg p-1">
+              <button id="modernGridViewBtn" class="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white rounded-md shadow-sm transition-all" title="网格视图">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                </svg>
+              </button>
+              <button id="modernListViewBtn" class="px-3 py-1.5 text-sm font-medium text-gray-500 hover:text-gray-700 transition-all" title="列表视图">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div id="modernPatientGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 relative patient-cards-container" role="list"></div>
+      <div id="modernEmptyState" class="hidden mt-12 text-center text-gray-500 dark:text-gray-400" role="status">
+        <div class="mx-auto size-24 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800 rounded-full flex items-center justify-center mb-4">
+          <svg class="size-12 text-gray-400 dark:text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M7 3h10a2 2 0 0 1 2 2v14l-7-4-7 4V5a2 2 0 0 1 2-2Z"/>
+          </svg>
+        </div>
+        <p class="text-lg font-medium mb-2">没有找到患儿信息</p>
+        <p class="text-sm">请尝试调整搜索条件或导入患儿数据</p>
       </div>
     </section>
 
@@ -1287,6 +1467,7 @@
   <script src="./js/components/resource-table.js"></script>
   <script src="./js/app.js"></script>
   <script src="./js/patients-table.js"></script>
+  <script src="./js/patient-cards-redesigned.js"></script>
   
 </body>
 </html>
